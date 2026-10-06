@@ -89,9 +89,18 @@ button {
   text-decoration: none;
 }
 
-.nav a:hover,
+/* Header buttons get a wobbly, logo-red outline instead of a straight border. */
+.nav a:not(.x),
+.nav button {
+  border: 0;
+  padding: 7px 12px;
+  background: url("/button-border.svg") center / 100% 100% no-repeat;
+  transition: transform 0.15s;
+}
+
+.nav a:not(.x):hover,
 .nav button:hover {
-  border-color: var(--ink);
+  transform: rotate(-3deg);
 }
 
 /* Grid */
@@ -204,12 +213,21 @@ button {
 }
 
 .nav .x {
+  display: block;
+  padding: 0;
   border: 0;
-  padding: 0 4px;
-  font-size: 28px;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--accent);
+  background: none;
+  transition: transform 0.15s;
+}
+
+.nav .x img {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+.nav .x:hover {
+  transform: rotate(90deg);
 }
 
 /* Add form */

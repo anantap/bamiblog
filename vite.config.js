@@ -20,7 +20,11 @@ function devApi() {
         }
 
         const chunks = [];
-        for await (const chunk of req) chunks.push(chunk);
+        try {
+          for await (const chunk of req) chunks.push(chunk);
+        } catch {
+          return; // the browser gave up on the request (e.g. navigated away)
+        }
         const raw = Buffer.concat(chunks).toString();
         try {
           req.body = raw ? JSON.parse(raw) : undefined;
