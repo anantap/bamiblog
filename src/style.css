@@ -78,7 +78,6 @@ button {
 
 .nav a,
 .nav button,
-.sheet button,
 .stack button[type="submit"] {
   border: 1px solid var(--line);
   background: var(--bg);
@@ -90,8 +89,7 @@ button {
 }
 
 .nav a:hover,
-.nav button:hover,
-.sheet button:hover {
+.nav button:hover {
   border-color: var(--ink);
 }
 
@@ -170,52 +168,28 @@ button {
   color: var(--muted);
 }
 
-/* Dialogs */
+/* About */
 
-.sheet {
-  width: min(560px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
+.about-page {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 96px);
   padding: 16px;
-  border: 0;
-  background: var(--bg);
-  color: var(--ink);
 }
 
-.sheet::backdrop {
-  background: rgb(255 255 255 / 0.9);
-}
-
-.sheet p {
-  margin: 0 0 6px;
-}
-
-
-.about {
-  position: relative;
-  padding: 48px 24px;
-  font-size: 22px;
-  letter-spacing: -0.02em;
-}
-
-.about p {
+.about-page p {
   margin: 0;
+  font-size: clamp(48px, 12vw, 160px);
+  font-weight: 200;
+  letter-spacing: -0.04em;
 }
 
-.sheet .x {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+.nav .x {
   border: 0;
-  background: none;
-  font-size: 22px;
+  padding: 0 4px;
+  font-size: 28px;
+  font-weight: 200;
   line-height: 1;
-  color: var(--muted);
-}
-
-.sheet .x:hover {
   color: var(--ink);
 }
 

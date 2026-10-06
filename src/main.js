@@ -2,16 +2,8 @@ import { api, h } from "./dom.js";
 import { formatDate, padNumber, sortEntries, stars, title } from "./format.js";
 
 const grid = document.getElementById("grid");
-const about = document.getElementById("about");
 let loggedIn = false;
 let entries = [];
-
-document.getElementById("about-open").addEventListener("click", () => about.showModal());
-
-// Clicking the backdrop closes the dialog.
-about.addEventListener("click", (event) => {
-  if (event.target === about) about.close();
-});
 
 function starLine(rating) {
   const { on, off } = stars(rating);

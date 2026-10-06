@@ -57,6 +57,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: resolve(import.meta.dirname, "index.html"),
           add: resolve(import.meta.dirname, "add/index.html"),
+          about: resolve(import.meta.dirname, "about/index.html"),
         },
       },
     },
