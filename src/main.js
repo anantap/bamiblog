@@ -45,7 +45,7 @@ function tile(entry) {
 function render() {
   grid.setAttribute("aria-busy", "false");
   if (entries.length === 0) {
-    grid.replaceChildren(h("p", { class: "empty" }, "No noodles yet."));
+    grid.replaceChildren(h("p", { class: "empty" }, "send noods"));
     return;
   }
   grid.replaceChildren(...sortEntries(entries).map(tile));
