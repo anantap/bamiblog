@@ -210,13 +210,6 @@ button {
   line-height: 1.55;
 }
 
-.about-text h1 {
-  margin: 0 0 1.4em;
-  font-size: 1em;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
 .about-text p {
   margin: 0 0 1.4em;
 }
@@ -265,31 +258,16 @@ button {
   height: 26px;
 }
 
-/* Outline buttons: the header "about" and the About page's "send noods". */
-a.lettering.outline-button {
+/* Outlined lettering links: the header "about" and the About page's "send noods". */
+a.lettering.lettering-link {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 7px 14px;
-  border: 1.5px solid currentColor;
-  background: transparent;
-  color: var(--accent); /* the lettering's colour, so outline and label match */
-  transform: none;
-  transition: background-color 0.15s;
+  align-items: flex-end;
+  min-height: 44px; /* comfortable tap target */
 }
 
-a.lettering.outline-button:hover {
-  background: currentColor;
-}
-
-a.lettering.outline-button:hover img {
-  filter: brightness(0) invert(1); /* red lettering turns white on the red fill */
-}
-
-a.lettering.outline-button:focus-visible {
+a.lettering.lettering-link:focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
 
 .nav .x {
