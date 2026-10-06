@@ -90,7 +90,7 @@ button {
 }
 
 /* Header buttons get a wobbly, logo-red outline instead of a straight border. */
-.nav a:not(.x),
+.nav a:not(.x):not(.lettering),
 .nav button {
   border: 0;
   padding: 7px 12px;
@@ -98,7 +98,7 @@ button {
   transition: transform 0.15s;
 }
 
-.nav a:not(.x):hover,
+.nav a:not(.x):not(.lettering):hover,
 .nav button:hover {
   transform: rotate(-3deg);
 }
@@ -210,6 +210,40 @@ button {
 
 .about-page p {
   margin: 0;
+}
+
+/* Words drawn from the logo's own shapes (tools/lettering). */
+.lettering {
+  display: inline-block;
+  line-height: 0;
+  transition: transform 0.15s;
+}
+
+.lettering img {
+  display: block;
+  width: auto;
+}
+
+.lettering:hover {
+  transform: rotate(-3deg);
+}
+
+.nav .lettering {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.nav .lettering img {
+  height: 30px;
+}
+
+.about-page .lettering img {
+  height: 44px;
+}
+
+.empty .lettering img {
+  height: 36px;
 }
 
 .nav .x {

@@ -46,7 +46,13 @@ function tile(entry) {
 function render() {
   grid.setAttribute("aria-busy", "false");
   if (entries.length === 0) {
-    grid.replaceChildren(h("p", { class: "empty" }, h("a", { href: SEND_NOODS }, "send noods")));
+    grid.replaceChildren(
+      h(
+        "p",
+        { class: "empty" },
+        h("a", { class: "lettering", href: SEND_NOODS }, h("img", { src: "/lettering/send-noods.svg", alt: "send noods", width: 495, height: 132 }))
+      )
+    );
     return;
   }
   grid.replaceChildren(...sortEntries(entries).map(tile));
