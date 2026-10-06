@@ -36,7 +36,7 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 ## Pages
 
 - `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DD/MM/YYYY`) above the photo, stars below. Tiles do not open; brand, flavour and flag live in the photo alt text. When logged in, each tile shows a × to delete it.
-- `/add` — phone-first form, login prompt if not logged in. After taking a photo you frame it in a square crop (drag, pinch/scroll or slider to zoom, circle guide); only that square is uploaded, at most 1200×1200.
+- `/add` — phone-first form, login prompt if not logged in. After taking a photo you frame it in a square crop (drag, pinch/scroll or slider to zoom, pack-shaped rectangular guide); only that square is uploaded, at most 1200×1200.
 - `/about/` — full page, just "bami".
 
 ## Out of scope
