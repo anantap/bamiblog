@@ -2,6 +2,7 @@ import { api, h } from "./dom.js";
 import { formatDate, padNumber, sortEntries, stars, title } from "./format.js";
 
 const grid = document.getElementById("grid");
+const SEND_NOODS = "mailto:anantadotwork@gmail.com";
 let loggedIn = false;
 let entries = [];
 
@@ -45,7 +46,7 @@ function tile(entry) {
 function render() {
   grid.setAttribute("aria-busy", "false");
   if (entries.length === 0) {
-    grid.replaceChildren(h("p", { class: "empty" }, "send noods"));
+    grid.replaceChildren(h("p", { class: "empty" }, h("a", { href: SEND_NOODS }, "send noods")));
     return;
   }
   grid.replaceChildren(...sortEntries(entries).map(tile));
