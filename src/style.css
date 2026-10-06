@@ -81,26 +81,12 @@ button {
 }
 
 .nav a,
-.nav button,
 .stack button[type="submit"] {
   border: 1px solid var(--line);
   background: var(--bg);
   padding: 6px 10px;
   font-size: 12px;
   text-decoration: none;
-}
-
-/* Header buttons are plain text, no outline. */
-.nav a:not(.lettering),
-.nav button {
-  border: 0;
-  padding: 7px 12px;
-  transition: transform 0.15s;
-}
-
-.nav a:not(.lettering):hover,
-.nav button:hover {
-  transform: rotate(-3deg);
 }
 
 /* Grid */

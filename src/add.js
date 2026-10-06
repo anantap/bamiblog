@@ -5,7 +5,6 @@ import { createCropper } from "./cropper.js";
 
 const loginForm = document.getElementById("login");
 const entryForm = document.getElementById("entry");
-const logout = document.getElementById("logout");
 const picker = document.getElementById("picker");
 const cropParts = ["cropper", "crop-tools"].map((id) => document.getElementById(id));
 const cropper = createCropper(document.querySelector("#cropper canvas"));
@@ -25,7 +24,6 @@ function today() {
 function show(loggedIn) {
   loginForm.hidden = loggedIn;
   entryForm.hidden = !loggedIn;
-  logout.hidden = !loggedIn;
   if (loggedIn && !entryForm.date.value) entryForm.date.value = today();
   (loggedIn ? entryForm.brand : loginForm.password).focus();
 }
@@ -50,11 +48,6 @@ loginForm.addEventListener("submit", async (event) => {
   } finally {
     setBusy(loginForm, false, "Log in");
   }
-});
-
-logout.addEventListener("click", async () => {
-  await api("/api/login", { method: "DELETE" });
-  show(false);
 });
 
 entryForm.photo.addEventListener("change", async () => {
