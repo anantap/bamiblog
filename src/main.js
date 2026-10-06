@@ -1,15 +1,10 @@
 import { api, h } from "./dom.js";
-import { formatDate, padNumber, sortEntries, stars, title } from "./format.js";
+import { formatDate, padNumber, sortEntries, title } from "./format.js";
 import { SEND_NOODS } from "./send-noods.js";
 
 const grid = document.getElementById("grid");
 let loggedIn = false;
 let entries = [];
-
-function starLine(rating) {
-  const { on, off } = stars(rating);
-  return h("span", { class: "stars", "aria-label": `${rating} out of 5` }, on, h("span", { class: "off" }, off));
-}
 
 async function remove(entry) {
   if (!confirm(`Delete ${padNumber(entry.number)}?`)) return;
@@ -35,12 +30,10 @@ function tile(entry) {
     h(
       "div",
       { class: "frame" },
-      h("img", { src: entry.photo, alt: title(entry), loading: "lazy", decoding: "async" }),
-      loggedIn &&
-        h("button", { class: "remove", type: "button", "aria-label": `Delete ${padNumber(entry.number)}`, onclick: () => remove(entry) }, "×")
+      h("img", { src: entry.photo, alt: title(entry), loading: "lazy", decoding: "async" })
     ),
-    // The rating is only for me; visitors don't get it from the API either.
-    loggedIn && starLine(entry.rating)
+    loggedIn &&
+      h("button", { class: "remove", type: "button", "aria-label": `Delete ${padNumber(entry.number)}`, onclick: () => remove(entry) }, "Delete")
   );
 }
 
