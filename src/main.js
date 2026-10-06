@@ -84,7 +84,6 @@ async function load() {
     const [list, session] = await Promise.all([api("/api/entries"), api("/api/login")]);
     entries = list;
     loggedIn = session.loggedIn;
-    document.getElementById("add-link").hidden = !loggedIn;
     render();
   } catch (err) {
     grid.setAttribute("aria-busy", "false");
