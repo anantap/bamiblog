@@ -80,7 +80,26 @@ button {
   margin-left: auto; /* stays right even when there's no logo, as on About */
 }
 
-.nav a,
+/* Plain text, like the tile metadata, so the logo is the only drawn thing up here. */
+.nav a {
+  display: inline-flex;
+  align-items: flex-end;
+  min-height: 44px; /* comfortable tap target */
+  font: 400 13px/1 var(--font);
+  color: var(--anthracite);
+  text-decoration: none;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nav a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
 .stack button[type="submit"] {
   border: 1px solid var(--line);
   background: var(--bg);
@@ -217,22 +236,6 @@ button {
   transform: rotate(-3deg);
 }
 
-.nav .lettering {
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.nav .lettering img {
-  height: 28px;
-}
-
-@media (max-width: 480px) {
-  .nav .lettering img {
-    height: 24px;
-  }
-}
-
 .about-page .lettering img {
   height: 30px;
 }
@@ -241,7 +244,7 @@ button {
   height: 26px;
 }
 
-/* Outlined lettering links: the header "about" and the About page's "send noods". */
+/* Lettering links: the About page's "send noods". */
 a.lettering.lettering-link {
   display: inline-flex;
   align-items: flex-end;
