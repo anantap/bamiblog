@@ -59,21 +59,18 @@ button {
 .logo {
   display: block;
   flex-shrink: 0;
-  /* phones: a fluid share of the row, leaving room for the button beside it */
-  width: clamp(120px, 45%, 200px);
-}
-
-/* from 768px the logo is exactly one grid tile wide (4 columns, 16px gaps) */
-@media (min-width: 768px) {
-  .logo {
-    width: calc((100% - 48px) / 4);
-  }
 }
 
 .logo img {
   display: block;
-  width: 100%;
-  height: auto;
+  width: auto;
+  height: 88px;
+}
+
+@media (max-width: 480px) {
+  .logo img {
+    height: 64px;
+  }
 }
 
 .nav {
