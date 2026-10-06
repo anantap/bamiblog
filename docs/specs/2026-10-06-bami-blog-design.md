@@ -1,6 +1,6 @@
 # bami.blog — design
 
-A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Instrument Sans SemiBold. The `b.b` mark sits top left on every page (and is the favicon); the full wobbly wordmark appears on the About page.
+A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Instrument Sans SemiBold. The `b.b` mark sits top left on the grid and add pages (and is the favicon); the About page drops it and shows the full wobbly wordmark instead, with a red × to close.
 
 ## Stack
 
