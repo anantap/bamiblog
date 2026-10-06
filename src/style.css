@@ -64,12 +64,12 @@ button {
 .logo img {
   display: block;
   width: auto;
-  height: 44px;
+  height: 88px;
 }
 
 @media (max-width: 480px) {
   .logo img {
-    height: 36px;
+    height: 64px;
   }
 }
 
@@ -204,7 +204,7 @@ button {
 
 .about-logo {
   display: block;
-  width: min(280px, 70vw);
+  width: min(440px, 82vw);
   height: auto;
 }
 
@@ -235,7 +235,13 @@ button {
 }
 
 .nav .lettering img {
-  height: 30px;
+  height: 40px;
+}
+
+@media (max-width: 480px) {
+  .nav .lettering img {
+    height: 32px;
+  }
 }
 
 .about-page .lettering img {
