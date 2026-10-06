@@ -290,6 +290,28 @@ a.lettering.lettering-link:focus-visible {
   letter-spacing: 0;
 }
 
+/* Our own chevron, 10px from the edge like the text, instead of each browser's own placement. */
+.stack select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 34px;
+  background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%231d1d1b' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;
+}
+
+/* iOS Safari gives date fields a built-in minimum width and centred text, so they overflow the form. */
+.stack input[type="date"] {
+  display: block;
+  min-width: 0;
+  height: calc(1.45em + 22px); /* same height as the other fields */
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+
+.stack input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 .stack ::placeholder {
   color: #c4c3bd;
 }
