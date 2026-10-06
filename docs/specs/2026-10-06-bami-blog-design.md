@@ -1,6 +1,6 @@
 # bami.blog — design
 
-A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Instrument Sans SemiBold. The `b.b` mark sits top left on the grid and add pages (and is the favicon); the About page drops it and shows the full wobbly wordmark instead, with a hand-drawn red × (`close.svg`) to close. "about" (header) and "send noods" (About page, empty grid) are lettering built only from the logo's own shapes (`tools/lettering`, output in `public/lettering/`); "Log out" keeps a wobbly red outline (`button-border.svg`).
+A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Instrument Sans SemiBold. The `b.b` mark sits top left on the grid and add pages (and is the favicon); the About page has no header: its full wobbly wordmark links back to the grid. "about" (header) and "send noods" (About page, empty grid) are lettering built only from the logo's own shapes (`tools/lettering`, output in `public/lettering/`); "Log out" keeps a wobbly red outline (`button-border.svg`).
 
 ## Stack
 

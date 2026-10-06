@@ -90,7 +90,7 @@ button {
 }
 
 /* Header buttons get a wobbly, logo-red outline instead of a straight border. */
-.nav a:not(.x):not(.lettering),
+.nav a:not(.lettering),
 .nav button {
   border: 0;
   padding: 7px 12px;
@@ -98,7 +98,7 @@ button {
   transition: transform 0.15s;
 }
 
-.nav a:not(.x):not(.lettering):hover,
+.nav a:not(.lettering):hover,
 .nav button:hover {
   transform: rotate(-3deg);
 }
@@ -189,14 +189,30 @@ button {
 /* About */
 
 .about-page {
-  padding: 32px 20px 96px;
+  padding: clamp(32px, 6vw, 64px) 20px 96px;
+}
+
+/* The wordmark doubles as the way back to the grid. */
+.about-home {
+  display: block;
+  width: fit-content;
+  margin: 0 auto clamp(48px, 8vw, 96px);
+  transition: transform 0.15s;
+}
+
+.about-home:hover {
+  transform: rotate(-2deg);
+}
+
+.about-home:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 6px;
 }
 
 .about-logo {
   display: block;
   width: min(440px, 82vw);
   height: auto;
-  margin: 0 auto clamp(48px, 8vw, 96px);
 }
 
 .about-text {
@@ -265,24 +281,6 @@ a.lettering.lettering-link {
 a.lettering.lettering-link:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 4px;
-}
-
-.nav .x {
-  display: block;
-  padding: 0;
-  border: 0;
-  background: none;
-  transition: transform 0.15s;
-}
-
-.nav .x img {
-  display: block;
-  width: 28px;
-  height: 28px;
-}
-
-.nav .x:hover {
-  transform: rotate(90deg);
 }
 
 /* Add form */
