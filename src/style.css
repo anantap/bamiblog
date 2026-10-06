@@ -91,12 +91,11 @@ button {
   text-decoration: none;
 }
 
-/* Header buttons get a wobbly, logo-red outline instead of a straight border. */
+/* Header buttons are plain text, no outline. */
 .nav a:not(.lettering),
 .nav button {
   border: 0;
   padding: 7px 12px;
-  background: url("/button-border.svg") center / 100% 100% no-repeat;
   transition: transform 0.15s;
 }
 
