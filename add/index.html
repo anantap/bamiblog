@@ -33,11 +33,11 @@
             <input name="photo" type="file" accept="image/*" required />
           </label>
           <div class="cropper" id="cropper" hidden>
-            <canvas aria-label="Photo. Drag the box and its corners so it hugs the pack."></canvas>
+            <canvas tabindex="0" aria-label="Photo. Drag to move; pinch, scroll or press + and − to zoom."></canvas>
+            <div class="guide"></div>
           </div>
           <div class="crop-tools" id="crop-tools" hidden>
-            <canvas class="tile-preview" width="128" height="128" aria-label="Preview of the saved tile"></canvas>
-            <p class="hint">Drag the corners so the box hugs the pack or cup. The dashed square is your tile.</p>
+            <p class="hint">Drag and pinch until the pack touches the dashed square.</p>
             <button id="new-photo" type="button">New photo</button>
           </div>
         </div>

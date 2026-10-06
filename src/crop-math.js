@@ -1,43 +1,42 @@
-// Crop maths. A box is { x, y, w, h } in photo pixels, drawn tightly around the pack or cup.
-// The square tile is then derived from the box, so every noodle is framed the same way.
+// Crop state for a photo inside a square frame. Positions are in "view units":
+// the frame is 1×1, (x, y) is where the photo's top-left corner sits, and
+// `scale` converts photo pixels to view units. The photo always covers the frame.
 
-// Share of the tile that the box's long side fills.
-export const FILL = 0.84;
+const MAX_ZOOM = 5;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function initialBox({ width, height }) {
-  const w = width * 0.6;
-  const h = height * 0.6;
-  return { x: (width - w) / 2, y: (height - h) / 2, w, h };
+function fit(crop) {
+  const w = crop.width * crop.scale;
+  const h = crop.height * crop.scale;
+  return { ...crop, x: clamp(crop.x, 1 - w, 0), y: clamp(crop.y, 1 - h, 0) };
 }
 
-export function moveBox(box, dx, dy, photo) {
+export function initialCrop({ width, height }) {
+  const scale = 1 / Math.min(width, height);
+  return { width, height, zoom: 1, scale, x: (1 - width * scale) / 2, y: (1 - height * scale) / 2 };
+}
+
+export function pan(crop, dx, dy) {
+  return fit({ ...crop, x: crop.x + dx, y: crop.y + dy });
+}
+
+// Zooms to `zoom` (1× = photo just fills the frame) keeping view point (px, py) fixed.
+export function zoomAt(crop, zoom, px, py) {
+  const z = clamp(zoom, 1, MAX_ZOOM);
+  const scale = z / Math.min(crop.width, crop.height);
+  const imageX = (px - crop.x) / crop.scale;
+  const imageY = (py - crop.y) / crop.scale;
+  return fit({ ...crop, zoom: z, scale, x: px - imageX * scale, y: py - imageY * scale });
+}
+
+// The square of the original photo (in photo pixels) that is visible in the frame.
+export function sourceRect(crop) {
   return {
-    ...box,
-    x: clamp(box.x + dx, 0, photo.width - box.w),
-    y: clamp(box.y + dy, 0, photo.height - box.h),
+    sx: Math.round(-crop.x / crop.scale) + 0, // + 0 turns -0 into 0
+    sy: Math.round(-crop.y / crop.scale) + 0,
+    size: Math.round(1 / crop.scale),
   };
-}
-
-// Drags one corner ("nw", "ne", "sw" or "se"); the opposite corner stays put.
-export function resizeBox(box, corner, dx, dy, photo) {
-  const min = Math.min(photo.width, photo.height) * 0.05;
-  let { x, y } = box;
-  let right = box.x + box.w;
-  let bottom = box.y + box.h;
-  if (corner.includes("w")) x = clamp(x + dx, 0, right - min);
-  else right = clamp(right + dx, x + min, photo.width);
-  if (corner.includes("n")) y = clamp(y + dy, 0, bottom - min);
-  else bottom = clamp(bottom + dy, y + min, photo.height);
-  return { x, y, w: right - x, h: bottom - y };
-}
-
-// The square (in photo pixels) centred on the box, with the box's long side filling FILL of it.
-// It may reach past the photo's edges; the cropper fills that with the background colour.
-export function squareAround(box) {
-  const size = Math.max(box.w, box.h) / FILL;
-  return { sx: box.x + box.w / 2 - size / 2, sy: box.y + box.h / 2 - size / 2, size };
 }

@@ -8,9 +8,7 @@ const entryForm = document.getElementById("entry");
 const logout = document.getElementById("logout");
 const picker = document.getElementById("picker");
 const cropParts = ["cropper", "crop-tools"].map((id) => document.getElementById(id));
-const cropper = createCropper(document.querySelector("#cropper canvas"), {
-  preview: document.querySelector(".tile-preview"),
-});
+const cropper = createCropper(document.querySelector("#cropper canvas"));
 
 const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
 entryForm.country.append(
