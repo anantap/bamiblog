@@ -190,10 +190,33 @@ button {
 }
 
 
-.about form {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
+.about {
+  position: relative;
+  padding: 48px 24px;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.about p {
+  margin: 0;
+}
+
+.sheet .x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.sheet .x:hover {
+  color: var(--ink);
 }
 
 /* Add form */
