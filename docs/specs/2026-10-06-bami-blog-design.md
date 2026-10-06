@@ -1,6 +1,6 @@
 # bami.blog — design
 
-A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Inter, with the wobbly wordmark as logo and a `b.b` favicon.
+A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Instrument Sans SemiBold. The `b.b` mark sits top left on every page (and is the favicon); the full wobbly wordmark appears on the About page.
 
 ## Stack
 
@@ -37,7 +37,7 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 
 - `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DDMMYY`) above the photo, stars below. Tiles do not open; brand, flavour and flag live in the photo alt text. When logged in, each tile shows a × to delete it.
 - `/add` — phone-first form, login prompt if not logged in. The photo (library, camera or files) sits in a square frame under a fixed dashed guide at 84% of the tile. Move it by dragging; zoom by pinching (phone), trackpad pinch or scroll wheel (desktop), or + / − keys (arrows also move). Line the pack's long side (or a cup's rim) up with the guide; only the framed square is uploaded, at most 1200×1200.
-- `/about/` — full page, just "send noods" (also the empty-grid text), linking to a mailto with subject "noods"; the address is assembled in JS so it is not in the HTML.
+- `/about/` — full page: the bami.blog wordmark above "send noods" (also the empty-grid text), linking to a mailto with subject "noods"; the address is assembled in JS so it is not in the HTML.
 
 ## Out of scope
 
