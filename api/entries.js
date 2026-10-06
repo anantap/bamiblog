@@ -1,3 +1,4 @@
+import { nextNumber } from "../lib/numbering.js";
 import { decodePhoto } from "../lib/photo.js";
 import { isLoggedIn } from "../lib/session.js";
 import { store } from "../lib/store.js";
@@ -33,7 +34,7 @@ export default async function handler(req, res) {
       return;
     }
     const id = crypto.randomUUID();
-    const number = await store.nextNumber();
+    const number = nextNumber(await store.list());
     const photoUrl = await store.uploadPhoto(`${String(number).padStart(3, "0")}.${photo.ext}`, photo.bytes, photo.contentType);
     const saved = { id, number, photo: photoUrl, ...entry, createdAt: Date.now() };
     await store.save(saved);

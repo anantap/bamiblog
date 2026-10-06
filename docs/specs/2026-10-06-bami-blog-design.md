@@ -5,14 +5,14 @@ A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rock
 ## Stack
 
 - Plain Vite front-end (no framework), deployed on Vercel, domain `bami.blog`.
-- Vercel Blob for photos, Upstash Redis for entries (hash `bami:entries`, counter `bami:counter`).
+- Vercel Blob for photos, Upstash Redis for entries (hash `bami:entries`).
 - Without Redis/Blob credentials and outside Vercel, the API falls back to an in-memory store so `npm run dev` works end to end.
 
 ## Entry
 
 | field   | rules                                   |
 |---------|-----------------------------------------|
-| number  | assigned by the server, never reused    |
+| number  | assigned by the server: highest existing + 1 (empty log starts at 001) |
 | photo   | Blob URL                                |
 | brand   | required, ≤ 60 chars                    |
 | flavour | optional, ≤ 80 chars                    |
