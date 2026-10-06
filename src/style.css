@@ -179,9 +179,6 @@ button {
 
 .about-page p {
   margin: 0;
-  font-size: clamp(48px, 12vw, 160px);
-  font-weight: 200;
-  letter-spacing: -0.04em;
 }
 
 .nav .x {
@@ -257,20 +254,22 @@ button {
   cursor: wait;
 }
 
+.photo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .photo-picker {
   position: relative;
-  display: grid !important;
+  display: grid;
   place-items: center;
   aspect-ratio: 1;
   background: var(--card);
   cursor: pointer;
-  overflow: hidden;
-}
-
-.photo-picker img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 
 /* Visually hidden but still focusable, so the browser can point at it when it's missing. */
@@ -279,6 +278,60 @@ button {
   inset: auto 0 0;
   opacity: 0;
   height: 1px;
+}
+
+.cropper {
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.cropper canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.cropper canvas:active {
+  cursor: grabbing;
+}
+
+.guide {
+  position: absolute;
+  inset: 8%;
+  border: 1.5px dashed rgb(255 255 255 / 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);
+  pointer-events: none;
+}
+
+.crop-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crop-tools input {
+  flex: 1;
+  accent-color: var(--ink);
+}
+
+.crop-tools button {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .rating {

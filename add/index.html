@@ -27,11 +27,21 @@
       </form>
 
       <form id="entry" class="stack" hidden>
-        <label class="photo-picker">
-          <img id="preview" alt="" hidden />
-          <span id="photo-label">TAP TO ADD PHOTO</span>
-          <input name="photo" type="file" accept="image/*" capture="environment" required />
-        </label>
+        <div class="photo-field">
+          <label class="photo-picker" id="picker">
+            <span>TAP TO ADD PHOTO</span>
+            <input name="photo" type="file" accept="image/*" capture="environment" required />
+          </label>
+          <div class="cropper" id="cropper" hidden>
+            <canvas aria-label="Photo crop. Drag to move, pinch or scroll to zoom."></canvas>
+            <div class="guide"></div>
+          </div>
+          <div class="crop-tools" id="crop-tools" hidden>
+            <input id="zoom" type="range" min="1" max="5" step="0.01" value="1" aria-label="Zoom" />
+            <button id="new-photo" type="button">NEW PHOTO</button>
+          </div>
+          <p class="hint" id="crop-hint" hidden>Drag and zoom until the noodles sit in the circle.</p>
+        </div>
         <label>Brand <input name="brand" maxlength="60" required placeholder="Indomie" /></label>
         <label>Flavour <input name="flavour" maxlength="80" placeholder="Mi Goreng" /></label>
         <label>Country <select name="country"><option value="">—</option></select></label>

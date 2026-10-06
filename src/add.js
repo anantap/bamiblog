@@ -1,13 +1,17 @@
 import { COUNTRIES } from "../lib/countries.js";
 import { api, h } from "./dom.js";
 import { flag } from "./format.js";
-import { resizePhoto } from "./resize.js";
+import { createCropper } from "./cropper.js";
 
 const loginForm = document.getElementById("login");
 const entryForm = document.getElementById("entry");
 const logout = document.getElementById("logout");
-const preview = document.getElementById("preview");
-const photoLabel = document.getElementById("photo-label");
+const picker = document.getElementById("picker");
+const zoom = document.getElementById("zoom");
+const cropParts = ["cropper", "crop-tools", "crop-hint"].map((id) => document.getElementById(id));
+const cropper = createCropper(document.querySelector("#cropper canvas"), {
+  onZoom: (value) => (zoom.value = value),
+});
 
 const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
 entryForm.country.append(
@@ -56,13 +60,16 @@ logout.addEventListener("click", async () => {
   show(false);
 });
 
-entryForm.photo.addEventListener("change", () => {
+entryForm.photo.addEventListener("change", async () => {
   const file = entryForm.photo.files[0];
-  if (preview.src) URL.revokeObjectURL(preview.src);
-  preview.hidden = !file;
-  photoLabel.hidden = Boolean(file);
-  if (file) preview.src = URL.createObjectURL(file);
+  if (!file) return;
+  picker.hidden = true;
+  for (const part of cropParts) part.hidden = false;
+  await cropper.load(file);
 });
+
+zoom.addEventListener("input", () => cropper.setZoom(Number(zoom.value)));
+document.getElementById("new-photo").addEventListener("click", () => entryForm.photo.click());
 
 entryForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -71,7 +78,7 @@ entryForm.addEventListener("submit", async (event) => {
   setBusy(entryForm, true, "SAVING…");
   try {
     const fields = Object.fromEntries(new FormData(entryForm));
-    const photo = await resizePhoto(entryForm.photo.files[0]);
+    const photo = cropper.toDataURL();
     await api("/api/entries", { method: "POST", body: { ...fields, photo } });
     location.href = "/";
   } catch (err) {

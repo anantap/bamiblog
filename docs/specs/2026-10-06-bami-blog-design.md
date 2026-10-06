@@ -25,7 +25,7 @@ A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rock
 ## API
 
 - `GET /api/entries` — public, all entries.
-- `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (resized client-side to ≤ 1600px WebP/JPEG).
+- `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (square crop made client-side, ≤ 1200×1200 WebP/JPEG).
 - `DELETE /api/entries?id=…` — auth; removes the entry and its photo.
 - `GET /api/login` → `{ loggedIn }`; `POST /api/login` `{ password }` sets the cookie; `DELETE /api/login` logs out.
 
@@ -36,7 +36,8 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 ## Pages
 
 - `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DD/MM/YYYY`) above the photo, stars below. Tiles do not open; brand, flavour and flag live in the photo alt text. When logged in, each tile shows a × to delete it.
-- `/add` — phone-first form (camera input, fields, date defaults to today), login prompt if not logged in.
+- `/add` — phone-first form, login prompt if not logged in. After taking a photo you frame it in a square crop (drag, pinch/scroll or slider to zoom, circle guide); only that square is uploaded, at most 1200×1200.
+- `/about/` — full page, just "bami".
 
 ## Out of scope
 
