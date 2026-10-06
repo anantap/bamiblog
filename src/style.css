@@ -6,6 +6,7 @@
   --line: #e4e3de;
   --accent: #e54c2a;
   --gap: 12px;
+  --page: 1432px; /* 1400px of content plus 16px gutters */
   --font: "Instrument Sans", system-ui, -apple-system, sans-serif;
   color-scheme: light;
 }
@@ -50,6 +51,8 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  max-width: var(--page);
+  margin: 0 auto;
   padding: 16px;
 }
 
@@ -94,9 +97,18 @@ button {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px var(--gap);
+  max-width: var(--page);
+  margin: 0 auto;
   padding: 0 16px 48px;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px 16px;
+  }
 }
 
 .tile {
@@ -189,7 +201,8 @@ button {
 /* Add form */
 
 .form-page {
-  max-width: 440px;
+  max-width: var(--page);
+  margin: 0 auto;
   padding: 0 16px 48px;
 }
 
@@ -197,6 +210,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  max-width: 408px;
 }
 
 .stack > label,
