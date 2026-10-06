@@ -1,6 +1,6 @@
 # bami.blog — design
 
-A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Instrument Sans SemiBold. The `b.b` mark sits top left on the grid and add pages (and is the favicon); the About page has no header: its full wobbly wordmark links back to the grid. "about" (header) and "send noods" (About page, empty grid) are lettering built only from the logo's own shapes (`tools/lettering`, output in `public/lettering/`); "Log out" keeps a wobbly red outline (`button-border.svg`).
+A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Brutalist: one font, DM Mono (400 and 500, from Google Fonts), and no fades or transitions. The `b.b` mark sits top left on the grid and add pages (and is the favicon), with a plain-text "about" link bottom right in anthracite `#2E2E30`, so the logo is the only drawn shape in the header. The About page has no header: its full wobbly wordmark links back to the grid. "send noods" (About page, empty grid) is lettering built only from the logo's own shapes (`tools/lettering`, output in `public/lettering/`).
 
 ## Stack
 
@@ -24,10 +24,10 @@ A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rock
 
 ## API
 
-- `GET /api/entries` — public, all entries.
+- `GET /api/entries` — public, all entries; `rating` is left out unless logged in.
 - `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (square crop made client-side, ≤ 1200×1200 WebP/JPEG).
 - `DELETE /api/entries?id=…` — auth; removes the entry and its photo.
-- `GET /api/login` → `{ loggedIn }`; `POST /api/login` `{ password }` sets the cookie; `DELETE /api/login` logs out.
+- `GET /api/login` → `{ loggedIn }`; `POST /api/login` `{ password }` sets the cookie; `DELETE /api/login` logs out (no button for it on the site; clear the cookie or change `ADMIN_PASSWORD` instead).
 
 ## Auth
 
@@ -35,9 +35,9 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 
 ## Pages
 
-- `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DDMMYY`) above the photo, stars below. Tiles do not open; brand, flavour and flag live in the photo alt text. When logged in, each tile shows a × to delete it.
-- `/add` — phone-first form, login prompt if not logged in. The photo (library, camera or files) sits in a square frame under a fixed dashed guide at 84% of the tile. Move it by dragging; zoom by pinching (phone), trackpad pinch or scroll wheel (desktop), or + / − keys (arrows also move). Line the pack's long side (or a cup's rim) up with the guide; only the framed square is uploaded, at most 1200×1200.
-- `/about/` — full page: the bami.blog wordmark above "send noods" (also the empty-grid text), linking to a mailto with subject "noods"; the address is assembled in JS so it is not in the HTML.
+- `/` — logo, about, grid newest-first. Each tile: number and date (`DD.MM.YY`) above the photo, in DM Mono 400 anthracite. Ratings are never shown on the site; they are kept for a later yearly overview. Tiles do not open; brand, flavour and flag live in the photo alt text. When logged in, each tile shows a red "Delete" text link under the photo.
+- `/add` — phone-first form, login prompt if not logged in (no log-out button). The photo (library, camera or files) sits in a square frame under a fixed dashed guide at 84% of the tile. Move it by dragging; zoom by pinching (phone), trackpad pinch or scroll wheel (desktop), or + / − keys (arrows also move). Line the pack's long side (or a cup's rim) up with the guide; only the framed square is uploaded, at most 1200×1200.
+- `/about/` — full page: the bami.blog wordmark, a short text, then "send noods" (also the empty-grid text), linking to a mailto with subject "noods"; the address is assembled in JS so it is not in the HTML.
 
 ## Out of scope
 
