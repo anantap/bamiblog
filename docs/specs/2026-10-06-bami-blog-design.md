@@ -1,6 +1,6 @@
 # bami.blog — design
 
-A logbook of instant noodles, in the spirit of [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos grouped by date and place.
+A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Set in Inter, with the wobbly wordmark as logo and a `b.b` favicon.
 
 ## Stack
 
@@ -19,7 +19,7 @@ A logbook of instant noodles, in the spirit of [nice.rocks](https://nice.rocks/)
 | country | optional, ISO-3166 alpha-2 from list    |
 | rating  | required, integer 1–5                   |
 | note    | optional, ≤ 280 chars                   |
-| place   | optional, ≤ 80 chars                    |
+| place   | optional, ≤ 80 chars (no longer in the form or on the page) |
 | date    | required, `YYYY-MM-DD`, defaults today  |
 
 ## API
@@ -35,7 +35,7 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 
 ## Pages
 
-- `/` — logo, ABOUT, grid newest-first. Consecutive entries with the same date + place share a text card (`DD/MM/YYYY`, place). Caption: `🇮🇩 INDOMIE — MI GORENG · ★4`. Tap opens a dialog with the large photo and note; when logged in it has a delete button.
+- `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DD/MM/YYYY`) above the photo, stars below. Brand, flavour and flag only appear in the photo's alt text and in the dialog that opens on tap (large photo, note, delete button when logged in).
 - `/add` — phone-first form (camera input, fields, date defaults to today), login prompt if not logged in.
 
 ## Out of scope

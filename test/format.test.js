@@ -1,30 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { caption, flag, formatDate, groupEntries, padNumber } from "../src/format.js";
+import { flag, formatDate, padNumber, sortEntries, stars, title } from "../src/format.js";
 
-const e = (number, date, place = "") => ({ id: String(number), number, date, place });
+const e = (number, date) => ({ id: String(number), number, date });
 
-describe("groupEntries", () => {
-  it("sorts newest first and groups consecutive entries sharing date and place", () => {
-    const groups = groupEntries([
-      e(1, "2026-10-01", "Thuis"),
-      e(3, "2026-10-02", "Thuis"),
-      e(2, "2026-10-01", "Thuis"),
-      e(4, "2026-10-02", "Kantoor"),
-    ]);
-    expect(groups.map((g) => [g.date, g.place, g.entries.map((x) => x.number)])).toEqual([
-      ["2026-10-02", "Kantoor", [4]],
-      ["2026-10-02", "Thuis", [3]],
-      ["2026-10-01", "Thuis", [2, 1]],
-    ]);
+describe("sortEntries", () => {
+  it("sorts by date, newest first, then by number", () => {
+    const sorted = sortEntries([e(1, "2026-10-01"), e(3, "2026-10-02"), e(2, "2026-10-01"), e(4, "2026-09-30")]);
+    expect(sorted.map((x) => x.number)).toEqual([3, 2, 1, 4]);
   });
 
-  it("returns nothing for no entries", () => {
-    expect(groupEntries([])).toEqual([]);
+  it("does not mutate its input", () => {
+    const input = [e(1, "2026-10-01"), e(2, "2026-10-02")];
+    sortEntries(input);
+    expect(input.map((x) => x.number)).toEqual([1, 2]);
   });
 });
 
 describe("formatting", () => {
-  it("formats dates like nice.rocks", () => {
+  it("formats dates as DD/MM/YYYY", () => {
     expect(formatDate("2026-10-06")).toBe("06/10/2026");
   });
 
@@ -38,10 +31,13 @@ describe("formatting", () => {
     expect(flag("")).toBe("");
   });
 
-  it("builds the caption", () => {
-    expect(caption({ brand: "Indomie", flavour: "Mi Goreng", country: "ID", rating: 4 })).toBe(
-      "🇮🇩 INDOMIE — MI GORENG · ★4"
-    );
-    expect(caption({ brand: "Nissin", flavour: "", country: "", rating: 2 })).toBe("NISSIN · ★2");
+  it("splits a rating into filled and empty stars", () => {
+    expect(stars(4)).toEqual({ on: "★★★★", off: "★" });
+    expect(stars(5)).toEqual({ on: "★★★★★", off: "" });
+  });
+
+  it("builds a title from flag, brand and flavour", () => {
+    expect(title({ brand: "Indomie", flavour: "Mi Goreng", country: "ID" })).toBe("🇮🇩 Indomie — Mi Goreng");
+    expect(title({ brand: "Nissin", flavour: "", country: "" })).toBe("Nissin");
   });
 });

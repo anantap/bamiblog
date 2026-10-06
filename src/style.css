@@ -6,7 +6,7 @@
   --line: #e4e3de;
   --accent: #e54c2a;
   --gap: 12px;
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --font: "Inter", system-ui, -apple-system, sans-serif;
   color-scheme: light;
 }
 
@@ -18,7 +18,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 13px/1.45 var(--mono);
+  font: 14px/1.45 var(--font);
+  font-feature-settings: "tnum", "cv11";
   -webkit-text-size-adjust: 100%;
 }
 
@@ -81,8 +82,9 @@ button {
   border: 1px solid var(--line);
   background: var(--bg);
   padding: 6px 10px;
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-decoration: none;
 }
 
@@ -124,32 +126,29 @@ button {
   opacity: 0.85;
 }
 
-.number {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.caption {
-  font-size: 11px;
-  font-weight: 500;
-  overflow-wrap: anywhere;
-}
-
-.date-card {
+.tile-head {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-self: start;
-  aspect-ratio: 1;
-  margin-top: 22px; /* lines up with the photos, below their number */
-  padding: 10px;
-  background: var(--card);
-  color: var(--muted);
+  justify-content: space-between;
+  gap: 8px;
   font-size: 12px;
 }
 
-.date-card span:first-child {
-  color: var(--ink);
+.number {
+  font-weight: 600;
+}
+
+.date {
+  color: var(--muted);
+}
+
+.stars {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.stars .off {
+  color: var(--line);
 }
 
 .empty {
@@ -190,8 +189,8 @@ button {
   margin: 10px 0 !important;
 }
 
-.meta {
-  color: var(--muted);
+.title {
+  font-weight: 600;
 }
 
 .actions {

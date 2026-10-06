@@ -1,5 +1,5 @@
 import { api, h } from "./dom.js";
-import { caption, formatDate, groupEntries, padNumber } from "./format.js";
+import { formatDate, padNumber, sortEntries, stars, title } from "./format.js";
 
 const grid = document.getElementById("grid");
 const detail = document.getElementById("detail");
@@ -16,22 +16,23 @@ for (const dialog of [detail, about]) {
   });
 }
 
+function starLine(rating) {
+  const { on, off } = stars(rating);
+  return h("span", { class: "stars", "aria-label": `${rating} out of 5` }, on, h("span", { class: "off" }, off));
+}
+
 function tile(entry) {
   return h(
     "button",
     { class: "tile", type: "button", onclick: () => openDetail(entry) },
-    h("span", { class: "number" }, padNumber(entry.number)),
-    h("img", { src: entry.photo, alt: caption(entry), loading: "lazy", decoding: "async" }),
-    h("span", { class: "caption" }, caption(entry))
-  );
-}
-
-function dateCard(group) {
-  return h(
-    "div",
-    { class: "date-card" },
-    h("span", {}, formatDate(group.date)),
-    group.place && h("span", {}, group.place)
+    h(
+      "span",
+      { class: "tile-head" },
+      h("span", { class: "number" }, padNumber(entry.number)),
+      h("span", { class: "date" }, formatDate(entry.date))
+    ),
+    h("img", { src: entry.photo, alt: title(entry), loading: "lazy", decoding: "async" }),
+    starLine(entry.rating)
   );
 }
 
@@ -41,7 +42,7 @@ function render() {
     grid.replaceChildren(h("p", { class: "empty" }, "No noodles yet."));
     return;
   }
-  grid.replaceChildren(...groupEntries(entries).flatMap((group) => [dateCard(group), ...group.entries.map(tile)]));
+  grid.replaceChildren(...sortEntries(entries).map(tile));
 }
 
 function openDetail(entry) {
@@ -58,11 +59,16 @@ function openDetail(entry) {
   };
 
   detail.replaceChildren(
-    h("img", { class: "detail-photo", src: entry.photo, alt: caption(entry) }),
-    h("p", { class: "number" }, padNumber(entry.number)),
-    h("p", { class: "caption" }, caption(entry)),
+    h("img", { class: "detail-photo", src: entry.photo, alt: title(entry) }),
+    h(
+      "p",
+      { class: "tile-head" },
+      h("span", { class: "number" }, padNumber(entry.number)),
+      h("span", { class: "date" }, formatDate(entry.date))
+    ),
+    h("p", { class: "title" }, title(entry)),
+    starLine(entry.rating),
     entry.note && h("p", { class: "note" }, entry.note),
-    h("p", { class: "meta" }, [formatDate(entry.date), entry.place].filter(Boolean).join(" · ")),
     h(
       "div",
       { class: "actions" },

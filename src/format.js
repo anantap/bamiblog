@@ -1,16 +1,6 @@
-// Newest first; consecutive entries with the same date and place share one group.
-export function groupEntries(entries) {
-  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number);
-  const groups = [];
-  for (const entry of sorted) {
-    const last = groups[groups.length - 1];
-    if (last && last.date === entry.date && last.place === entry.place) {
-      last.entries.push(entry);
-    } else {
-      groups.push({ date: entry.date, place: entry.place, entries: [entry] });
-    }
-  }
-  return groups;
+// Newest first; entries from the same day by number, highest first.
+export function sortEntries(entries) {
+  return [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number);
 }
 
 export function formatDate(iso) {
@@ -27,7 +17,11 @@ export function flag(code) {
   return [...code.toUpperCase()].map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65)).join("");
 }
 
-export function caption({ brand, flavour, country, rating }) {
-  const name = [brand, flavour].filter(Boolean).join(" — ").toUpperCase();
-  return [flag(country), name].filter(Boolean).join(" ") + ` · ★${rating}`;
+export function stars(rating) {
+  return { on: "★".repeat(rating), off: "★".repeat(5 - rating) };
+}
+
+export function title({ brand, flavour, country }) {
+  const name = [brand, flavour].filter(Boolean).join(" — ");
+  return [flag(country), name].filter(Boolean).join(" ");
 }
