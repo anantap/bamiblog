@@ -290,6 +290,20 @@ a.lettering.lettering-link:focus-visible {
   letter-spacing: 0;
 }
 
+/* iOS Safari gives date fields a built-in minimum width and centred text, so they overflow the form. */
+.stack input[type="date"] {
+  display: block;
+  min-width: 0;
+  height: calc(1.45em + 22px); /* same height as the other fields */
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+
+.stack input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 .stack ::placeholder {
   color: #c4c3bd;
 }
