@@ -1,10 +1,5 @@
 """An alphabet built only from the bami.blog logo's own shapes. Logo coordinates; baseline ≈ y 124."""
-import re
-from pathlib import Path
-LOGO = Path(__file__).resolve().parents[2] / "public" / "logo.svg"
-_d = re.search(r' d="([^"]+)"', open(LOGO).read()).group(1)
-SUB = ["M" + s for s in _d.split("M")[1:]]
-# 0 g, 13 g-hole · 1 m · 2 a, 9 a-hole · 3 o, 12 o-hole · 4 dot · 5 l · 6 i-stem, 14 i-dot · 7 b2, 11 b2-hole · 8 b1, 10 b1-hole
+from source import SUB
 RED = "#e54c2a"
 OCX, OCY = 281.7, 84      # centre of the o
 STEM = (165, 88.5)        # centre of the i-stem (≈24 wide, 67 tall)
@@ -25,7 +20,21 @@ DEFS = ('<clipPath id="gtail" clipPathUnits="userSpaceOnUse"><rect x="280" y="11
 def _n():
     # the logo's m, outline edited: top notch smoothed into one arch, counter spike into a round counter
     from outline import n_outline
-    return f'<path d="{n_outline(counter=(114, 141.5, 70, 90), counter_apex=66, top_apex=44)}"/>'
+    return f'<path d="{n_outline()}"/>'
+
+def _outline(name):
+    import outline
+    return f'<path d="{getattr(outline, name)()}"/>'
+
+TAIL_TOP = (346, 118)     # where the g's tail leaves the bowl
+
+def _tail(to, k=1.0):
+    """The g's tail hung from point `to` (its thin top end)."""
+    return piece((0,), sx=k, sy=k, to=to, about=TAIL_TOP, clip="gtail")
+
+def _stem(cx, cy, rot=0, sx=1.0, sy=1.0):
+    """The i's stem (thin top, blobby bottom) centred on (cx, cy)."""
+    return piece((6,), sx=sx, sy=sy, rot=rot, to=(cx, cy), about=STEM)
 
 def _s():
     k = 0.62
@@ -45,6 +54,27 @@ GLYPHS = {
     "u": (f'<g transform="rotate(180 125.5 89)">{_n()}</g>', 94.4, 156.5),                        # n, upside down
     "t": (piece((5,), sy=0.8, to=(253, 124), about=(253, 124)) + piece((6,), sx=0.55, sy=0.55, rot=90, to=(252, 60), about=STEM), 234.5, 271.0),
     "s": (_s(), 10, 50),
+    # straight from the logo
+    "g": (f'<path d="{P(0, 13)}"/>', 289.0, 355.0),
+    "i": (f'<path d="{P(6, 14)}"/>', 151.0, 177.5),
+    "l": (f'<path d="{P(5)}"/>', 236.0, 270.0),
+    "m": (f'<path d="{P(1)}"/>', 94.5, 156.6),
+    # flipped / turned
+    "p": (f'<path transform="translate(0 190) scale(1 -1)" d="{P(8, 10)}"/>', 5.2, 56.4),                  # b, flipped
+    "q": (f'<path transform="translate(61.6 190) scale(-1 -1)" d="{P(8, 10)}"/>', 5.2, 56.4),              # b, turned
+    "w": (f'<g transform="rotate(180 125.5 89)"><path d="{P(1)}"/></g>', 94.4, 156.5),                     # m, upside down
+    # combined
+    "h": (_n() + piece((5,), to=(108, 130), about=(250, 124)), 94.5, 156.6),                               # n + l
+    "f": (f'<path transform="translate(506 0) scale(-1 1)" d="{P(5)}"/>' + _stem(250, 64, rot=90, sx=0.55, sy=0.6), 233.0, 272.0),  # mirrored l + bar
+    "j": (f'<path d="{P(6, 14)}"/>' + _tail((168, 110), 0.8), 127.0, 177.5),                               # i + g-tail
+    "k": (f'<path d="{P(5)}"/>' + _stem(276, 74, rot=42, sx=0.7, sy=0.6) + _stem(279, 104, rot=-36, sx=0.75, sy=0.6), 236.0, 300.0),
+    "v": (_stem(14, 86, rot=-20, sx=0.9) + _stem(38, 86, rot=20, sx=0.9), 0.0, 52.0),
+    "x": (_stem(26, 88, rot=34, sx=0.85, sy=1.05) + _stem(26, 88, rot=-34, sx=0.85, sy=1.05), 0.0, 52.0),
+    "y": (f'<g transform="rotate(180 125.5 89)">{_n()}</g>' + _tail((153, 108), 0.85), 94.4, 157.0),       # u + g-tail
+    "z": (_stem(25, 62, rot=90, sx=0.6, sy=0.7) + _stem(25, 117, rot=-90, sx=0.6, sy=0.7) + _stem(25, 90, rot=50, sx=0.6, sy=0.85), 0.0, 50.0),
+    # edited outlines
+    "c": (_outline("c_outline"), 257.4, 300.0),
+    "r": (_outline("r_outline"), 94.5, 140.0),
 }
 
 def word_svg(text, gap=2.0, space=24):

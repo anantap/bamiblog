@@ -2,7 +2,7 @@
 
     python3 tools/lettering/build.py "send noods" public/lettering/send-noods.svg
 
-Available letters: a b d e n o s t u (and space). New letters have to be built in glyphs.py.
+Available letters: a–z and space. Each one is made only from the logo: see glyphs.py.
 """
 import sys
 from pathlib import Path

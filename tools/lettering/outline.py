@@ -1,6 +1,6 @@
 """Point-level edits to logo outlines (used to turn the logo's m into an n)."""
 import re, math
-from glyphs import SUB
+from source import SUB
 
 def flatten(d, steps=12):
     toks = re.findall(r"[MLCZ]|-?\d+\.?\d*", d)
@@ -44,11 +44,39 @@ def smooth(pts, passes=2):
         n = len(pts); pts = [((pts[i - 1][0] + 2 * pts[i][0] + pts[(i + 1) % n][0]) / 4, (pts[i - 1][1] + 2 * pts[i][1] + pts[(i + 1) % n][1]) / 4) for i in range(n)]
     return pts
 
-def n_outline(notch=(110, 142, 70), counter=(112, 139, 70, 100), top_apex=44, counter_apex=74):
+def to_path(pts):
+    return "M" + " L".join(f"{x:.2f} {y:.2f}" for x, y in pts) + "Z"
+
+def n_points(notch=(110, 142, 70), counter=(114, 141.5, 70, 90), top_apex=44, counter_apex=66):
     pts = flatten(SUB[1])
     x0, x1, ymax = notch
     pts = replace_run(pts, lambda p: x0 < p[0] < x1 and p[1] < ymax, lambda s, e: arc(s, e, top_apex))
     cx0, cx1, cy0, cy1 = counter
     pts = replace_run(pts, lambda p: cx0 < p[0] < cx1 and cy0 < p[1] < cy1, lambda s, e: arc(s, e, counter_apex))
-    pts = smooth(pts)
-    return "M" + " L".join(f"{x:.2f} {y:.2f}" for x, y in pts) + "Z"
+    return smooth(pts)
+
+def n_outline(**kw):
+    return to_path(n_points(**kw))
+
+def cap(start, end, bulge, n=16):
+    """Round end between two points, bulging `bulge` units to the right of start→end."""
+    mx, my = (start[0] + end[0]) / 2, (start[1] + end[1]) / 2
+    dx, dy = end[0] - start[0], end[1] - start[1]; L = math.hypot(dx, dy) or 1
+    nx, ny = dy / L, -dx / L
+    return [(start[0] + dx * k / n + nx * bulge * math.sin(math.pi * k / n),
+             start[1] + dy * k / n + ny * bulge * math.sin(math.pi * k / n)) for k in range(1, n)]
+
+def r_outline():
+    """The n without its right leg: the arch ends in a round drop."""
+    pts = n_points()
+    pts = replace_run(pts, lambda p: p[0] > 133 and p[1] > 84, lambda s, e: cap(s, e, 9))
+    return to_path(smooth(pts, 3))
+
+def c_outline(opening=55):
+    """The o, opened on the right: outer and inner contours joined by round ends."""
+    cx, cy = 281.7, 82
+    ang = lambda p: math.degrees(math.atan2(p[1] - cy, p[0] - cx)) % 360
+    keep = lambda pts: sorted([p for p in pts if opening < ang(p) < 360 - opening], key=ang)
+    outer, inner = keep(flatten(SUB[3])), keep(flatten(SUB[12]))
+    pts = outer + cap(outer[-1], inner[-1], 6) + inner[::-1] + cap(inner[0], outer[0], 6)
+    return to_path(smooth(pts, 3))
