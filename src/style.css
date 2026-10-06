@@ -4,7 +4,7 @@
   --muted: #8a8a85;
   --card: #f4f3ef;
   --line: #e4e3de;
-  --accent: #d9542b;
+  --accent: #e54c2a;
   --gap: 12px;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   color-scheme: light;
@@ -53,12 +53,20 @@ button {
 }
 
 .logo {
-  font-family: "Silkscreen", var(--mono);
-  font-weight: 700;
-  font-size: 26px;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-decoration: none;
+  display: block;
+  flex-shrink: 0;
+}
+
+.logo img {
+  display: block;
+  width: auto;
+  height: 64px;
+}
+
+@media (max-width: 480px) {
+  .logo img {
+    height: 48px;
+  }
 }
 
 .nav {
