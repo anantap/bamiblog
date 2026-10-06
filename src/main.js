@@ -1,8 +1,8 @@
 import { api, h } from "./dom.js";
 import { formatDate, padNumber, sortEntries, stars, title } from "./format.js";
+import { SEND_NOODS } from "./send-noods.js";
 
 const grid = document.getElementById("grid");
-const SEND_NOODS = "mailto:anantadotwork@gmail.com";
 let loggedIn = false;
 let entries = [];
 

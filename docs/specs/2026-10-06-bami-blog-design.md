@@ -36,8 +36,8 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 ## Pages
 
 - `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DD/MM/YYYY`) above the photo, stars below. Tiles do not open; brand, flavour and flag live in the photo alt text. When logged in, each tile shows a × to delete it.
-- `/add` — phone-first form, login prompt if not logged in. After taking a photo you frame it in a square crop (drag, pinch/scroll or slider to zoom, pack-shaped rectangular guide); only that square is uploaded, at most 1200×1200.
-- `/about/` — full page, just "send noods" (also the empty-grid text).
+- `/add` — phone-first form, login prompt if not logged in. After taking a photo you drag and resize a box (by its corners) to hug the pack or cup. The tile is the square centred on that box with the box's long side filling 84%, so every noodle is framed alike; areas past the photo's edge get the light background colour. A dashed square and a small preview show the result. Max 1200×1200.
+- `/about/` — full page, just "send noods" (also the empty-grid text), linking to a mailto with subject "noods"; the address is assembled in JS so it is not in the HTML.
 
 ## Out of scope
 

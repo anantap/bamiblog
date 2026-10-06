@@ -33,15 +33,13 @@
             <input name="photo" type="file" accept="image/*" capture="environment" required />
           </label>
           <div class="cropper" id="cropper" hidden>
-            <canvas aria-label="Photo crop. Drag to move, pinch or scroll to zoom."></canvas>
-            <div class="guide"></div>
+            <canvas aria-label="Photo. Drag the box and its corners so it hugs the pack."></canvas>
           </div>
           <div class="crop-tools" id="crop-tools" hidden>
-            <input id="zoom" type="range" min="1" max="5" step="0.01" value="1" aria-label="Zoom" />
-            <button id="guide-shape" type="button" aria-pressed="false">Cup</button>
+            <canvas class="tile-preview" width="128" height="128" aria-label="Preview of the saved tile"></canvas>
+            <p class="hint">Drag the corners so the box hugs the pack or cup. The dashed square is your tile.</p>
             <button id="new-photo" type="button">New photo</button>
           </div>
-          <p class="hint" id="crop-hint" hidden>Drag and zoom until the pack fills the frame — or switch to Cup for a cup shot from above.</p>
         </div>
         <label>Brand <input name="brand" maxlength="60" required placeholder="Indomie" /></label>
         <label>Flavour <input name="flavour" maxlength="80" placeholder="Mi Goreng" /></label>

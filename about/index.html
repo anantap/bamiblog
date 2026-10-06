@@ -20,7 +20,12 @@
     </header>
 
     <main class="about-page">
-      <p><a href="mailto:anantadotwork@gmail.com">send noods</a></p>
+      <p><a href="#" data-send-noods>send noods</a></p>
     </main>
+
+    <script type="module">
+      import { linkSendNoods } from "/src/send-noods.js";
+      linkSendNoods();
+    </script>
   </body>
 </html>

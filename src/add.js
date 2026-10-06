@@ -7,10 +7,9 @@ const loginForm = document.getElementById("login");
 const entryForm = document.getElementById("entry");
 const logout = document.getElementById("logout");
 const picker = document.getElementById("picker");
-const zoom = document.getElementById("zoom");
-const cropParts = ["cropper", "crop-tools", "crop-hint"].map((id) => document.getElementById(id));
+const cropParts = ["cropper", "crop-tools"].map((id) => document.getElementById(id));
 const cropper = createCropper(document.querySelector("#cropper canvas"), {
-  onZoom: (value) => (zoom.value = value),
+  preview: document.querySelector(".tile-preview"),
 });
 
 const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
@@ -68,16 +67,7 @@ entryForm.photo.addEventListener("change", async () => {
   await cropper.load(file);
 });
 
-zoom.addEventListener("input", () => cropper.setZoom(Number(zoom.value)));
 document.getElementById("new-photo").addEventListener("click", () => entryForm.photo.click());
-
-const guide = document.querySelector("#cropper .guide");
-const guideShape = document.getElementById("guide-shape");
-guideShape.addEventListener("click", () => {
-  const cup = guide.classList.toggle("cup");
-  guideShape.textContent = cup ? "Pack" : "Cup";
-  guideShape.setAttribute("aria-pressed", String(cup));
-});
 
 entryForm.addEventListener("submit", async (event) => {
   event.preventDefault();

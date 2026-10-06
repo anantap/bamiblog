@@ -1,65 +1,57 @@
 import { describe, expect, it } from "vitest";
-import { initialCrop, pan, sourceRect, zoomAt } from "../src/crop-math.js";
+import { FILL, initialBox, moveBox, resizeBox, squareAround } from "../src/crop-math.js";
 
-// All positions are in "view units": the square crop frame is 1×1.
-const landscape = { width: 3000, height: 2000 };
-const portrait = { width: 2000, height: 3000 };
+// Boxes are in photo pixels.
+const photo = { width: 3000, height: 2000 };
 
-describe("initialCrop", () => {
-  it("fills the frame and centres a landscape photo", () => {
-    const c = initialCrop(landscape);
-    expect(c.scale).toBeCloseTo(1 / 2000);
-    expect(c.x).toBeCloseTo(-0.25); // 1.5 wide, centred
-    expect(c.y).toBeCloseTo(0);
-  });
-
-  it("fills the frame and centres a portrait photo", () => {
-    const c = initialCrop(portrait);
-    expect(c.x).toBeCloseTo(0);
-    expect(c.y).toBeCloseTo(-0.25);
+describe("initialBox", () => {
+  it("starts centred at 60% of the photo", () => {
+    expect(initialBox(photo)).toEqual({ x: 600, y: 400, w: 1800, h: 1200 });
   });
 });
 
-describe("pan", () => {
-  it("moves the photo", () => {
-    const c = pan(initialCrop(landscape), 0.1, 0);
-    expect(c.x).toBeCloseTo(-0.15);
+describe("moveBox", () => {
+  it("moves the box", () => {
+    expect(moveBox({ x: 100, y: 100, w: 500, h: 300 }, 50, -20, photo)).toEqual({ x: 150, y: 80, w: 500, h: 300 });
   });
 
-  it("never reveals an edge of the frame", () => {
-    const c = pan(initialCrop(landscape), 5, 5);
-    expect(c.x).toBeCloseTo(0);
-    expect(c.y).toBeCloseTo(0);
-    const d = pan(initialCrop(landscape), -5, -5);
-    expect(d.x).toBeCloseTo(-0.5);
-    expect(d.y).toBeCloseTo(0);
+  it("keeps the box inside the photo", () => {
+    expect(moveBox({ x: 100, y: 100, w: 500, h: 300 }, -999, 9999, photo)).toEqual({ x: 0, y: 1700, w: 500, h: 300 });
   });
 });
 
-describe("zoomAt", () => {
-  it("keeps the point under the finger in place", () => {
-    const before = initialCrop(landscape);
-    const after = zoomAt(before, 2, 0.5, 0.5);
-    const imageX = (0.5 - before.x) / before.scale;
-    expect(after.x + imageX * after.scale).toBeCloseTo(0.5);
-    expect(after.zoom).toBe(2);
+describe("resizeBox", () => {
+  const box = { x: 1000, y: 500, w: 1000, h: 800 };
+
+  it("drags the bottom-right corner", () => {
+    expect(resizeBox(box, "se", 200, -100, photo)).toEqual({ x: 1000, y: 500, w: 1200, h: 700 });
   });
 
-  it("clamps zoom between 1× and 5×", () => {
-    expect(zoomAt(initialCrop(landscape), 0.2, 0.5, 0.5).zoom).toBe(1);
-    expect(zoomAt(initialCrop(landscape), 50, 0.5, 0.5).zoom).toBe(5);
+  it("drags the top-left corner, keeping the opposite corner fixed", () => {
+    expect(resizeBox(box, "nw", -100, 100, photo)).toEqual({ x: 900, y: 600, w: 1100, h: 700 });
+  });
+
+  it("stops at the photo's edges", () => {
+    expect(resizeBox(box, "ne", 9999, -9999, photo)).toEqual({ x: 1000, y: 0, w: 2000, h: 1300 });
+  });
+
+  it("never gets smaller than 5% of the photo's short side", () => {
+    const r = resizeBox(box, "se", -9999, -9999, photo);
+    expect(r.w).toBe(100);
+    expect(r.h).toBe(100);
   });
 });
 
-describe("sourceRect", () => {
-  it("returns the square of the original photo inside the frame", () => {
-    expect(sourceRect(initialCrop(landscape))).toEqual({ sx: 500, sy: 0, size: 2000 });
+describe("squareAround", () => {
+  it("centres the box in a square where its long side fills 84%", () => {
+    const s = squareAround({ x: 1000, y: 600, w: 840, h: 420 });
+    expect(FILL).toBe(0.84);
+    expect(s.size).toBeCloseTo(1000);
+    expect(s.sx).toBeCloseTo(920);
+    expect(s.sy).toBeCloseTo(310);
   });
 
-  it("shrinks when zoomed in", () => {
-    const r = sourceRect(zoomAt(initialCrop(landscape), 2, 0.5, 0.5));
-    expect(r.size).toBe(1000);
-    expect(r.sx).toBe(1000);
-    expect(r.sy).toBe(500);
+  it("uses the taller side for portrait boxes", () => {
+    expect(squareAround({ x: 0, y: 0, w: 210, h: 420 }).size).toBeCloseTo(500);
   });
 });
