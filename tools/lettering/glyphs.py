@@ -44,6 +44,13 @@ def _s():
     return low + top + spine
 
 # name: (svg, left, right) — left/right edges in the glyph's own coordinates
+def _arrow(spread=40, arm=0.85, shaft=1.2):
+    import math
+    dx, dy = 33 * arm * math.sin(math.radians(spread)), 33 * arm * math.cos(math.radians(spread))
+    head = (f'<g transform="rotate(-90 26 88)">{_stem(26 - dx, 119 - dy, rot=-spread, sx=0.9, sy=arm)}'
+            f'{_stem(26 + dx, 119 - dy, rot=spread, sx=0.9, sy=arm)}</g>')   # tip at (57, 88)
+    return f'<g transform="translate(34 0)">{_stem(57 - 33 * shaft - 4, 88, rot=90, sx=0.6, sy=shaft)}{head}</g>'
+
 GLYPHS = {
     "a": (f'<path d="{P(2, 9)}"/>', 53.5, 102.3),
     "b": (f'<path d="{P(8, 10)}"/>', 5.2, 56.4),
@@ -72,6 +79,8 @@ GLYPHS = {
     "x": (_stem(26, 88, rot=34, sx=0.85, sy=1.05) + _stem(26, 88, rot=-34, sx=0.85, sy=1.05), 0.0, 52.0),
     "y": (f'<g transform="rotate(180 125.5 89)">{_n()}</g>' + _tail((153, 108), 0.85), 94.4, 157.0),       # u + g-tail
     "z": (_stem(25, 62, rot=90, sx=0.6, sy=0.7) + _stem(25, 117, rot=-90, sx=0.6, sy=0.7) + _stem(25, 90, rot=50, sx=0.6, sy=0.85), 0.0, 50.0),
+    # arrow: two i-stems meeting in their blobby ends as the head, one laid flat as the shaft
+    "→": (_arrow(), 0.0, 95.0),
     # edited outlines
     "c": (_outline("c_outline"), 257.4, 300.0),
     "r": (_outline("r_outline"), 94.5, 140.0),

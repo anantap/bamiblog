@@ -235,21 +235,21 @@ button {
 }
 
 .nav .lettering img {
-  height: 40px;
+  height: 28px;
 }
 
 @media (max-width: 480px) {
   .nav .lettering img {
-    height: 32px;
+    height: 24px;
   }
 }
 
 .about-page .lettering img {
-  height: 44px;
+  height: 30px;
 }
 
 .empty .lettering img {
-  height: 36px;
+  height: 26px;
 }
 
 .nav .x {
