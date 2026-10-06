@@ -35,7 +35,7 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 
 ## Pages
 
-- `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DD/MM/YYYY`) above the photo, stars below. Brand, flavour and flag only appear in the photo's alt text and in the dialog that opens on tap (large photo, note, delete button when logged in).
+- `/` — logo, ABOUT, grid newest-first. Each tile: number and date (`DD/MM/YYYY`) above the photo, stars below. Tiles do not open; brand, flavour and flag live in the photo alt text. When logged in, each tile shows a × to delete it.
 - `/add` — phone-first form (camera input, fields, date defaults to today), login prompt if not logged in.
 
 ## Out of scope
