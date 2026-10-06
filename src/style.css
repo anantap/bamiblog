@@ -8,6 +8,8 @@
   --gap: 12px;
   --page: 1432px; /* 1400px of content plus 16px gutters */
   --font: "Instrument Sans", system-ui, -apple-system, sans-serif;
+  --mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace; /* tile number and date only */
+  --anthracite: #2e2e30;
   color-scheme: light;
 }
 
@@ -161,14 +163,8 @@ button {
   justify-content: space-between;
   align-items: baseline;
   gap: 8px;
-  font-size: 13px;
-}
-
-.number {
-}
-
-.date {
-  color: var(--muted);
+  font: 400 13px/1.45 var(--mono);
+  color: var(--anthracite);
 }
 
 .stars {
