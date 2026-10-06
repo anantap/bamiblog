@@ -1,0 +1,338 @@
+:root {
+  --bg: #ffffff;
+  --ink: #1d1d1b;
+  --muted: #8a8a85;
+  --card: #f4f3ef;
+  --line: #e4e3de;
+  --accent: #d9542b;
+  --gap: 12px;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 13px/1.45 var(--mono);
+  -webkit-text-size-adjust: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Header */
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+}
+
+.logo {
+  font-family: "Silkscreen", var(--mono);
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav a,
+.nav button,
+.sheet button,
+.stack button[type="submit"] {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  padding: 6px 10px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.nav a:hover,
+.nav button:hover,
+.sheet button:hover {
+  border-color: var(--ink);
+}
+
+/* Grid */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px var(--gap);
+  padding: 0 16px 48px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.tile img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--card);
+  transition: opacity 0.15s;
+}
+
+.tile:hover img,
+.tile:focus-visible img {
+  opacity: 0.85;
+}
+
+.number {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.caption {
+  font-size: 11px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-self: start;
+  aspect-ratio: 1;
+  margin-top: 22px; /* lines up with the photos, below their number */
+  padding: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.date-card span:first-child {
+  color: var(--ink);
+}
+
+.empty {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+
+/* Dialogs */
+
+.sheet {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 16px;
+  border: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.sheet::backdrop {
+  background: rgb(255 255 255 / 0.9);
+}
+
+.sheet p {
+  margin: 0 0 6px;
+}
+
+.detail-photo {
+  display: block;
+  width: 100%;
+  max-height: 65dvh;
+  object-fit: contain;
+  margin-bottom: 12px;
+  background: var(--card);
+}
+
+.note {
+  font-size: 14px;
+  margin: 10px 0 !important;
+}
+
+.meta {
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sheet .delete {
+  color: var(--accent);
+  margin-right: auto;
+}
+
+.about form {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* Add form */
+
+.form-page {
+  max-width: 440px;
+  padding: 0 16px 48px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stack > label,
+.rating legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stack input:not([type="radio"]):not([type="file"]),
+.stack select,
+.stack textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg);
+  font-size: 16px; /* stops iOS zooming in on focus */
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.stack ::placeholder {
+  color: #c4c3bd;
+}
+
+.stack input:focus,
+.stack select:focus,
+.stack textarea:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.stack button[type="submit"] {
+  padding: 14px;
+  font-size: 13px;
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.stack button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.photo-picker {
+  position: relative;
+  display: grid !important;
+  place-items: center;
+  aspect-ratio: 1;
+  background: var(--card);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.photo-picker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Visually hidden but still focusable, so the browser can point at it when it's missing. */
+.photo-picker input {
+  position: absolute;
+  inset: auto 0 0;
+  opacity: 0;
+  height: 1px;
+}
+
+.rating {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rating legend {
+  margin-bottom: 4px;
+}
+
+.rating label {
+  flex: 1;
+  position: relative;
+}
+
+.rating input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+}
+
+.rating span {
+  display: block;
+  padding: 10px 0;
+  border: 1px solid var(--line);
+  text-align: center;
+  font-size: 16px;
+}
+
+.rating input:checked + span {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.rating input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.error {
+  margin: 0;
+  color: var(--accent);
+  min-height: 1em;
+}
