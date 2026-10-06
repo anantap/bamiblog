@@ -17,8 +17,8 @@ describe("sortEntries", () => {
 });
 
 describe("formatting", () => {
-  it("formats dates as DDMMYY", () => {
-    expect(formatDate("2026-10-06")).toBe("061026");
+  it("formats dates as DD.MM.YY", () => {
+    expect(formatDate("2026-10-06")).toBe("06.10.26");
   });
 
   it("pads numbers to three digits", () => {

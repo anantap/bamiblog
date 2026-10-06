@@ -39,7 +39,8 @@ function tile(entry) {
       loggedIn &&
         h("button", { class: "remove", type: "button", "aria-label": `Delete ${padNumber(entry.number)}`, onclick: () => remove(entry) }, "×")
     ),
-    starLine(entry.rating)
+    // The rating is only for me; visitors don't get it from the API either.
+    loggedIn && starLine(entry.rating)
   );
 }
 

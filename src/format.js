@@ -5,7 +5,7 @@ export function sortEntries(entries) {
 
 export function formatDate(iso) {
   const [y, m, d] = iso.split("-");
-  return `${d}${m}${y.slice(-2)}`;
+  return `${d}.${m}.${y.slice(-2)}`;
 }
 
 export function padNumber(n) {

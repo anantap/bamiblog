@@ -7,7 +7,9 @@ import { validateEntry } from "../lib/validate.js";
 export default async function handler(req, res) {
   if (req.method === "GET") {
     res.setHeader("Cache-Control", "no-store");
-    res.status(200).json(await store.list());
+    const entries = await store.list();
+    // Ratings stay stored but are only sent to the logged-in owner.
+    res.status(200).json(isLoggedIn(req) ? entries : entries.map(({ rating, ...rest }) => rest));
     return;
   }
 
