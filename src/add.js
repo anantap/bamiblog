@@ -51,7 +51,7 @@ loginForm.addEventListener("submit", async (event) => {
   } catch (err) {
     error.textContent = err.message;
   } finally {
-    setBusy(loginForm, false, "LOG IN");
+    setBusy(loginForm, false, "Log in");
   }
 });
 
@@ -71,11 +71,19 @@ entryForm.photo.addEventListener("change", async () => {
 zoom.addEventListener("input", () => cropper.setZoom(Number(zoom.value)));
 document.getElementById("new-photo").addEventListener("click", () => entryForm.photo.click());
 
+const guide = document.querySelector("#cropper .guide");
+const guideShape = document.getElementById("guide-shape");
+guideShape.addEventListener("click", () => {
+  const cup = guide.classList.toggle("cup");
+  guideShape.textContent = cup ? "Pack" : "Cup";
+  guideShape.setAttribute("aria-pressed", String(cup));
+});
+
 entryForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const error = entryForm.querySelector(".error");
   error.textContent = "";
-  setBusy(entryForm, true, "SAVING…");
+  setBusy(entryForm, true, "Saving…");
   try {
     const fields = Object.fromEntries(new FormData(entryForm));
     const photo = cropper.toDataURL();
@@ -83,7 +91,7 @@ entryForm.addEventListener("submit", async (event) => {
     location.href = "/";
   } catch (err) {
     error.textContent = err.message;
-    setBusy(entryForm, false, "SAVE");
+    setBusy(entryForm, false, "Save");
   }
 });
 
