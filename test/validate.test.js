@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateEntry } from "../lib/validate.js";
+import { cleanPlace, validateEntry } from "../lib/validate.js";
 
 const valid = {
   brand: "  Indomie ",
@@ -7,7 +7,7 @@ const valid = {
   country: "ID",
   rating: 4,
   note: "added an egg",
-  place: "Thuis",
+  place: "The Hague, NL",
   date: "2026-10-06",
 };
 
@@ -36,6 +36,7 @@ describe("validateEntry", () => {
     ["long brand", { brand: "x".repeat(61) }],
     ["long note", { note: "x".repeat(281) }],
     ["unknown country", { country: "XX" }],
+    ["place without a country", { place: "The Hague" }],
     ["rating 0", { rating: 0 }],
     ["rating 6", { rating: 6 }],
     ["fractional rating", { rating: 3.5 }],
@@ -47,5 +48,29 @@ describe("validateEntry", () => {
 
   it("rejects non-object input", () => {
     expect(validateEntry(null).error).toBeTruthy();
+  });
+});
+
+describe("cleanPlace", () => {
+  it.each([
+    ["The Hague, NL", "The Hague, NL"],
+    ["  the hague ,nl ", "the hague, NL"],
+    ["Tokyo,JP", "Tokyo, JP"],
+    ["Ho Chi Minh City, vn", "Ho Chi Minh City, VN"],
+    ["", ""],
+    [undefined, ""],
+  ])("cleans %j to %j", (input, expected) => {
+    expect(cleanPlace(input)).toEqual({ place: expected });
+  });
+
+  it.each([
+    ["no country", "The Hague"],
+    ["country spelled out", "The Hague, Netherlands"],
+    ["three-letter code", "The Hague, NLD"],
+    ["unknown code", "The Hague, XX"],
+    ["no city", ", NL"],
+    ["too long", `${"x".repeat(80)}, NL`],
+  ])("rejects %s", (_, input) => {
+    expect(cleanPlace(input).error).toBeTruthy();
   });
 });

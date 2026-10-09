@@ -16,6 +16,23 @@ entryForm.country.append(
     .map(({ code, name }) => h("option", { value: code }, `${flag(code)} ${name}`))
 );
 
+// Most noodles get eaten in the same place, so the form starts with the last location saved.
+const LAST_PLACE = "bami:last-place";
+
+function lastPlace() {
+  try {
+    return localStorage.getItem(LAST_PLACE) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function rememberPlace(place) {
+  try {
+    localStorage.setItem(LAST_PLACE, place);
+  } catch {}
+}
+
 function today() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -25,6 +42,7 @@ function show(loggedIn) {
   loginForm.hidden = loggedIn;
   entryForm.hidden = !loggedIn;
   if (loggedIn && !entryForm.date.value) entryForm.date.value = today();
+  if (loggedIn && !entryForm.place.value) entryForm.place.value = lastPlace();
   (loggedIn ? entryForm.brand : loginForm.password).focus();
 }
 
@@ -68,7 +86,8 @@ entryForm.addEventListener("submit", async (event) => {
   try {
     const fields = Object.fromEntries(new FormData(entryForm));
     const photo = cropper.toDataURL();
-    await api("/api/entries", { method: "POST", body: { ...fields, photo } });
+    const saved = await api("/api/entries", { method: "POST", body: { ...fields, photo } });
+    rememberPlace(saved.place);
     location.href = "/";
   } catch (err) {
     error.textContent = err.message;

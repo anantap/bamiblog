@@ -2,7 +2,7 @@ import { nextNumber } from "../lib/numbering.js";
 import { decodePhoto } from "../lib/photo.js";
 import { isLoggedIn } from "../lib/session.js";
 import { store } from "../lib/store.js";
-import { validateEntry } from "../lib/validate.js";
+import { cleanPlace, validateEntry } from "../lib/validate.js";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -13,8 +13,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (req.method !== "POST" && req.method !== "DELETE") {
-    res.setHeader("Allow", "GET, POST, DELETE");
+  if (req.method !== "POST" && req.method !== "PATCH" && req.method !== "DELETE") {
+    res.setHeader("Allow", "GET, POST, PATCH, DELETE");
     res.status(405).json({ error: "method not allowed" });
     return;
   }
@@ -50,6 +50,20 @@ export default async function handler(req, res) {
     res.status(404).json({ error: "not found" });
     return;
   }
+
+  // Only the location can be changed afterwards; everything else is fixed by deleting and re-adding.
+  if (req.method === "PATCH") {
+    const { place, error } = cleanPlace(req.body?.place);
+    if (error) {
+      res.status(400).json({ error });
+      return;
+    }
+    const updated = { ...existing, place };
+    await store.save(updated);
+    res.status(200).json(updated);
+    return;
+  }
+
   await store.remove(id);
   await store.deletePhoto(existing.photo);
   res.status(200).json({ ok: true });

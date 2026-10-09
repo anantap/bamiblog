@@ -32,6 +32,7 @@ function tile(entry) {
       { class: "frame" },
       h("img", { src: entry.photo, alt: title(entry), loading: "lazy", decoding: "async" })
     ),
+    entry.place && h("p", { class: "place" }, entry.place),
     loggedIn &&
       h("button", { class: "remove", type: "button", "aria-label": `Delete ${padNumber(entry.number)}`, onclick: () => remove(entry) }, "Delete")
   );
