@@ -261,7 +261,7 @@ button {
   height: 26px;
 }
 
-/* Lettering links: the About page's "send noods" and "receive noods". */
+/* Lettering links: the About page's "send noods" and "get noods". */
 a.lettering.lettering-link {
   display: inline-flex;
   align-items: flex-end;
