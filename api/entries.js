@@ -8,8 +8,8 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     res.setHeader("Cache-Control", "no-store");
     const entries = await store.list();
-    // Ratings stay stored but are only sent to the logged-in owner.
-    res.status(200).json(isLoggedIn(req) ? entries : entries.map(({ rating, ...rest }) => rest));
+    // Ratings and reviews stay stored but are only sent to the logged-in owner (reviews go out in the weekly email).
+    res.status(200).json(isLoggedIn(req) ? entries : entries.map(({ rating, review, ...rest }) => rest));
     return;
   }
 
