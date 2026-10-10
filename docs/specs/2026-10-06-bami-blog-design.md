@@ -1,6 +1,6 @@
 # bami.blog — design
 
-A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Brutalist: one font, DM Mono (400 and 500, from Google Fonts), and no fades or transitions. The `b.b` mark sits top left on the grid and add pages (and is the favicon), with plain-text "subscribe" (Buttondown signup page, `buttondown.com/mulyono`) and "about" links bottom right in anthracite `#2E2E30`, so the logo is the only drawn shape in the header. The About page has no header: its full wobbly wordmark links back to the grid. "send noods" (About page, empty grid) is lettering built only from the logo's own shapes (`tools/lettering`, output in `public/lettering/`).
+A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rocks/): a quiet grid of numbered photos. Brutalist: one font, DM Mono (400 and 500, from Google Fonts), and no fades or transitions. The `b.b` mark sits top left on the grid and add pages (and is the favicon), with plain-text "subscribe" (Buttondown signup page, `buttondown.com/bami.blog`) and "about" links bottom right in anthracite `#2E2E30`, so the logo is the only drawn shape in the header. The About page has no header: its full wobbly wordmark links back to the grid. "send noods" (About page, empty grid) is lettering built only from the logo's own shapes (`tools/lettering`, output in `public/lettering/`).
 
 ## Stack
 
