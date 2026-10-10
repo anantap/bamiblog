@@ -224,6 +224,9 @@ button {
 }
 
 .about-text .about-action {
+  display: flex;
+  flex-wrap: wrap; /* the two buttons stack on narrow phones */
+  gap: 0 24px;
   margin: 2.4em 0 0;
 }
 
@@ -251,7 +254,7 @@ button {
   height: 26px;
 }
 
-/* Lettering links: the About page's "send noods". */
+/* Lettering links: the About page's "send noods" and "receive noods". */
 a.lettering.lettering-link {
   display: inline-flex;
   align-items: flex-end;
