@@ -7,6 +7,7 @@ const valid = {
   country: "ID",
   rating: 4,
   note: "added an egg",
+  review: "Sweet, sticky, perfect.",
   place: "The Hague, NL",
   date: "2026-10-06",
 };
@@ -26,6 +27,7 @@ describe("validateEntry", () => {
       country: "",
       rating: 3,
       note: "",
+      review: "",
       place: "",
       date: "2026-01-31",
     });
@@ -35,6 +37,7 @@ describe("validateEntry", () => {
     ["missing brand", { brand: "  " }],
     ["long brand", { brand: "x".repeat(61) }],
     ["long note", { note: "x".repeat(281) }],
+    ["long review", { review: "x".repeat(2001) }],
     ["unknown country", { country: "XX" }],
     ["place without a country", { place: "The Hague" }],
     ["rating 0", { rating: 0 }],

@@ -19,15 +19,17 @@ A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rock
 | country | optional, ISO-3166 alpha-2 from list    |
 | rating  | required, integer 1–5                   |
 | note    | optional, ≤ 280 chars                   |
+| review  | optional, ≤ 2000 chars; only in the weekly email, never on the site |
 | place   | optional, where it was eaten: `City, CC` with a two-letter country code (e.g. `The Hague, NL`), ≤ 80 chars |
 | date    | required, `YYYY-MM-DD`, defaults today  |
 
 ## API
 
-- `GET /api/entries` — public, all entries; `rating` is left out unless logged in.
+- `GET /api/entries` — public, all entries; `rating` and `review` are left out unless logged in.
 - `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (square crop made client-side, ≤ 1200×1200 WebP/JPEG).
 - `PATCH /api/entries?id=…` — auth; JSON body `{ place }`, the only field that can be changed after saving.
 - `DELETE /api/entries?id=…` — auth; removes the entry and its photo.
+- `GET /api/digest` — the weekly email. Vercel cron (`vercel.json`, Mondays 06:00 UTC, authorised with `CRON_SECRET`) sends every entry added since the last send to Buttondown subscribers; skipped when there are none. Logged in: `?mode=preview` (default) returns the email, `?mode=draft` saves it as a Buttondown draft. The last send time lives in Redis (`bami:digest-sent`).
 - `GET /api/login` → `{ loggedIn }`; `POST /api/login` `{ password }` sets the cookie; `DELETE /api/login` logs out (no button for it on the site; clear the cookie or change `ADMIN_PASSWORD` instead).
 
 ## Auth

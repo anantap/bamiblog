@@ -16,6 +16,11 @@ npm test
 2. Storage tab → connect an **Upstash Redis** database and a **Blob** store.
 3. Settings → Environment Variables → add `ADMIN_PASSWORD`.
 4. Settings → Domains → add `bami.blog`.
+5. For the weekly email, add `BUTTONDOWN_API_KEY` (Buttondown → Settings → API) and `CRON_SECRET` (any long random string) too.
+
+## Weekly email
+
+Every Monday morning (06:00 UTC, set in `vercel.json`) a Vercel cron job emails your [Buttondown](https://buttondown.com) subscribers every noodle added since the last email: number, date, name, location, photo and your review. No ratings, and no email in a week without noodles. Logged in, open `/api/digest` to preview the next one, or `/api/digest?mode=draft` to save it as a draft in Buttondown; neither sends anything.
 
 ## Adding noodles
 
