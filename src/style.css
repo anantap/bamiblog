@@ -76,7 +76,7 @@ button {
 
 .nav {
   display: flex;
-  gap: 8px;
+  gap: 16px;
   margin-left: auto; /* stays right even when there's no logo, as on About */
 }
 
