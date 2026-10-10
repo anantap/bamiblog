@@ -223,11 +223,18 @@ button {
   margin: 0 0 1.4em;
 }
 
+/* Each button sits right under the paragraph that introduces it, as wide as the text. */
 .about-text .about-action {
-  display: flex;
-  flex-wrap: wrap; /* the two buttons stack on narrow phones */
-  gap: 0 24px;
-  margin: 2.4em 0 0;
+  margin: 0 0 2.4em;
+}
+
+.about-text .about-action .lettering {
+  display: block;
+}
+
+.about-text .about-action .lettering img {
+  width: 100%;
+  height: auto;
 }
 
 /* Words drawn from the logo's own shapes (tools/lettering). */
@@ -254,7 +261,7 @@ button {
   height: 26px;
 }
 
-/* Lettering links: the About page's "send noods" and "receive noods". */
+/* Lettering links: the About page's "send noods" and "get noods". */
 a.lettering.lettering-link {
   display: inline-flex;
   align-items: flex-end;

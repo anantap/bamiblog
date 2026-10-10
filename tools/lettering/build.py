@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from glyphs import DEFS, RED, word_svg
 
 TOP, BOTTOM = 4, 136  # vertical band shared by all letters (logo coordinates)
+DESCENDERS = {"g": 170, "j": 152, "y": 152}  # letters whose tails hang below the band, and how far
 OUTLINE = 6           # outline thickness in logo units (≈1.3px at the sizes used on the site)
 
 # Traces the edge of the combined shape: erode the letters, keep what was eaten away.
@@ -22,13 +23,14 @@ OUTLINE_FILTER = (f'<filter id="outline" x="-2%" y="-5%" width="104%" height="11
 
 def main(text, out, outline=False):
     body, width = word_svg(text)
+    bottom = max([BOTTOM] + [DESCENDERS[c] for c in text if c in DESCENDERS])
     defs = DEFS + (OUTLINE_FILTER if outline else "")
     filt = ' filter="url(#outline)"' if outline else ""
     group = f'<g fill="{RED}"{filt}>{body}</g>'
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 {TOP} {width + 4:.1f} {BOTTOM - TOP}" '
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 {TOP} {width + 4:.1f} {bottom - TOP}" '
            f'role="img" aria-label="{text}"><defs>{defs}</defs>{group}</svg>\n')
     Path(out).write_text(svg)
-    print(f"{out}: {width + 4:.0f}×{BOTTOM - TOP}")
+    print(f"{out}: {width + 4:.0f}×{bottom - TOP}")
 
 if __name__ == "__main__":
     args = sys.argv[1:]
