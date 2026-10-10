@@ -40,7 +40,7 @@ Single password in `ADMIN_PASSWORD`. Session cookie is an HMAC of a fixed string
 
 - `/` — logo, about, grid newest-first. Each tile: number and date (`DD.MM.YY`) above the photo, in DM Mono 400 anthracite. Ratings are never shown on the site; they are kept for a later yearly overview. Tiles do not open; brand, flavour and flag live in the photo alt text. The location, if set, sits under the photo in the same style. When logged in, each tile shows a red "Delete" text link under that.
 - `/add` — phone-first form, login prompt if not logged in (no log-out button). The photo (library, camera or files) sits in a square frame under a fixed dashed guide at 84% of the tile. Move it by dragging; zoom by pinching (phone), trackpad pinch or scroll wheel (desktop), or + / − keys (arrows also move). Line the pack's long side (or a cup's rim) up with the guide; only the framed square is uploaded, at most 1200×1200.
-- `/about/` — full page: the bami.blog wordmark, a short text, then "receive noods" (the weekly ingest's Buttondown sign-up page, `buttondown.com/bami.blog`) next to "send noods" (also the empty-grid text), linking to a mailto with subject "noods"; the address is assembled in JS so it is not in the HTML.
+- `/about/` — full page: the bami.blog wordmark, a short text in which "receive noods" (the weekly ingest's Buttondown sign-up page, `buttondown.com/bami.blog`) and "send noods" (also the empty-grid text) each sit under the paragraph that introduces them; "send noods" links to a mailto with subject "noods"; the address is assembled in JS so it is not in the HTML.
 
 ## Out of scope
 

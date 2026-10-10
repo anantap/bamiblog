@@ -223,11 +223,9 @@ button {
   margin: 0 0 1.4em;
 }
 
+/* Each button sits right under the paragraph that introduces it. */
 .about-text .about-action {
-  display: flex;
-  flex-wrap: wrap; /* the two buttons stack on narrow phones */
-  gap: 0 24px;
-  margin: 2.4em 0 0;
+  margin: 0 0 2.4em;
 }
 
 /* Words drawn from the logo's own shapes (tools/lettering). */
