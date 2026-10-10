@@ -34,9 +34,9 @@ describe("newSince", () => {
 });
 
 describe("digestEmail", () => {
-  it("counts the noodles in the subject", () => {
-    expect(digestEmail([noodle(1, 0)]).subject).toBe("bami.blog: 1 nood this week");
-    expect(digestEmail([noodle(1, 0), noodle(2, 0)]).subject).toBe("bami.blog: 2 noods this week");
+  it("is called weekly ingest", () => {
+    expect(digestEmail([noodle(1, 0)]).subject).toBe("weekly ingest");
+    expect(digestEmail([noodle(1, 0), noodle(2, 0)]).subject).toBe("weekly ingest");
   });
 
   it("lists number, name, date, location, photo and review, but no rating", () => {
@@ -49,12 +49,12 @@ describe("digestEmail", () => {
     expect(body).not.toMatch(/★|rating|\b5\/5\b/i);
   });
 
-  it("opens with the lettering, served from the site", () => {
-    expect(digestEmail([noodle(1, 0)], "https://example.test").body).toMatch(/^<img src="https:\/\/example\.test\/lettering\/digested-this-week\.png" alt="digested this week"/);
+  it("opens with the logo, served from the site", () => {
+    expect(digestEmail([noodle(1, 0)], "https://example.test").body).toMatch(/^<img src="https:\/\/example\.test\/logo-email\.png" alt="bami\.blog"/);
   });
 
   it("leaves out an empty review and location", () => {
     const { body } = digestEmail([noodle(8, 0)]);
-    expect(body).toBe('<img src="https://bami.blog/lettering/digested-this-week.png" alt="digested this week" width="305" height="48" />\n\n## 008 · 🇮🇩 Indomie — Mi Goreng\n\n06.10.26\n\n![🇮🇩 Indomie — Mi Goreng](https://blob.example/8.jpg)\n\n---\n\nAll the noods: [bami.blog](https://bami.blog)');
+    expect(body).toBe('<img src="https://bami.blog/logo-email.png" alt="bami.blog" width="200" height="96" />\n\n## 008 · 🇮🇩 Indomie — Mi Goreng\n\n06.10.26\n\n![🇮🇩 Indomie — Mi Goreng](https://blob.example/8.jpg)\n\n---\n\nAll the noods: [bami.blog](https://bami.blog)');
   });
 });
