@@ -45,7 +45,7 @@ function render() {
       h(
         "p",
         { class: "empty" },
-        h("a", { class: "lettering", href: SEND_NOODS }, h("img", { src: "/lettering/send-noods.svg", alt: "send noods", width: 616, height: 132 }))
+        h("a", { class: "lettering", href: SEND_NOODS }, h("img", { src: "/lettering/send-noods.svg", alt: "send noods", width: 495, height: 132 }))
       )
     );
     return;
