@@ -76,7 +76,7 @@ button {
 
 .nav {
   display: flex;
-  gap: 16px;
+  gap: 8px;
   margin-left: auto; /* stays right even when there's no logo, as on About */
 }
 
@@ -221,6 +221,45 @@ button {
 
 .about-text p {
   margin: 0 0 1.4em;
+}
+
+/* Signs up for the weekly ingest on Buttondown, which opens its confirmation page in a new tab. */
+.subscribe {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 1.4em;
+}
+
+.subscribe input,
+.subscribe button {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg);
+  font: 400 16px/1.45 var(--font); /* 16px stops iOS zooming in on focus */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.subscribe input {
+  flex: 1;
+  min-width: 0;
+}
+
+.subscribe input::placeholder {
+  color: #c4c3bd;
+}
+
+.subscribe input:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.subscribe button {
+  flex-shrink: 0;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
 }
 
 .about-text .about-action {
