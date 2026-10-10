@@ -223,9 +223,18 @@ button {
   margin: 0 0 1.4em;
 }
 
-/* Each button sits right under the paragraph that introduces it. */
+/* Each button sits right under the paragraph that introduces it, as wide as the text. */
 .about-text .about-action {
   margin: 0 0 2.4em;
+}
+
+.about-text .about-action .lettering {
+  display: block;
+}
+
+.about-text .about-action .lettering img {
+  width: 100%;
+  height: auto;
 }
 
 /* Words drawn from the logo's own shapes (tools/lettering). */
