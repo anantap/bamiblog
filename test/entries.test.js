@@ -42,7 +42,7 @@ describe("PATCH /api/entries", () => {
     const { status, data } = await call({
       method: "PATCH",
       query: { id: saved.id },
-      body: { brand: "Indomie", flavour: "Soto", country: "ID", rating: 5, review: "typo fixed", note: "", place: "Delft, nl", date: "2026-10-08" },
+      body: { brand: "Indomie", flavour: "Soto", country: "ID", rating: 5, review: "typo fixed", place: "Delft, nl", date: "2026-10-08" },
     });
     expect(status).toBe(200);
     expect(data).toMatchObject({ id: saved.id, number: saved.number, createdAt: saved.createdAt, photo: saved.photo });
@@ -73,5 +73,19 @@ describe("PATCH /api/entries", () => {
     const saved = await add();
     expect((await call({ method: "PATCH", query: { id: saved.id }, body: { brand: "X" }, auth: false })).status).toBe(401);
     expect((await call({ method: "PATCH", query: { id: "nope" }, body: { brand: "X" } })).status).toBe(404);
+  });
+});
+
+describe("GET /api/entries", () => {
+  it("never sends old notes, and keeps ratings and reviews for the owner", async () => {
+    const { store } = await import("../lib/store.js");
+    await store.save({ id: "old", number: 99, createdAt: 1, brand: "Mama", rating: 3, review: "ok", note: "added an egg", date: "2026-01-01", photo: PNG });
+    const visitor = (await call({ auth: false })).data.find((e) => e.id === "old");
+    const owner = (await call()).data.find((e) => e.id === "old");
+    expect(visitor).not.toHaveProperty("note");
+    expect(visitor).not.toHaveProperty("rating");
+    expect(visitor).not.toHaveProperty("review");
+    expect(owner).not.toHaveProperty("note");
+    expect(owner).toMatchObject({ rating: 3, review: "ok" });
   });
 });
