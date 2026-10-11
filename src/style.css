@@ -145,9 +145,24 @@ button {
   background: var(--card);
 }
 
-/* Only rendered when logged in: a plain text link under the photo. */
+/* Only rendered when logged in: plain text links under the photo. */
+.tile-actions {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+}
+
+.edit {
+  color: var(--anthracite);
+  font-size: 13px;
+  text-underline-offset: 2px;
+}
+
+.edit:hover {
+  text-decoration: none;
+}
+
 .remove {
-  align-self: flex-start;
   padding: 0;
   border: 0;
   background: none;
@@ -371,6 +386,17 @@ a.lettering.lettering-link:focus-visible {
   cursor: pointer;
   font-size: 13px;
   color: var(--muted);
+}
+
+/* Editing: the current photo fills the picker until a new one is chosen. */
+.photo-picker.has-photo {
+  background: var(--card) center / cover no-repeat;
+}
+
+.photo-picker.has-photo span {
+  padding: 6px 10px;
+  background: rgb(255 255 255 / 0.9);
+  color: var(--ink);
 }
 
 /* Visually hidden but still focusable, so the browser can point at it when it's missing. */

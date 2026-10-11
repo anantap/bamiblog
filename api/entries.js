@@ -2,7 +2,7 @@ import { nextNumber } from "../lib/numbering.js";
 import { decodePhoto } from "../lib/photo.js";
 import { isLoggedIn } from "../lib/session.js";
 import { store } from "../lib/store.js";
-import { cleanPlace, validateEntry } from "../lib/validate.js";
+import { validateEntry } from "../lib/validate.js";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -51,15 +51,26 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Only the location can be changed afterwards; everything else is fixed by deleting and re-adding.
+  // Edit: any fields left out keep their current value. The number, id and createdAt never change, so an
+  // edited noodle keeps its place in the grid and isn't emailed again. A new photo replaces the old one.
   if (req.method === "PATCH") {
-    const { place, error } = cleanPlace(req.body?.place);
+    const { entry, error } = validateEntry({ ...existing, ...req.body });
     if (error) {
       res.status(400).json({ error });
       return;
     }
-    const updated = { ...existing, place };
+    let photoUrl = existing.photo;
+    if (req.body?.photo) {
+      const photo = decodePhoto(req.body.photo);
+      if (photo.error) {
+        res.status(400).json({ error: photo.error });
+        return;
+      }
+      photoUrl = await store.uploadPhoto(`${String(existing.number).padStart(3, "0")}.${photo.ext}`, photo.bytes, photo.contentType);
+    }
+    const updated = { ...existing, ...entry, photo: photoUrl };
     await store.save(updated);
+    if (photoUrl !== existing.photo) await store.deletePhoto(existing.photo).catch(() => {});
     res.status(200).json(updated);
     return;
   }
