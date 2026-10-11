@@ -18,14 +18,13 @@ A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rock
 | flavour | optional, ≤ 80 chars                    |
 | country | optional, ISO-3166 alpha-2 from list    |
 | rating  | required, integer 1–5                   |
-| note    | optional, ≤ 280 chars                   |
 | review  | optional, ≤ 2000 chars; only in the weekly email, never on the site |
 | place   | optional, where it was eaten: `City, CC` with a two-letter country code (e.g. `The Hague, NL`), ≤ 80 chars |
 | date    | required, `YYYY-MM-DD`, defaults today  |
 
 ## API
 
-- `GET /api/entries` — public, all entries; `rating` and `review` are left out unless logged in.
+- `GET /api/entries` — public, all entries; `rating` and `review` are left out unless logged in. Old `note` fields (from before reviews) stay stored but are never sent.
 - `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (square crop made client-side, ≤ 1200×1200 WebP/JPEG).
 - `PATCH /api/entries?id=…` — auth; edits an entry. Same fields and checks as `POST`; anything left out keeps its value, and an optional `photo` replaces the old one (which is deleted). `number`, `id` and `createdAt` never change, so an edit doesn't resend the noodle in the weekly email.
 - `DELETE /api/entries?id=…` — auth; removes the entry and its photo.

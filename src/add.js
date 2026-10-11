@@ -45,7 +45,7 @@ function today() {
 async function fillForEdit() {
   const entry = (await api("/api/entries")).find((e) => e.id === editId);
   if (!entry) throw new Error("that noodle doesn't exist (any more)");
-  for (const field of ["brand", "flavour", "country", "review", "note", "place", "date"]) entryForm[field].value = entry[field] ?? "";
+  for (const field of ["brand", "flavour", "country", "review", "place", "date"]) entryForm[field].value = entry[field] ?? "";
   entryForm.rating.value = String(entry.rating);
   entryForm.photo.required = false;
   picker.classList.add("has-photo");
