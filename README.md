@@ -24,4 +24,4 @@ Every Monday morning (06:00 UTC, set in `vercel.json`) a Vercel cron job emails 
 
 ## Adding noodles
 
-Go to `bami.blog/add/` on your phone, log in once (it remembers you for a year), snap the pack, fill in the rest. To fix a mistake, open the entry on the homepage and hit DELETE, then add it again.
+Go to `bami.blog/add/` on your phone, log in once (it remembers you for a year), snap the pack, fill in the rest. To fix a mistake, hit Edit under the noodle on the homepage (you need to be logged in): every field and the photo can be changed, and it keeps its number.

@@ -8,6 +8,9 @@ const entryForm = document.getElementById("entry");
 const picker = document.getElementById("picker");
 const cropParts = ["cropper", "crop-tools"].map((id) => document.getElementById(id));
 const cropper = createCropper(document.querySelector("#cropper canvas"));
+// /add/?id=… edits that noodle instead of adding a new one.
+const editId = new URLSearchParams(location.search).get("id");
+const saveLabel = editId ? "Save changes" : "Save";
 
 const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
 entryForm.country.append(
@@ -38,11 +41,34 @@ function today() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function show(loggedIn) {
+// Fills the form with the noodle being edited. Its photo shows in the picker until a new one is chosen.
+async function fillForEdit() {
+  const entry = (await api("/api/entries")).find((e) => e.id === editId);
+  if (!entry) throw new Error("that noodle doesn't exist (any more)");
+  for (const field of ["brand", "flavour", "country", "review", "note", "place", "date"]) entryForm[field].value = entry[field] ?? "";
+  entryForm.rating.value = String(entry.rating);
+  entryForm.photo.required = false;
+  picker.classList.add("has-photo");
+  picker.style.backgroundImage = `url("${entry.photo}")`;
+  picker.querySelector("span").textContent = "Tap to replace the photo";
+}
+
+async function show(loggedIn) {
   loginForm.hidden = loggedIn;
   entryForm.hidden = !loggedIn;
-  if (loggedIn && !entryForm.date.value) entryForm.date.value = today();
-  if (loggedIn && !entryForm.place.value) entryForm.place.value = lastPlace();
+  if (loggedIn && editId) {
+    document.title = "Edit · bami.blog";
+    setBusy(entryForm, false, saveLabel);
+    try {
+      await fillForEdit();
+    } catch (err) {
+      entryForm.querySelector(".error").textContent = err.message;
+      setBusy(entryForm, true, saveLabel);
+      return;
+    }
+  }
+  if (loggedIn && !editId && !entryForm.date.value) entryForm.date.value = today();
+  if (loggedIn && !editId && !entryForm.place.value) entryForm.place.value = lastPlace();
   (loggedIn ? entryForm.brand : loginForm.password).focus();
 }
 
@@ -84,14 +110,19 @@ entryForm.addEventListener("submit", async (event) => {
   error.textContent = "";
   setBusy(entryForm, true, "Saving…");
   try {
-    const fields = Object.fromEntries(new FormData(entryForm));
-    const photo = cropper.toDataURL();
-    const saved = await api("/api/entries", { method: "POST", body: { ...fields, photo } });
-    rememberPlace(saved.place);
+    const { photo: _file, ...fields } = Object.fromEntries(new FormData(entryForm));
+    if (editId) {
+      // Only send a photo when a new one was picked; otherwise the current one stays.
+      const body = cropper.ready ? { ...fields, photo: cropper.toDataURL() } : fields;
+      await api(`/api/entries?id=${encodeURIComponent(editId)}`, { method: "PATCH", body });
+    } else {
+      const saved = await api("/api/entries", { method: "POST", body: { ...fields, photo: cropper.toDataURL() } });
+      rememberPlace(saved.place);
+    }
     location.href = "/";
   } catch (err) {
     error.textContent = err.message;
-    setBusy(entryForm, false, "Save");
+    setBusy(entryForm, false, saveLabel);
   }
 });
 

@@ -34,7 +34,12 @@ function tile(entry) {
     ),
     entry.place && h("p", { class: "place" }, entry.place),
     loggedIn &&
-      h("button", { class: "remove", type: "button", "aria-label": `Delete ${padNumber(entry.number)}`, onclick: () => remove(entry) }, "Delete")
+      h(
+        "p",
+        { class: "tile-actions" },
+        h("a", { class: "edit", href: `/add/?id=${encodeURIComponent(entry.id)}`, "aria-label": `Edit ${padNumber(entry.number)}` }, "Edit"),
+        h("button", { class: "remove", type: "button", "aria-label": `Delete ${padNumber(entry.number)}`, onclick: () => remove(entry) }, "Delete")
+      )
   );
 }
 
