@@ -16,3 +16,11 @@ describe("emailPage", () => {
     expect(emailPage({}, "Nothing new")).toContain('<p class="empty">Nothing new</p>');
   });
 });
+
+describe("email CSS", () => {
+  it("is shared by the preview page", async () => {
+    const { EMAIL_CSS } = await import("../lib/email-style.js");
+    expect(emailPage({ subject: "s", body: "b" })).toContain(EMAIL_CSS);
+    expect(EMAIL_CSS).toContain('"DM Mono"');
+  });
+});
