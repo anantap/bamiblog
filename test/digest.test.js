@@ -54,7 +54,7 @@ describe("digestEmail", () => {
   });
 
   it("adds the one-off Monday mood video to the 19 October email only, before the footer", () => {
-    const mood = "[![Monday mood](https://bami.blog/email/monday-mood.png)](https://www.threads.com/share/_iJJygnnr/)\n\nMonday mood (via [Pieter](https://pieter-de-jong.nl/))";
+    const mood = "[![Monday mood](https://bami.blog/email/monday-mood.jpg)](https://www.threads.com/share/_iJJygnnr/)\n\nMonday mood (via [Pieter](https://pieter-de-jong.nl/))";
     const on19 = digestEmail([noodle(1, 0)], "https://bami.blog", Date.UTC(2026, 9, 19, 6)).body;
     expect(on19).toContain(`---\n\n${mood}\n\n---\n\nAll the noods`);
     expect(digestEmail([noodle(1, 0)], "https://bami.blog", Date.UTC(2026, 9, 20, 6)).body).not.toContain("Monday mood");
