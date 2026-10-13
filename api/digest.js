@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const email = digestEmail(entries, process.env.SITE_URL || "https://bami.blog");
+  const email = digestEmail(entries, process.env.SITE_URL || "https://bami.blog", now);
   if (mode === "preview") {
     res.status(200).json({ mode, count: entries.length, since, ...email });
     return;

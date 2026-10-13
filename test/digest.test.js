@@ -53,8 +53,15 @@ describe("digestEmail", () => {
     expect(digestEmail([noodle(1, 0)], "https://example.test").body).toMatch(/^<img src="https:\/\/example\.test\/logo-email\.png" alt="bami\.blog"/);
   });
 
+  it("adds the one-off Monday mood video to the 19 October email only, before the footer", () => {
+    const mood = "[![Monday mood](https://bami.blog/email/monday-mood.png)](https://www.threads.com/share/_iJJygnnr/)\n\nMonday mood (via [Pieter](https://pieter-de-jong.nl/))";
+    const on19 = digestEmail([noodle(1, 0)], "https://bami.blog", Date.UTC(2026, 9, 19, 6)).body;
+    expect(on19).toContain(`---\n\n${mood}\n\n---\n\nAll the noods`);
+    expect(digestEmail([noodle(1, 0)], "https://bami.blog", Date.UTC(2026, 9, 20, 6)).body).not.toContain("Monday mood");
+  });
+
   it("leaves out an empty review and location", () => {
-    const { body } = digestEmail([noodle(8, 0)]);
+    const { body } = digestEmail([noodle(8, 0)], "https://bami.blog", Date.UTC(2026, 9, 26, 6));
     expect(body).toBe('<img src="https://bami.blog/logo-email.png" alt="bami.blog" width="200" height="96" />\n\n## 008 · 🇮🇩 Indomie — Mi Goreng\n\n06.10.26\n\n![🇮🇩 Indomie — Mi Goreng](https://blob.example/8.jpg)\n\n---\n\nAll the noods: [bami.blog](https://bami.blog)');
   });
 });
