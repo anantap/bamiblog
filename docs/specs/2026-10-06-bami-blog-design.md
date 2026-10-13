@@ -28,7 +28,7 @@ A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rock
 - `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (square crop made client-side, ≤ 1200×1200 WebP/JPEG).
 - `PATCH /api/entries?id=…` — auth; edits an entry. Same fields and checks as `POST`; anything left out keeps its value, and an optional `photo` replaces the old one (which is deleted). `number`, `id` and `createdAt` never change, so an edit doesn't resend the noodle in the weekly email.
 - `DELETE /api/entries?id=…` — auth; removes the entry and its photo.
-- `GET /api/digest` — the weekly email. Vercel cron (`vercel.json`, Mondays 06:00 UTC, authorised with `CRON_SECRET`) sends every entry added since the last send to Buttondown subscribers; skipped when there are none. Logged in: `?mode=preview` (default) returns the email, `?mode=draft` saves it as a Buttondown draft. The last send time lives in Redis (`bami:digest-sent`).
+- `GET /api/digest` — the weekly email. Vercel cron (`vercel.json`, Mondays 06:00 UTC, authorised with `CRON_SECRET`) sends every entry added since the last send to Buttondown subscribers; skipped when there are none. Logged in: `?mode=preview` (default) returns the email as JSON, `?mode=html` renders it as an email page (Markdown via `marked`), `?mode=draft` saves it as a Buttondown draft. The last send time lives in Redis (`bami:digest-sent`).
 - `GET /api/login` → `{ loggedIn }`; `POST /api/login` `{ password }` sets the cookie; `DELETE /api/login` logs out (no button for it on the site; clear the cookie or change `ADMIN_PASSWORD` instead).
 
 ## Auth
