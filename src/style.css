@@ -377,6 +377,79 @@ a.lettering.lettering-link:focus-visible {
   gap: 8px;
 }
 
+/* /add: "noodle" and "mail" tabs, plain text like the header links. */
+.tabs {
+  display: flex;
+  gap: 16px;
+  margin: 0 0 20px;
+}
+
+.tabs button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 400 13px/1.45 var(--font);
+  color: var(--muted);
+}
+
+.tabs button[aria-current] {
+  color: var(--anthracite);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Mail tab: the image as it will go out, whatever its shape. */
+.extra-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--card);
+}
+
+.check {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Not a text field: keep the plain checkbox. */
+.stack .check input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 408px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queue li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.queue img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  background: var(--card);
+}
+
+.queue p {
+  margin: 0 0 2px;
+  font-size: 13px;
+}
+
 .photo-picker {
   position: relative;
   display: grid;

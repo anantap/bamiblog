@@ -20,7 +20,7 @@ npm test
 
 ## Weekly email
 
-Every Monday morning (06:00 UTC, set in `vercel.json`) a Vercel cron job emails your [Buttondown](https://buttondown.com) subscribers every noodle added since the last email: number, date, name, location, photo and your review. No ratings, and no email in a week without noodles. Logged in, open `/api/digest?mode=html` to see the next one rendered as an email, `/api/digest` for its raw text, or `/api/digest?mode=draft` to save it as a draft in Buttondown; none of them send anything.
+Every Monday morning (06:00 UTC, set in `vercel.json`) a Vercel cron job emails your [Buttondown](https://buttondown.com) subscribers every noodle added since the last email: number, date, name, location, photo and your review. No ratings, and no email in a week without noodles. To add something to the end of the email (a funny video, a painting), use the "mail" tab on `/add/`: each Monday email takes the oldest waiting item. Logged in, open `/api/digest?mode=html` to see the next one rendered as an email, `/api/digest` for its raw text, or `/api/digest?mode=draft` to save it as a draft in Buttondown; none of them send anything.
 
 ## Adding noodles
 

@@ -23,6 +23,11 @@
         <p class="error" role="alert"></p>
       </form>
 
+      <nav class="tabs" id="tabs" hidden>
+        <button type="button" data-tab="noodle" aria-current="page">noodle</button>
+        <button type="button" data-tab="mail">mail</button>
+      </nav>
+
       <form id="entry" class="stack" hidden>
         <div class="photo-field">
           <label class="photo-picker" id="picker">
@@ -55,6 +60,29 @@
         <button type="submit">Save</button>
         <p class="error" role="alert"></p>
       </form>
+      <section id="mail" hidden>
+        <form id="extra" class="stack">
+          <div class="photo-field">
+            <label class="photo-picker" id="extra-picker">
+              <span>Tap to add an image</span>
+              <input name="image" type="file" accept="image/*" required />
+            </label>
+            <img class="extra-preview" id="extra-preview" alt="" hidden />
+            <div class="crop-tools" id="extra-tools" hidden>
+              <label class="check"><input name="video" type="checkbox" /> It's a video: add a play button</label>
+              <button id="extra-new" type="button">New image</button>
+            </div>
+          </div>
+          <label>Link <input name="link" type="url" inputmode="url" placeholder="https://www.threads.com/…" /></label>
+          <label>Caption <input name="caption" maxlength="120" required value="Monday mood" /></label>
+          <label>Via <input name="credit" maxlength="60" placeholder="Pieter" /></label>
+          <label>Via link <input name="creditUrl" type="url" inputmode="url" placeholder="https://…" /></label>
+          <p class="hint">One goes at the end of each Monday email, oldest first.</p>
+          <button type="submit">Add to the mail</button>
+          <p class="error" role="alert"></p>
+        </form>
+        <ol class="queue" id="queue"></ol>
+      </section>
     </main>
 
     <script type="module" src="/src/add.js"></script>
