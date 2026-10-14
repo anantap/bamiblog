@@ -103,15 +103,15 @@ export function createCropper(canvas) {
       return crop !== null;
     },
 
-    // The framed square as a data URL, at most 1200×1200. Prefers WebP, falls back to JPEG.
+    // The framed square as a data URL, at most 1200×1200. JPEG, so it also shows in the weekly email
+    // in every mail app (desktop Outlook doesn't show WebP).
     toDataURL() {
       const { sx, sy, size } = sourceRect(crop);
       const out = Math.min(OUTPUT_SIZE, size);
       const canvasOut = document.createElement("canvas");
       canvasOut.width = canvasOut.height = out;
       canvasOut.getContext("2d").drawImage(bitmap, sx, sy, size, size, 0, 0, out, out);
-      const webp = canvasOut.toDataURL("image/webp", 0.85);
-      return webp.startsWith("data:image/webp") ? webp : canvasOut.toDataURL("image/jpeg", 0.88);
+      return canvasOut.toDataURL("image/jpeg", 0.88);
     },
   };
 }

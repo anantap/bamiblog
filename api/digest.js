@@ -1,5 +1,5 @@
 import { createEmail } from "../lib/buttondown.js";
-import { digestEmail, newSince } from "../lib/digest.js";
+import { digestEmail, newSince, pickExtra } from "../lib/digest.js";
 import { emailPage } from "../lib/digest-html.js";
 import { checkPassword, isLoggedIn } from "../lib/session.js";
 import { store } from "../lib/store.js";
@@ -37,7 +37,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  const email = digestEmail(entries, process.env.SITE_URL || "https://bami.blog", now);
+  const extra = pickExtra(await store.listExtras(), now);
+  const email = digestEmail(entries, process.env.SITE_URL || "https://bami.blog", now, extra);
   if (mode === "html") return sendPage(res, emailPage(email));
   if (mode === "preview") {
     res.status(200).json({ mode, count: entries.length, since, ...email });
@@ -51,7 +52,10 @@ export default async function handler(req, res) {
     return;
   }
   // Only a real send moves the window on, so next week starts where this email ended.
-  if (mode === "send") await store.setLastDigest(now);
+  if (mode === "send") {
+    await store.setLastDigest(now);
+    if (extra) await store.saveExtra({ ...extra, sentAt: now });
+  }
   res.status(200).json({ mode, count: entries.length, sent: mode === "send" });
 }
 

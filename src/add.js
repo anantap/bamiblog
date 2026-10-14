@@ -2,6 +2,7 @@ import { COUNTRIES } from "../lib/countries.js";
 import { api, h } from "./dom.js";
 import { flag } from "./format.js";
 import { createCropper } from "./cropper.js";
+import { initExtras } from "./extras.js";
 
 const loginForm = document.getElementById("login");
 const entryForm = document.getElementById("entry");
@@ -53,9 +54,36 @@ async function fillForEdit() {
   picker.querySelector("span").textContent = "Tap to replace the photo";
 }
 
+// Two tabs: the noodle form and the mail tab (footer items for the weekly email). #mail opens the second one.
+const tabs = document.getElementById("tabs");
+const mail = document.getElementById("mail");
+let extrasReady = false;
+
+function showTab(name) {
+  entryForm.hidden = name !== "noodle";
+  mail.hidden = name !== "mail";
+  for (const tab of tabs.querySelectorAll("button")) {
+    if (tab.dataset.tab === name) tab.setAttribute("aria-current", "page");
+    else tab.removeAttribute("aria-current");
+  }
+  if (name === "mail" && !extrasReady) {
+    extrasReady = true;
+    initExtras();
+  }
+  history.replaceState(null, "", name === "mail" ? "#mail" : location.pathname + location.search);
+}
+
+tabs.addEventListener("click", (event) => {
+  const tab = event.target.closest("button[data-tab]");
+  if (tab) showTab(tab.dataset.tab);
+});
+
 async function show(loggedIn) {
   loginForm.hidden = loggedIn;
   entryForm.hidden = !loggedIn;
+  // Editing a noodle is about that noodle only, so no tabs then.
+  tabs.hidden = !loggedIn || Boolean(editId);
+  if (loggedIn && !editId && location.hash === "#mail") showTab("mail");
   if (loggedIn && editId) {
     document.title = "Edit · bami.blog";
     setBusy(entryForm, false, saveLabel);
