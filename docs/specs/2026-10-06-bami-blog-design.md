@@ -25,7 +25,7 @@ A logbook of instant noodles, loosely inspired by [nice.rocks](https://nice.rock
 ## API
 
 - `GET /api/entries` — public, all entries; `rating` and `review` are left out unless logged in. Old `note` fields (from before reviews) stay stored but are never sent.
-- `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (square crop made client-side, ≤ 1200×1200 WebP/JPEG).
+- `POST /api/entries` — auth; JSON body with fields + `photo` as a data URL (square crop made client-side, ≤ 1200×1200 JPEG; WebP is still accepted but the form no longer makes it, since desktop Outlook can't show it in the email).
 - `PATCH /api/entries?id=…` — auth; edits an entry. Same fields and checks as `POST`; anything left out keeps its value, and an optional `photo` replaces the old one (which is deleted). `number`, `id` and `createdAt` never change, so an edit doesn't resend the noodle in the weekly email.
 - `DELETE /api/entries?id=…` — auth; removes the entry and its photo.
 - `GET/POST/DELETE /api/extras` — auth; footer items for the weekly email (image as a data URL, optional link, caption, optional credit and credit link), stored in Redis (`bami:extras`). Each email takes the oldest unsent one and marks it sent; weeks with a hard-coded `ONE_OFFS` entry in `lib/digest.js` skip the queue.
