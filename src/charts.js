@@ -77,11 +77,15 @@ export function treemap(host, entries) {
     const g = svg("g", { class: `estate tone-${i % 4}` });
     const x = b.x + gap / 2, y = b.y + gap / 2, w = Math.max(0, b.w - gap), h = Math.max(0, b.h - gap);
     const inner = h > head * 2 ? squarify(b.flavours.map((f) => ({ ...f, v: f.count })), x, y + head, w, h - head) : [];
-    g.append(svg("rect", { x, y, width: w, height: inner.length ? head + 1 : h })); // 1px under the first flavour: no seam
+    g.append(svg("rect", { x, y, width: w, height: inner.length ? head : h }));
     inner.forEach((f, j) => {
       const shade = Math.max(30, 100 - j * 22); // percent of the brand's red, the rest white
       const tile = svg("g", { class: shade >= 70 ? "shade-dark" : "shade-light" });
-      tile.append(svg("rect", { x: f.x, y: f.y, width: Math.max(0, f.w - (f.x + f.w < x + w - 1 ? 2 : 0)), height: Math.max(0, f.h - (f.y + f.h < y + h - 1 ? 2 : 0)), style: `fill: color-mix(in srgb, var(--tone) ${shade}%, #fff)` }));
+      // The busiest flavour runs into the brand's strip (reaching 1px up into it, so no seam shows); the others
+      // touching the strip get a white line between.
+      const top = Math.abs(f.y - (y + head)) < 0.5 ? (j ? 2 : -1) : 0;
+      const fw = f.w - (f.x + f.w < x + w - 1 ? 2 : 0), fh = f.h - (f.y + f.h < y + h - 1 ? 2 : 0) - top;
+      tile.append(svg("rect", { x: f.x, y: f.y + top, width: Math.max(0, fw), height: Math.max(0, fh), style: `fill: color-mix(in srgb, var(--tone) ${shade}%, #fff)` }));
       const lines = wrap(f.flavour || "no flavour", 11, f.w - 14);
       if (lines && lines.length * 14.3 + 10 < f.h) tile.append(label(f.x + 8, f.y + 17, lines, 11));
       g.append(tile);
