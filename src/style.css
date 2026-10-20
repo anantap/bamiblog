@@ -526,8 +526,8 @@ button {
   font-weight: 500;
 }
 
-/* All the noodles as one noodle, a pixel a meter, with a mark every kilometer; all the soup in bathtubs
-   (src/amounts.js). */
+/* All the noodles as one noodle, a pixel a meter, with a mark every kilometer; all the soup cooling an AI data center,
+   in the map's bricks (src/amounts.js). */
 .length svg {
   display: block;
   margin: 0 auto;
@@ -543,25 +543,44 @@ button {
   fill: var(--muted);
 }
 
-.tubs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px 24px;
-}
-
-.tub {
+.cooling {
   display: block;
-  width: min(240px, 60vw);
+  width: min(100%, 560px);
   height: auto;
+  margin: 0 auto;
 }
 
-.tub-side {
+.cooling rect {
   fill: var(--line);
 }
 
-.tub-soup {
+.cooling text {
+  font: 400 13px var(--font);
+  text-anchor: middle;
+  fill: var(--muted);
+}
+
+.cooling .cool-soup {
   fill: var(--accent-light);
+}
+
+.cooling .cool-soup.gone {
+  fill: transparent;
+}
+
+.cooling .cool-smoke {
+  fill: var(--line);
+}
+
+.cooling :is(.cool-pipe, .cool-light).on {
+  fill: var(--accent);
+}
+
+.cool-timer {
+  margin: 16px 0 0;
+  font: 500 clamp(32px, 7vw, 64px)/1 var(--font);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Every pack (src/every-pack.js): all the photos in a square-ish grid as big as the screen allows, and "and more to
