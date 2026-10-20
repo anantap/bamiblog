@@ -263,13 +263,16 @@ button {
   margin: 0 auto -8%;
 }
 
-/* On phones the map is zoomed in and scrolls sideways, edge to edge; on wider screens it just fits. */
+/* The map is zoomed in, past the edges of the screen, and loops sideways (see src/map.js): three copies of a world
+   --world wide. */
 .map {
   --accent-light: #f19d8a;
+  --world: 1400px;
   overflow-x: auto;
   margin: 0 -16px;
-  padding: 0 16px;
   scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
 }
 
 .map::-webkit-scrollbar {
@@ -278,19 +281,14 @@ button {
 
 .map svg {
   display: block;
-  width: 100%;
-  min-width: 1400px;
+  width: calc(3 * var(--world));
   height: auto;
 }
 
 @media (min-width: 992px) {
   .map {
+    --world: 2200px;
     margin: 0;
-    padding: 0;
-  }
-
-  .map svg {
-    min-width: 0;
   }
 }
 

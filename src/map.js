@@ -20,13 +20,48 @@ let mode = location.hash === "#eaten" ? "eaten" : "made";
 let selected = null;
 let focus = "now"; // pan to the noodles on the first draw and after switching modes; smoothly after picking a country
 
-// On a phone the map is wider than the screen and scrolls sideways; bring these countries to the middle.
+// The map is drawn three times side by side and kept on the middle copy, so it loops: whatever is picked can sit in
+// the middle of the screen, and scrolling never reaches an end.
+const copy = () => mapEl.scrollWidth / 3;
+let panning = false;
+
+function recentre() {
+  if (panning) return;
+  const w = copy();
+  if (mapEl.scrollLeft < w / 2) mapEl.scrollLeft += w;
+  else if (mapEl.scrollLeft > w * 1.5) mapEl.scrollLeft -= w;
+}
+
+// Bring these countries to the middle of the screen, the short way round.
 function focusOn(codes, behavior) {
   const columns = codes.flatMap((code) => world.cells[code] ?? [world.small[code]]).filter((i) => i !== undefined).map((i) => i % world.cols);
-  if (!columns.length || mapEl.scrollWidth <= mapEl.clientWidth) return;
-  const middle = (Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols;
-  mapEl.scrollTo({ left: middle * mapEl.scrollWidth - mapEl.clientWidth / 2, behavior });
+  if (!columns.length) columns.push(world.cols / 2);
+  const w = copy();
+  const middle = w + ((Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols) * w - mapEl.clientWidth / 2;
+  const left = [middle - w, middle, middle + w].reduce((a, b) => (Math.abs(b - mapEl.scrollLeft) < Math.abs(a - mapEl.scrollLeft) ? b : a));
+  if (behavior !== "smooth") {
+    mapEl.scrollLeft = middle;
+    return;
+  }
+  panning = true;
+  mapEl.scrollTo({ left, behavior });
+  setTimeout(() => {
+    panning = false;
+    recentre();
+  }, 700);
 }
+
+mapEl.addEventListener("scroll", recentre, { passive: true });
+
+// Mice can drag the map sideways too.
+mapEl.addEventListener("pointerdown", (event) => {
+  if (event.pointerType !== "mouse") return;
+  const start = event.clientX, from = mapEl.scrollLeft;
+  const move = (e) => (mapEl.scrollLeft = from - (e.clientX - start));
+  const up = () => removeEventListener("pointermove", move);
+  addEventListener("pointermove", move);
+  addEventListener("pointerup", up, { once: true });
+});
 
 function svg(tag, attrs = {}) {
   const el = document.createElementNS(SVG, tag);
@@ -53,13 +88,17 @@ const label = (code) => `${flag(code)} ${names.of(code)}`;
 function render() {
   const groups = byCountry(entries, mode);
   const order = [...groups.keys()].sort((a, b) => groups.get(b).length - groups.get(a).length || names.of(a).localeCompare(names.of(b)));
-  const width = world.cols * world.cellW - GAP;
+  const width = world.cols * world.cellW;
   const height = world.rows * world.cellH - GAP;
-  const map = svg("svg", { viewBox: `0 0 ${width.toFixed(2)} ${height.toFixed(2)}`, role: "img", "aria-label": "World map" });
-  for (const code of Object.keys(world.cells)) map.append(country(code, groups));
+  const map = svg("svg", { viewBox: `0 0 ${(3 * width).toFixed(2)} ${height.toFixed(2)}`, role: "img", "aria-label": "World map" });
+  const earth = svg("g", { id: "earth" });
+  for (const code of Object.keys(world.cells)) earth.append(country(code, groups));
   // Countries too small for a block only get one when they have noodles, drawn last so it sits on top.
-  for (const code of Object.keys(world.small)) if (groups.has(code)) map.append(country(code, groups));
+  for (const code of Object.keys(world.small)) if (groups.has(code)) earth.append(country(code, groups));
+  map.append(earth, svg("use", { href: "#earth", x: width.toFixed(2) }), svg("use", { href: "#earth", x: (2 * width).toFixed(2) }));
+  const left = mapEl.scrollLeft;
   mapEl.replaceChildren(map);
+  mapEl.scrollLeft = left;
   if (focus) {
     focusOn(selected ? [selected] : order, focus === "smooth" ? "smooth" : "instant");
     focus = null;
