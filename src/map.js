@@ -29,8 +29,10 @@ const copy = () => mapEl.scrollWidth / 3;
 
 function recentre() {
   const w = copy();
-  if (mapEl.scrollLeft < w / 2) mapEl.scrollLeft += w;
-  else if (mapEl.scrollLeft > w * 1.5) mapEl.scrollLeft -= w;
+  const jump = mapEl.scrollLeft < w / 2 ? w : mapEl.scrollLeft > w * 1.5 ? -w : 0;
+  if (!jump) return;
+  mapEl.scrollLeft += jump;
+  if (at !== null) at += jump; // the drift carries on from the same spot
 }
 
 // Start with these countries in the middle of the screen.
@@ -41,8 +43,9 @@ function focusOn(codes) {
   mapEl.scrollLeft = w + ((Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols) * w - mapEl.clientWidth / 2;
 }
 
-// The map drifts from right to left like a ticker, round and round. It stops while someone holds, drags or
-// scrolls it, and for a moment after, and while a country's card is open; with less motion asked for, it stays put.
+// The map drifts from right to left like a ticker, round and round, card open or not. It only waits while someone
+// holds, drags or scrolls it, and drifts on as soon as the scroll has glided to a stop; with less motion asked for,
+// it stays put.
 const DRIFT = 20; // pixels a second
 const still = matchMedia("(prefers-reduced-motion: reduce)");
 let held = false, restUntil = 0, at = null, before = 0;
@@ -54,20 +57,24 @@ function rest(ms) {
 function drift(now) {
   const seconds = before ? Math.min(0.1, (now - before) / 1000) : 0;
   before = now;
-  if (!still.matches && !held && !carded && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
-    if (at === null || Math.abs(at - mapEl.scrollLeft) > 2) at = mapEl.scrollLeft; // moved by hand, or looped
+  if (!still.matches && !held && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
+    if (at === null || Math.abs(at - mapEl.scrollLeft) > 2) at = mapEl.scrollLeft; // moved by hand
     at += DRIFT * seconds;
     mapEl.scrollLeft = at;
   }
+  if (carded) follow();
   requestAnimationFrame(drift);
 }
 requestAnimationFrame(drift);
 
 for (const type of ["pointerdown", "touchstart"]) mapEl.addEventListener(type, () => (held = true), { passive: true });
-for (const type of ["pointerup", "pointercancel", "touchend"]) addEventListener(type, () => held && ((held = false), rest(2500)), { passive: true });
-mapEl.addEventListener("wheel", () => rest(2500), { passive: true });
+for (const type of ["pointerup", "pointercancel", "touchend"]) addEventListener(type, () => (held = false), { passive: true });
 
-mapEl.addEventListener("scroll", recentre, { passive: true });
+// A scroll the drift didn't make (a swipe gliding on, a trackpad, a wheel) gets a moment to finish first.
+mapEl.addEventListener("scroll", () => {
+  recentre();
+  if (at !== null && Math.abs(mapEl.scrollLeft - at) > 2) rest(200);
+}, { passive: true });
 
 // Mice can drag the map sideways too. A drag isn't a click on a country.
 let dragged = false;
@@ -163,6 +170,18 @@ function place(country) {
 }
 
 let carded = null;
+
+// On wider screens the open card travels with its country (whichever copy of it is on screen) and closes once the
+// country has drifted off.
+function follow() {
+  if (!wide.matches) return;
+  const map = mapEl.getBoundingClientRect(), left = Math.max(map.left, 0), right = Math.min(map.right, innerWidth);
+  const seen = (r) => Math.min(r.right, right) - Math.max(r.left, left);
+  const best = [...mapEl.querySelectorAll(`[data-code="${carded}"]`)].map((el) => ({ el, seen: seen(el.getBoundingClientRect()) })).sort((a, b) => b.seen - a.seen)[0];
+  if (!best || best.seen <= 0) return hideCard();
+  place(best.el);
+}
+
 function showCard(country) {
   const code = country.dataset.code;
   if (code !== carded) {
@@ -205,7 +224,7 @@ function hideCard() {
 }
 
 // Clicking (or tapping) a noodle country opens its card; clicking it again, the sea or anywhere off the map
-// closes it. The map holds still while a card is open.
+// closes it.
 mapEl.addEventListener("click", (event) => {
   if (dragged) return;
   const country = event.target.closest?.("[data-code]");
@@ -271,7 +290,7 @@ function pill(x, y, text, cls) {
   const g = svg("g", { class: cls });
   const label = svg("text", { x: x + w / 2, y: y + 4 - ((lines.length - 1) * LINE) / 2 });
   lines.forEach((line, i) => label.append(svg("tspan", { x: x + w / 2, dy: i ? LINE : 0 }, line)));
-  g.append(svg("rect", { x, y: y - h / 2, width: w, height: h, rx: PILL.h / 2 }), label);
+  g.append(svg("rect", { x, y: y - h / 2, width: w, height: h }), label);
   return { g, w, h };
 }
 
