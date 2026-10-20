@@ -1,5 +1,5 @@
 import { api, h } from "./dom.js";
-import { flag } from "./format.js";
+import { flag, formatDate } from "./format.js";
 import { brands, facts } from "./facts.js";
 import { svg, treemap } from "./charts.js";
 import { strip } from "./strip.js";
@@ -62,7 +62,7 @@ function focusOn(codes, behavior) {
 // scrolls it, and for a moment after; with less motion asked for, it stays put.
 const DRIFT = 20; // pixels a second
 const still = matchMedia("(prefers-reduced-motion: reduce)");
-let held = false, restUntil = 0, at = null, before = 0;
+let held = false, hovered = false, restUntil = 0, at = null, before = 0;
 
 function rest(ms) {
   restUntil = performance.now() + ms;
@@ -71,7 +71,7 @@ function rest(ms) {
 function drift(now) {
   const seconds = before ? Math.min(0.1, (now - before) / 1000) : 0;
   before = now;
-  if (!still.matches && !held && !panning && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
+  if (!still.matches && !held && !hovered && !panning && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
     if (at === null || Math.abs(at - mapEl.scrollLeft) > 2) at = mapEl.scrollLeft; // moved by hand, or looped
     at += DRIFT * seconds;
     mapEl.scrollLeft = at;
@@ -107,6 +107,7 @@ function country(code, groups) {
   const el = svg("path", { d });
   el.classList.toggle("has", groups.has(code));
   el.classList.toggle("selected", code === selected);
+  if (groups.has(code)) el.dataset.code = code;
   return el;
 }
 
@@ -120,7 +121,10 @@ function render() {
   for (const code of Object.keys(world.cells)) earth.append(country(code, groups));
   // Countries too small for a block only get one when they have noodles, drawn last so it sits on top.
   for (const code of Object.keys(world.small)) if (groups.has(code)) earth.append(country(code, groups));
-  map.append(earth, svg("use", { href: "#earth", x: width.toFixed(2) }), svg("use", { href: "#earth", x: (2 * width).toFixed(2) }));
+  // Three real copies (not <use>), so pointing at any of them finds the country underneath.
+  const copies = [1, 2].map((n) => Object.assign(earth.cloneNode(true), { id: "" }));
+  copies.forEach((c, n) => c.setAttribute("transform", `translate(${((n + 1) * width).toFixed(2)} 0)`));
+  map.append(earth, ...copies);
   const left = mapEl.scrollLeft;
   mapEl.replaceChildren(map);
   mapEl.scrollLeft = left;
@@ -151,6 +155,62 @@ function render() {
     })
   );
 }
+
+// Pointing at a noodle country (tapping, on a phone) shows its bami facts in a card next to it and lights it up.
+const card = document.getElementById("country-card");
+
+function cardFor(code) {
+  const mine = entries.filter((e) => e.country === code);
+  const { packs, flavours, meters, liters } = facts(mine);
+  const top = brands(mine);
+  const favourite = top.flatMap((b) => b.flavours.map((f) => ({ ...f, brand: b.brand }))).sort((a, b) => b.count - a.count)[0];
+  const first = [...mine].sort((a, b) => a.date.localeCompare(b.date))[0];
+  const share = Math.round((packs / entries.length) * 100);
+  const plural = (n, word) => `${n.toLocaleString("en")} ${n === 1 ? word : `${word}s`}`;
+  return [
+    h("p", { class: "card-name" }, `${flag(code)} ${names.of(code)}`),
+    h("p", {}, `${plural(packs, "pack")}, ${share}% of all.`),
+    h("p", {}, `${top.slice(0, 3).map((b) => b.brand).join(", ")}${top.length > 3 ? ` and ${top.length - 3} more` : ""}.`),
+    h("p", {}, `${plural(flavours, "flavour")}, mostly ${favourite.flavour || "no flavour"}.`),
+    h("p", {}, `${meters.toLocaleString("en")} meters of noodles, ${liters.toLocaleString("en")} liters of soup.`),
+    h("p", {}, `first one on ${formatDate(first.date)}.`),
+  ];
+}
+
+let carded = null;
+function showCard(code, x, y) {
+  if (code !== carded) {
+    carded = code;
+    card.replaceChildren(...cardFor(code));
+    mapEl.querySelectorAll("[data-code]").forEach((p) => p.classList.toggle("selected", p.dataset.code === code));
+  }
+  card.hidden = false;
+  const box = mapEl.getBoundingClientRect();
+  const left = Math.min(Math.max(8, x - box.left + 16), box.width - card.offsetWidth - 8);
+  const top = Math.min(Math.max(8, y - box.top + 16), box.height - card.offsetHeight - 8);
+  card.style.transform = `translate(${left}px, ${top}px)`;
+}
+
+function hideCard() {
+  if (!carded) return;
+  carded = null;
+  card.hidden = true;
+  mapEl.querySelectorAll("[data-code].selected").forEach((p) => p.classList.remove("selected"));
+}
+
+mapEl.addEventListener("pointermove", (event) => {
+  if (event.pointerType !== "mouse") return;
+  const code = event.target.closest?.("[data-code]")?.dataset.code;
+  code ? showCard(code, event.clientX, event.clientY) : hideCard();
+});
+mapEl.addEventListener("pointerenter", (event) => event.pointerType === "mouse" && (hovered = true));
+mapEl.addEventListener("pointerleave", (event) => event.pointerType === "mouse" && ((hovered = false), hideCard()));
+mapEl.addEventListener("click", (event) => {
+  const code = event.target.closest?.("[data-code]")?.dataset.code;
+  if (!code) return hideCard();
+  showCard(code, event.clientX, event.clientY);
+  rest(6000);
+});
 
 countriesEl.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-country]");
