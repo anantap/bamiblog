@@ -225,7 +225,6 @@ new ResizeObserver(() => {
 const wide = matchMedia("(min-width: 768px)");
 const PILL = { h: 22, pad: 10, char: 7.2 }; // DM Mono at 12px is 7.2px a character
 const ROW = 32; // flavours hang this far apart
-const INDENT = 22; // flavours sit this far in from their brand, with their noodle in between
 const COLUMN_GAP = 28;
 
 function pill(x, y, text, cls) {
@@ -241,31 +240,21 @@ function pill(x, y, text, cls) {
 // "bami" in the logo's own shapes (tools/lettering).
 const BAMI = { w: 72, h: 57 }; // public/lettering/bami.svg is 167.6 × 132
 
-// A noodle through these points (straight runs with rounded corners), with an even wiggle along the whole length
-// (one wave every WAVE pixels) that settles at both ends, and now and then a loop. Each one is a little different.
-const WAVE = 30, AMP = 2.4, CORNER = 18;
+// A noodle from (x1, y1) flowing down to (x2, y2) in one smooth curve: it leaves its parent going straight down
+// and arrives going down (into the top of a pill) or, with `across`, sideways (into its left end). An even wiggle
+// runs along the whole length (one wave every WAVE pixels), settling at both ends, and now and then it lies in a
+// loop. Each one is a little different.
+const WAVE = 30, AMP = 2.4;
 
-function noodle(points, seed) {
-  const base = [points[0]];
-  const run = ([x1, y1], [x2, y2]) => {
-    const n = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 3));
-    for (let i = 1; i <= n; i++) base.push([x1 + ((x2 - x1) * i) / n, y1 + ((y2 - y1) * i) / n]);
-  };
-  for (let i = 1; i < points.length; i++) {
-    const [px, py] = base[base.length - 1], [x, y] = points[i], next = points[i + 1];
-    if (!next) {
-      run([px, py], [x, y]);
-      continue;
-    }
-    const d1 = Math.hypot(x - px, y - py) || 1, d2 = Math.hypot(next[0] - x, next[1] - y) || 1;
-    const r = Math.min(CORNER, d1 / 2, d2 / 2);
-    const a = [x - ((x - px) / d1) * r, y - ((y - py) / d1) * r], c = [x + ((next[0] - x) / d2) * r, y + ((next[1] - y) / d2) * r];
-    run([px, py], a);
-    for (let k = 1; k <= 8; k++) {
-      const t = k / 8, u = 1 - t;
-      base.push([u * u * a[0] + 2 * u * t * x + t * t * c[0], u * u * a[1] + 2 * u * t * y + t * t * c[1]]);
-    }
-  }
+function noodle([x1, y1], [x2, y2], seed, across = false) {
+  const drop = y2 - y1;
+  const c1 = [x1, y1 + drop * (across ? 0.75 : 0.55)];
+  const c2 = across ? [x2 - Math.max(16, (x2 - x1) * 0.6), y2] : [x2, y2 - drop * 0.55];
+  const steps = Math.max(24, Math.ceil((Math.abs(x2 - x1) + drop) / 3));
+  const base = Array.from({ length: steps + 1 }, (_, i) => {
+    const t = i / steps, u = 1 - t;
+    return [0, 1].map((k) => u * u * u * [x1, y1][k] + 3 * u * u * t * c1[k] + 3 * u * t * t * c2[k] + t * t * t * [x2, y2][k]);
+  });
   const along = [0];
   for (let i = 1; i < base.length; i++) along.push(along[i - 1] + Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]));
   const length = along[along.length - 1] || 1;
@@ -305,38 +294,37 @@ function renderBrands() {
   document.getElementById("brands-panel").hidden = !all.length;
   if (!all.length) return;
 
-  // Lay it out loosely first: brands at slightly different heights, flavours stepping in and out below them.
+  // Lay it out loosely first: brands at slightly different heights, flavours stepping in and out below them, all
+  // to the right of where their noodles leave the brand.
   const width = (text) => text.length * PILL.char + 2 * PILL.pad;
   const STEPS = [0, 22, 8, 30, 14];
-  const bus = BAMI.h + 12; // where the brands' noodles start running across
   const plan = all.map(({ brand, flavours }, i) => {
-    const across = bus + loose(i * 7 + 2) * 14;
     const brandX = loose(i * 7 + 3) * 10;
-    const brandY = across + 26 + loose(i * 7 + 1) * 34;
+    const brandY = BAMI.h + 64 + loose(i * 7 + 1) * 40;
+    const root = brandX + Math.min(width(brand) / 2, 28); // where its flavours' noodles leave the brand
     let y = brandY;
     const leaves = flavours.map(({ flavour }, j) => {
-      y += ROW * (0.85 + loose(i * 31 + j * 5) * 0.45);
-      return { text: flavour || "no flavour", x: brandX + INDENT + STEPS[j % STEPS.length] + loose(i * 31 + j * 5 + 1) * 6, y };
+      y += ROW * (0.9 + loose(i * 31 + j * 5) * 0.45);
+      return { text: flavour || "no flavour", x: root + 22 + STEPS[j % STEPS.length] + loose(i * 31 + j * 5 + 1) * 6, y };
     });
     const w = Math.max(brandX + width(brand), ...leaves.map((l) => l.x + width(l.text)));
-    return { brand, across, brandX, brandY, leaves, w };
+    return { brand, brandX, brandY, root, leaves, w };
   });
   const total = plan.reduce((n, p) => n + p.w, 0) + COLUMN_GAP * (plan.length - 1);
   const lines = svg("g", { class: "branches" });
   const pills = svg("g");
   let left = -total / 2, seed = 0, bottom = 0;
-  plan.forEach(({ brand, across, brandX, brandY, leaves, w }, i) => {
+  // The noodles leave their parent side by side, like a bundle, from just under it.
+  const bundle = (k, n) => (k - (n - 1) / 2) * 3;
+  plan.forEach(({ brand, brandX, brandY, root, leaves, w }, i) => {
     const label = pill(left + brandX, brandY, brand, "brand");
-    const middle = left + brandX + label.w / 2;
-    const start = (i - (plan.length - 1) / 2) * 3; // the noodles leave "bami" side by side, like a bundle
-    lines.append(noodle([[start, BAMI.h - 4], [start, across], [middle, across], [middle, brandY - PILL.h / 2]], seed++));
+    lines.append(noodle([bundle(i, plan.length), BAMI.h - 4], [left + brandX + label.w / 2, brandY - PILL.h / 2], seed++));
     pills.append(label.g);
-    const lane = left + brandX + 10; // the flavours' noodles come down here, left of every flavour
-    for (const leaf of leaves) {
+    leaves.forEach((leaf, j) => {
       const p = pill(left + leaf.x, leaf.y, leaf.text, "flavour");
-      lines.append(noodle([[lane, brandY + PILL.h / 2], [lane, leaf.y], [left + leaf.x, leaf.y]], seed++));
+      lines.append(noodle([left + root + bundle(j, leaves.length), brandY + PILL.h / 2 - 1], [left + leaf.x, leaf.y], seed++, true));
       pills.append(p.g);
-    }
+    });
     bottom = Math.max(bottom, brandY, ...leaves.map((l) => l.y));
     left += w + COLUMN_GAP;
   });
