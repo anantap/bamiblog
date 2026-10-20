@@ -1,4 +1,4 @@
-// Builds src/world.json: the /map page's world made of noodle-brick blocks, worked out once here so the browser
+// Builds src/world.json: the world map on /bamiversary/, made of noodle-brick blocks, worked out once here so the browser
 // only draws rectangles.
 //
 //     node tools/map/build.mjs

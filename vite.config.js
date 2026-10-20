@@ -62,7 +62,7 @@ export default defineConfig(({ mode }) => {
           main: resolve(import.meta.dirname, "index.html"),
           add: resolve(import.meta.dirname, "add/index.html"),
           about: resolve(import.meta.dirname, "about/index.html"),
-          map: resolve(import.meta.dirname, "map/index.html"),
+          bamiversary: resolve(import.meta.dirname, "bamiversary/index.html"),
         },
       },
     },
