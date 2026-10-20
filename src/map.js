@@ -187,32 +187,82 @@ function renderClock() {
   document.getElementById("clock-caption").textContent = `most noodles around ${String(peak).padStart(2, "0")}:00.`;
 }
 
-// Every brand with its flavours: a row of bricks per flavour, one brick per pack, growing left from the middle with
-// the flavour's name on the right. A brand's clear favourite (no ties) is the logo red.
-function renderBrands() {
-  const plural = (n, word) => `${n} ${n === 1 ? word : `${word}s`}`;
-  document.getElementById("brands").replaceChildren(
-    ...brands(entries).map(({ brand, count, flavours }) =>
-      h(
-        "div",
-        { class: "brand" },
-        h("h2", {}, brand, h("span", {}, ` ${plural(count, "pack")}, ${plural(flavours.length, "flavour")}`)),
-        h(
-          "ul",
-          {},
-          ...flavours.map(({ flavour, count: packs }, i) =>
-            h(
-              "li",
-              {},
-              h("span", { class: `bricks${i === 0 && packs > (flavours[1]?.count ?? packs) ? " favourite" : ""}`, role: "img", "aria-label": plural(packs, "pack") }, ...Array.from({ length: packs }, () => h("i"))),
-              h("span", { class: "flavour" }, flavour || "no flavour")
-            )
-          )
-        )
-      )
-    )
+// Every brand with its flavours as a mind map: "bami" in the middle, brands branching off it, flavours off them.
+// On wide screens the brands split over both sides; on phones they all go right, so the text stays readable.
+// A brand's clear favourite flavour (no ties) is the logo red.
+const wide = matchMedia("(min-width: 768px)");
+const PILL = { h: 22, pad: 10, char: 7.2 }; // DM Mono at 12px is 7.2px a character
+const ROW = 28; // flavours stack this far apart
+const SPLIT = 12; // extra space between brands
+const REACH = 44; // horizontal length of a branch
+
+function pill(x, y, text, cls, side) {
+  const w = text.length * PILL.char + 2 * PILL.pad;
+  const left = side > 0 ? x : x - w; // pills grow outwards from where their branch arrives
+  const g = svg("g", { class: cls });
+  g.append(
+    svg("rect", { x: left, y: y - PILL.h / 2, width: w, height: PILL.h, rx: PILL.h / 2 }),
+    Object.assign(svg("text", { x: left + w / 2, y: y + 4 }), { textContent: text })
   );
+  return { g, w };
 }
+
+const branch = (x1, y1, x2, y2) => svg("path", { d: `M${x1} ${y1}C${(x1 + x2) / 2} ${y1} ${(x1 + x2) / 2} ${y2} ${x2} ${y2}` });
+
+function renderBrands() {
+  const all = brands(entries);
+  const holder = document.getElementById("brands");
+  holder.hidden = !all.length;
+  if (!all.length) return;
+  const rows = (b) => b.flavours.length * ROW + SPLIT;
+
+  // Share the brands over the sides so both are about as tall.
+  const sides = wide.matches ? [[], []] : [[]];
+  const height = (list) => list.reduce((n, b) => n + rows(b), 0);
+  for (const b of all) sides.reduce((a, c) => (height(c) < height(a) ? c : a)).push(b);
+  const tallest = Math.max(...sides.map(height));
+
+  const lines = svg("g", { class: "branches" });
+  const pills = svg("g");
+  const centre = pill(0, tallest / 2, "bami", "theme", 1);
+  const half = centre.w / 2;
+  let minX = -half, maxX = half;
+  sides.forEach((list, i) => {
+    const dir = sides.length === 1 || i === 0 ? 1 : -1;
+    const brandX = dir * (half + REACH);
+    const brandW = Math.max(...list.map((b) => `${b.brand} ${b.count}`.length * PILL.char + 2 * PILL.pad), 0);
+    const flavourX = brandX + dir * (brandW + REACH);
+    let y = (tallest - height(list)) / 2;
+    for (const { brand, count, flavours } of list) {
+      const brandY = y + (flavours.length * ROW) / 2;
+      lines.append(branch(dir * half, tallest / 2, brandX, brandY));
+      const label = pill(brandX, brandY, `${brand} ${count}`, "brand", dir);
+      pills.append(label.g);
+      flavours.forEach(({ flavour, count: packs }, j) => {
+        const fy = y + j * ROW + ROW / 2;
+        const favourite = j === 0 && packs > (flavours[1]?.count ?? packs);
+        lines.append(branch(brandX + dir * label.w, brandY, flavourX, fy));
+        const leaf = pill(flavourX, fy, `${flavour || "no flavour"} ${packs}`, favourite ? "flavour favourite" : "flavour", dir);
+        pills.append(leaf.g);
+        minX = Math.min(minX, flavourX - (dir < 0 ? leaf.w : 0));
+        maxX = Math.max(maxX, flavourX + (dir > 0 ? leaf.w : 0));
+      });
+      y += flavours.length * ROW + SPLIT;
+    }
+  });
+  pills.prepend(centre.g);
+  const top = -PILL.h, total = tallest + 2 * PILL.h;
+  const map = svg("svg", {
+    viewBox: `${minX - 2} ${top} ${maxX - minX + 4} ${total}`,
+    width: maxX - minX + 4,
+    role: "img",
+    "aria-label": all.map((b) => `${b.brand}: ${b.flavours.map((f) => `${f.flavour || "no flavour"} ${f.count}`).join(", ")}`).join("; "),
+  });
+  map.append(lines, pills);
+  holder.replaceChildren(map);
+}
+
+wide.addEventListener("change", () => entries.length && renderBrands());
 
 api("/api/entries")
   .then((list) => {
