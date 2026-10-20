@@ -684,11 +684,6 @@ button {
   display: block;
   width: fit-content;
   margin: 0 auto clamp(48px, 8vw, 96px);
-  transition: transform 0.15s;
-}
-
-.about-home:hover {
-  transform: rotate(-2deg);
 }
 
 .about-home:focus-visible {
