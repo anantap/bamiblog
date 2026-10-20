@@ -13,8 +13,8 @@ const summary = document.getElementById("summary");
 
 const countriesEl = document.getElementById("countries");
 
-// The intro (see the page): once its images are ready, red fades in over the blank page with the title in white;
-// when it ends the red goes and the real title shows, so the colours flip.
+// The intro (see the page): once its images are ready, red fades in over the blank page with the title in white,
+// then fades away over the real title, so the colours fade over.
 const intro = document.querySelector(".intro");
 if (document.documentElement.classList.contains("intro-on")) {
   const done = () => document.documentElement.classList.remove("intro-on");
