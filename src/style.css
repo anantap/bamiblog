@@ -203,6 +203,11 @@ button {
   max-width: var(--page);
   margin: 0 auto;
   padding: 0 16px 48px;
+  text-align: center;
+}
+
+.map-page .tabs {
+  justify-content: center;
 }
 
 /* "bamiversary", drawn from the logo's own shapes (tools/lettering). */
@@ -214,6 +219,7 @@ button {
 .map-title a {
   display: block;
   width: min(560px, 100%);
+  margin: 0 auto;
   transition: transform 0.15s;
 }
 
@@ -224,7 +230,7 @@ button {
 /* The fact sheet: plain rows between thin rules, like the label on a pack. The labels are for screen readers. */
 .facts {
   max-width: 560px;
-  margin: 0 0 40px;
+  margin: 0 auto 40px;
   border-top: 2px solid var(--anthracite);
 }
 
@@ -318,16 +324,22 @@ button {
   color: var(--anthracite);
 }
 
+/* A country's noodles, centred under the map: three across on phones, six on wider screens. */
 .map-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px var(--gap);
   margin-top: 12px;
 }
 
+.map-list .map-tile {
+  width: calc((100% - 2 * var(--gap)) / 3);
+}
+
 @media (min-width: 768px) {
-  .map-list {
-    grid-template-columns: repeat(6, 1fr);
+  .map-list .map-tile {
+    width: calc((100% - 5 * var(--gap)) / 6);
   }
 }
 

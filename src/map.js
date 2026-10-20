@@ -123,10 +123,10 @@ function renderFacts() {
   const number = (n) => n.toLocaleString("en");
   document.getElementById("facts").replaceChildren(
     ...[
-      ["time", "1 year"],
-      ["packs", `${number(packs)} ${packs === 1 ? "pack" : "packs"} of noodles`],
-      ["length", `≈ ${number(meters)} meters of noodles`],
-      ["soup", `≈ ${number(liters)} liters of soup`],
+      ["time", "1 year."],
+      ["packs", `${number(packs)} ${packs === 1 ? "pack" : "packs"} of noodles.`],
+      ["length", `${number(meters)} meters of noodles.`],
+      ["soup", `${number(liters)} liters of soup.`],
     ].map(([label, value]) => h("div", {}, h("dt", {}, label), h("dd", {}, value)))
   );
 }
