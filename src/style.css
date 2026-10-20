@@ -289,7 +289,7 @@ button {
 }
 
 /* The intro (started from src/map.js once its images are in): over a blank page, red fades in with the title in
-   white, lined up with the real one; when it ends the red goes and the real title shows, so the colours flip. */
+   white, lined up with the real one; then the red fades away over the real title, so the colours fade over. */
 .intro {
   position: fixed;
   z-index: 10;
@@ -310,24 +310,43 @@ button {
 }
 
 .intro.play {
-  animation: intro 1.9s forwards;
+  animation: intro 2.8s forwards;
 }
 
 :root:not(.intro-on) .intro {
   display: none;
 }
 
+/* The real title waits until the red covers it, so the page starts blank. */
 .intro-on .panel-intro .map-title {
   visibility: hidden;
+}
+
+.intro-on .intro.play ~ .panel-intro .map-title {
+  animation: intro-title 2.8s forwards;
 }
 
 @keyframes intro {
   0% {
     opacity: 0;
   }
-  30%,
-  100% {
+  25%,
+  55% {
     opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes intro-title {
+  0%,
+  24% {
+    visibility: hidden;
+  }
+  25%,
+  100% {
+    visibility: visible;
   }
 }
 
