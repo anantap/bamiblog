@@ -174,8 +174,8 @@ function showCard(country) {
   place(country);
 }
 
-// On phones the card sits under the map, in room kept for it from the start so the page never shifts when one
-// opens. That room is the tallest card any country has here, measured, so even a country with long brand and
+// On phones the card sits under the map (below the hint, which always stays), in room kept for it from the start so
+// the page never shifts when one opens. That room is the tallest card any country has here, measured, so even a country with long brand and
 // flavour names (or a phone's own fonts) can't make it grow.
 function keepRoom() {
   const slot = card.parentElement;
@@ -193,7 +193,8 @@ function keepRoom() {
   card.replaceChildren(...was.children);
   card.hidden = was.hidden;
   card.style.visibility = "";
-  slot.style.minHeight = `${Math.ceil(tallest)}px`;
+  const hint = document.getElementById("map-hint");
+  slot.style.minHeight = `${Math.ceil(tallest + hint.offsetHeight + 12)}px`; // the hint stays above it
 }
 
 function hideCard() {
