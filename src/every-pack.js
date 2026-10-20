@@ -1,5 +1,5 @@
 // Every pack, the end of /bamiversary/: all the photos in one square-ish grid, oldest at the top left, and in the
-// room left after the newest, "and more to come…". The columns are picked so the grid is about as wide as tall and
+// room left after the newest, "And more to come…". The columns are picked so the grid is about as wide as tall and
 // that room fits the words; with none that does, they get a row of their own.
 import { h } from "./dom.js";
 import { formatDate, padNumber, title } from "./format.js";
@@ -20,7 +20,7 @@ export function everyPack(section, entries) {
   section.hidden = !entries.length;
   if (!entries.length) return;
   const oldest = [...entries].sort((a, b) => a.number - b.number);
-  const more = h("p", { class: "every-more" }, "and more to come…");
+  const more = h("p", { class: "every-more" }, "And more to come…");
   grid.replaceChildren(
     ...oldest.map((e) => h("img", { src: e.photo, alt: title(e), title: `#${padNumber(e.number)} ${title(e)} · ${formatDate(e.date)}`, loading: "lazy", decoding: "async" })),
     more

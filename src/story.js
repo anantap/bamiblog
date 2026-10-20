@@ -19,21 +19,37 @@ export function storyLines(entries) {
   const once = all.filter((b) => b.count === 1).length;
   const counted = countries.reduce((n, [, list]) => n + list.length, 0);
   let map = "";
-  if (countries.length === 1) map = `all of them came from ${names.of(countries[0][0])}.`;
+  if (countries.length === 1) map = `Then came ${plural(counted, "noodle")}, all of them from ${names.of(countries[0][0])}.`;
   else if (countries.length > 1) {
     const most = countries[0][1].length > counted / 2 ? "most of them" : "the most";
-    map = `then they came from ${countries.length} countries, ${most} from ${names.of(countries[0][0])}.`;
+    map = `Then came ${plural(counted, "noodle")} from ${countries.length} countries, ${most} from ${names.of(countries[0][0])}.`;
   }
   return {
-    start: "it started with a pan, a stove, 300ml water and an idea.",
+    start: "It started with a pan, a stove, 300ml water and an idea.",
     map,
-    brands: `${plural(all.length, "brand")}, ${plural(facts(entries).flavours, "flavour")}. ${once === all.length ? "never the same brand twice." : once ? "some only once, some again and again." : "every one of them again and again."}`,
+    brands: `${plural(all.length, "brand")}, ${plural(facts(entries).flavours, "flavour")}. ${once === all.length ? "Never the same brand twice." : once ? "Some only once, some again and again." : "Every one of them again and again."}`,
     estate: all.length > 1 ? `${top.brand} alone took up ${Math.round((top.count / entries.length) * 100)}% of the year.` : `${top.brand} took up the whole year.`,
-    every: `and here they all are, ${plural(entries.length, "pack")}.`,
+    every: `And here they all are, ${plural(entries.length, "pack")}.`,
     first,
   };
 }
 
+
+// "…again and again." goes on: and again, and again, each one smaller than the one before, trailing off.
+const AGAINS = 8;
+
+function againAndAgain(el, line) {
+  if (!line.endsWith(" and again.")) return (el.textContent = line);
+  const words = line.slice(0, -" and again.".length);
+  const fading = Array.from({ length: AGAINS }, (_, k) => {
+    const span = document.createElement("span");
+    span.textContent = k === AGAINS - 1 ? " and again…" : " and again";
+    span.style.fontSize = `${Math.round(100 * 0.8 ** (k + 1))}%`;
+    return span;
+  });
+  el.replaceChildren(words, ...fading);
+  el.setAttribute("aria-label", line);
+}
 
 export function tell(entries) {
   const lines = storyLines(entries);
@@ -43,7 +59,7 @@ export function tell(entries) {
   Object.assign(document.getElementById("first-photo"), { src: lines.first.photo, alt: title(lines.first) });
   text("first-number", `#${padNumber(lines.first.number)} ${pack(lines.first)} · ${formatDate(lines.first.date)}`);
   text("story-map", lines.map);
-  text("story-brands", lines.brands);
+  againAndAgain(document.getElementById("story-brands"), lines.brands);
   text("story-estate", lines.estate);
   text("story-every", lines.every);
   document.getElementById("day-one").hidden = false;

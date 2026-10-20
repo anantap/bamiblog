@@ -154,9 +154,7 @@ function render() {
   focusOn([...groups.keys()]);
 
   const counted = [...groups.values()].reduce((n, list) => n + list.length, 0);
-  summary.textContent = counted
-    ? `${counted} ${counted === 1 ? "noodle" : "noodles"} from ${groups.size} ${groups.size === 1 ? "country" : "countries"}`
-    : "No noodles yet.";
+  summary.textContent = counted ? "" : "No noodles yet."; // with noodles, the story's sentence above says it
 }
 
 // The fact sheet under the lettering: 1 year, then the totals.
