@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brands, facts, hours } from "../src/facts.js";
+import { brands, facts, hours, monthHours, weekly } from "../src/facts.js";
 
 describe("facts", () => {
   it("counts packs, guesses meters of noodles and liters of soup", () => {
@@ -42,5 +42,26 @@ describe("brands", () => {
       { brand: "Mama", count: 1, flavours: [{ flavour: "Tom Yum", count: 1 }] },
     ]);
     expect(facts(entries).flavours).toBe(4);
+  });
+});
+
+describe("monthHours", () => {
+  it("counts noodles per month eaten and hour logged", () => {
+    const grid = monthHours([{ date: "2026-03-02", createdAt: Date.parse("2026-03-02T18:30:00Z") }, { date: "2026-03-09", createdAt: Date.parse("2026-03-09T18:10:00Z") }, { date: "2026-03-09" }]);
+    expect(grid[2][19]).toBe(2); // 18:30 UTC is 19:30 in Amsterdam in March
+    expect(grid.flat().reduce((a, b) => a + b)).toBe(2);
+  });
+});
+
+describe("weekly", () => {
+  it("counts noodles per week per country, the rest together", () => {
+    const e = (date, country) => ({ date, country });
+    const { weeks, series } = weekly([e("2026-01-01", "ID"), e("2026-01-03", "ID"), e("2026-01-09", "JP"), e("2026-01-20", "KR"), e("2026-01-21", "")], 2);
+    expect(weeks).toBe(3);
+    expect(series).toEqual([
+      { country: "ID", counts: [2, 0, 0] },
+      { country: "JP", counts: [0, 1, 0] },
+      { country: "", counts: [0, 0, 2] },
+    ]);
   });
 });

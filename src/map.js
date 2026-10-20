@@ -1,15 +1,14 @@
 import { api, h } from "./dom.js";
 import { flag, padNumber, title } from "./format.js";
 import { brands, facts, hours } from "./facts.js";
+import { contour, sociogram, stream, svg, treemap } from "./charts.js";
 import { byCountry } from "./map-data.js";
 import world from "./world.json";
 
-const SVG = "http://www.w3.org/2000/svg";
 const names = new Intl.DisplayNames(["en"], { type: "region" });
 const page = document.querySelector(".map-page");
 const mapEl = document.getElementById("map");
 const summary = document.getElementById("summary");
-const countryEl = document.getElementById("country");
 
 const countriesEl = document.getElementById("countries");
 const groupsEl = document.getElementById("groups");
@@ -60,12 +59,6 @@ mapEl.addEventListener("pointerdown", (event) => {
   addEventListener("pointermove", move);
   addEventListener("pointerup", up, { once: true });
 });
-
-function svg(tag, attrs = {}) {
-  const el = document.createElementNS(SVG, tag);
-  for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
-  return el;
-}
 
 const GAP = world.cellW * 0.14; // white space between blocks
 
@@ -160,32 +153,32 @@ function renderFacts() {
   );
 }
 
-// The day in 24 columns of bricks, one brick per noodle in the hour it was logged (or a few noodles per brick, once
-// an hour gets busy). The busiest hour is the logo red.
-const CLOCK_ROWS = 12;
-
-function renderClock() {
+// The charts below the map are drawn to fill their boxes, so they're drawn again when the page changes width.
+// Each gets its section shown only once there are noodles for it.
+function renderCharts() {
+  const show = (id, on) => (document.getElementById(id).hidden = !on);
   const counts = hours(entries);
   const most = Math.max(...counts);
-  document.getElementById("clock").hidden = most === 0;
-  if (!most) return;
-  const per = Math.ceil(most / CLOCK_ROWS);
-  const rows = Math.ceil(most / per);
-  const w = 10, hgt = w / 1.4, gap = w * 0.14;
-  const chart = svg("svg", { viewBox: `0 0 ${24 * w - gap} ${rows * hgt - gap + 12}`, role: "img", "aria-label": `Noodles per hour of the day: ${counts.map((n, i) => `${i}:00 ${n}`).join(", ")}` });
-  counts.forEach((count, hour) => {
-    const filled = Math.ceil(count / per);
-    for (let row = 0; row < rows; row++) {
-      const attrs = { x: hour * w, y: (rows - 1 - row) * hgt, width: w - gap, height: hgt - gap };
-      const cls = row >= filled ? "" : count === most ? "most" : "has";
-      chart.append(svg("rect", cls ? { ...attrs, class: cls } : attrs));
-    }
-    if (hour % 6 === 0) chart.append(Object.assign(svg("text", { x: hour * w, y: rows * hgt - gap + 10 }), { textContent: String(hour).padStart(2, "0") }));
-  });
-  document.getElementById("clock-chart").replaceChildren(chart);
-  const peak = counts.indexOf(most);
-  document.getElementById("clock-caption").textContent = `most noodles around ${String(peak).padStart(2, "0")}:00.`;
+  show("clock", most > 0);
+  if (most) {
+    contour(document.getElementById("clock-chart"), entries);
+    document.getElementById("clock-caption").textContent = `most noodles around ${String(counts.indexOf(most)).padStart(2, "0")}:00.`;
+  }
+  show("estate-panel", entries.length > 0);
+  if (entries.length) treemap(document.getElementById("estate"), entries);
+  show("stream-panel", entries.length > 0);
+  const legend = entries.length ? stream(document.getElementById("stream"), entries) ?? [] : [];
+  document.getElementById("stream-legend").replaceChildren(...legend.map(({ label, tone }) => h("li", {}, h("i", { class: `tone-${tone}` }), label)));
+  show("makers-panel", entries.length > 0);
+  if (entries.length) sociogram(document.getElementById("makers"), entries);
 }
+
+let lastWidth = 0;
+new ResizeObserver(() => {
+  if (!entries.length || innerWidth === lastWidth) return;
+  lastWidth = innerWidth;
+  renderCharts();
+}).observe(document.body);
 
 // Every brand with its flavours as a mind map: "bami" in the logo's lettering in the middle, brands branching off it, flavours off them.
 // On wide screens the brands split over both sides; on phones they all go right, so the text stays readable.
@@ -224,7 +217,7 @@ const branch = (x1, y1, x2, y2) => svg("path", { d: `M${x1} ${y1}C${(x1 + x2) / 
 function renderBrands() {
   const all = brands(entries);
   const holder = document.getElementById("brands");
-  holder.hidden = !all.length;
+  document.getElementById("brands-panel").hidden = !all.length;
   if (!all.length) return;
   const rows = (b) => b.flavours.length * ROW + SPLIT;
 
@@ -279,9 +272,10 @@ api("/api/entries")
   .then((list) => {
     entries = list;
     renderFacts();
-    renderClock();
     renderBrands();
     render();
+    lastWidth = innerWidth;
+    renderCharts();
   })
   .catch((err) => (summary.textContent = `Couldn't load the noodles: ${err.message}`))
   .finally(() => page.setAttribute("aria-busy", "false"));

@@ -40,3 +40,32 @@ export function brands(entries) {
   const busiest = (a, b) => b.count - a.count || key(a.brand ?? a.flavour).localeCompare(key(b.brand ?? b.flavour));
   return [...byBrand.values()].map((b) => ({ ...b, flavours: [...b.flavours.values()].sort(busiest) })).sort(busiest);
 }
+
+// Noodles per month (0–11, by the date eaten) and hour (0–23, by when they were logged in Dutch time): rows are months.
+export function monthHours(entries, timeZone = "Europe/Amsterdam") {
+  const hour = new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone });
+  const grid = Array.from({ length: 12 }, () => Array(24).fill(0));
+  for (const { date, createdAt } of entries) if (date && createdAt) grid[Number(date.slice(5, 7)) - 1][Number(hour.format(createdAt))]++;
+  return grid;
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+
+// Noodles per week by the country they come from, from the first noodle's week to the last's. The `top` busiest
+// countries get a series each, busiest first; the rest share one with country "".
+export function weekly(entries, top = 5) {
+  const dated = entries.filter((e) => e.date);
+  if (!dated.length) return { start: 0, weeks: 0, series: [] };
+  const day = (e) => Date.parse(`${e.date}T00:00:00Z`);
+  const start = Math.min(...dated.map(day));
+  const weeks = Math.floor((Math.max(...dated.map(day)) - start) / (7 * DAY)) + 1;
+  const totals = new Map();
+  for (const e of dated) totals.set(e.country ?? "", (totals.get(e.country ?? "") ?? 0) + 1);
+  const named = [...totals].filter(([c]) => c).sort((a, b) => b[1] - a[1]).slice(0, top).map(([c]) => c);
+  const series = [...named, ""].map((country) => ({ country, counts: Array(weeks).fill(0) }));
+  for (const e of dated) {
+    const s = series.find((x) => x.country === (named.includes(e.country) ? e.country : ""));
+    s.counts[Math.floor((day(e) - start) / (7 * DAY))]++;
+  }
+  return { start, weeks, series: series.filter((s) => s.counts.some(Boolean)) };
+}
