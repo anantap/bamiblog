@@ -289,7 +289,8 @@ button {
 }
 
 /* The intro (started from src/map.js once its images are in): over a blank page, red fades in with the title in
-   white, lined up with the real one; then the red fades away over the real title, so the colours fade over. */
+   white in the middle of the screen; the title glides up to where the real one is, and then the red fades away
+   over the real title, so the colours fade over. */
 .intro {
   position: fixed;
   z-index: 10;
@@ -310,28 +311,32 @@ button {
 }
 
 .intro.play {
-  animation: intro 2.8s forwards;
+  animation: intro 3.6s forwards;
+}
+
+.intro.play .intro-title {
+  animation: intro-glide 3.6s forwards;
 }
 
 :root:not(.intro-on) .intro {
   display: none;
 }
 
-/* The real title waits until the red covers it, so the page starts blank. */
-.intro-on .panel-intro .map-title {
+/* The page waits until the red covers it, so it starts blank. */
+.intro-on .map-page > :not(.intro) {
   visibility: hidden;
 }
 
-.intro-on .intro.play ~ .panel-intro .map-title {
-  animation: intro-title 2.8s forwards;
+.intro-on .intro.play ~ * {
+  animation: intro-title 3.6s forwards;
 }
 
 @keyframes intro {
   0% {
     opacity: 0;
   }
-  25%,
-  55% {
+  18%,
+  62% {
     opacity: 1;
   }
   100% {
@@ -339,12 +344,25 @@ button {
   }
 }
 
+/* From the middle of the screen to the middle of the first screen's part. */
+@keyframes intro-glide {
+  0%,
+  25% {
+    transform: translateY(calc(50svh - var(--intro) / 2 - 50%));
+    animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  52%,
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
 @keyframes intro-title {
   0%,
-  24% {
+  17% {
     visibility: hidden;
   }
-  25%,
+  18%,
   100% {
     visibility: visible;
   }
