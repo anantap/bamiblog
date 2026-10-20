@@ -2,7 +2,7 @@
 
     python3 tools/lettering/build.py "send noods" public/lettering/send-noods.svg
     python3 tools/lettering/build.py --outline "about" public/lettering/about-outline.svg
-    python3 tools/lettering/build.py --gap=-6 --arc=32 --soft=2 "bamiversary" public/lettering/bamiversary.svg
+    python3 tools/lettering/build.py --gap=1 --arc=32 --soft=2 "bamiversary" public/lettering/bamiversary.svg
 
 --gap sets the space between letters (default 2; negative pulls them into each other). --arc bends the word
 along a circle, ends down like a rainbow, spanning that many degrees. --soft rounds off every sharp corner
@@ -47,8 +47,8 @@ def arc_svg(text, gap, degrees, bottom, space=24):
         px = width / 2 + radius * math.sin(angle)
         py = radius * (1 - math.cos(angle))
         turn = math.degrees(angle)
-        parts.append(f'<g transform="translate({px - cx:.1f} {py:.1f}) rotate({turn:.2f} {cx:.1f} {BASELINE})">'
-                     f'<g transform="translate({left - x0:.1f} 0)">{svg}</g></g>')
+        parts.append(f'<g class="letter"><g transform="translate({px - cx:.1f} {py:.1f}) rotate({turn:.2f} {cx:.1f} {BASELINE})">'
+                     f'<g transform="translate({left - x0:.1f} 0)">{svg}</g></g></g>')
         for bx, by in ((left, TOP), (left + x1 - x0, TOP), (left, bottom), (left + x1 - x0, bottom)):
             dx, dy = bx - cx, by - BASELINE
             xs.append(px + dx * math.cos(angle) - dy * math.sin(angle))
@@ -73,8 +73,9 @@ def main(text, out, outline=False, gap=2.0, arc=0.0, soft=0.0):
     filt = ' filter="url(#outline)"' if outline else ""
     group = f'<g fill="{RED}"{filt}>{body}</g>'
     if soft:
+        # Each letter is softened on its own, so the rounding can't glue neighbours together.
         defs += soft_filter(soft, box)
-        group = f'<g filter="url(#soft)">{group}</g>'
+        group = group.replace('<g class="letter">', '<g class="letter" filter="url(#soft)">')
     view = f"{box[0]:g} {box[1]:g} {box[2]:.1f} {box[3]:g}" if not arc else " ".join(f"{v:.1f}" for v in box)
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" '
            f'role="img" aria-label="{text}"><defs>{defs}</defs>{group}</svg>\n')
