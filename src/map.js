@@ -42,10 +42,10 @@ function focusOn(codes) {
 }
 
 // The map drifts from right to left like a ticker, round and round. It stops while someone holds, drags or
-// scrolls it, and for a moment after; with less motion asked for, it stays put.
+// scrolls it, and for a moment after, and while a country's card is open; with less motion asked for, it stays put.
 const DRIFT = 20; // pixels a second
 const still = matchMedia("(prefers-reduced-motion: reduce)");
-let held = false, hovered = false, restUntil = 0, at = null, before = 0;
+let held = false, restUntil = 0, at = null, before = 0;
 
 function rest(ms) {
   restUntil = performance.now() + ms;
@@ -54,11 +54,10 @@ function rest(ms) {
 function drift(now) {
   const seconds = before ? Math.min(0.1, (now - before) / 1000) : 0;
   before = now;
-  if (!still.matches && !held && !hovered && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
+  if (!still.matches && !held && !carded && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
     if (at === null || Math.abs(at - mapEl.scrollLeft) > 2) at = mapEl.scrollLeft; // moved by hand, or looped
     at += DRIFT * seconds;
     mapEl.scrollLeft = at;
-    if (wide.matches) hideCard(); // a card beside a country goes once the map moves on (under it, it stays)
   }
   requestAnimationFrame(drift);
 }
@@ -70,11 +69,16 @@ mapEl.addEventListener("wheel", () => rest(2500), { passive: true });
 
 mapEl.addEventListener("scroll", recentre, { passive: true });
 
-// Mice can drag the map sideways too.
+// Mice can drag the map sideways too. A drag isn't a click on a country.
+let dragged = false;
 mapEl.addEventListener("pointerdown", (event) => {
+  dragged = false;
   if (event.pointerType !== "mouse") return;
   const start = event.clientX, from = mapEl.scrollLeft;
-  const move = (e) => (mapEl.scrollLeft = from - (e.clientX - start));
+  const move = (e) => {
+    if (Math.abs(e.clientX - start) > 5) dragged = true;
+    mapEl.scrollLeft = from - (e.clientX - start);
+  };
   const up = () => removeEventListener("pointermove", move);
   addEventListener("pointermove", move);
   addEventListener("pointerup", up, { once: true });
@@ -116,7 +120,7 @@ function render() {
     : "No noodles yet.";
 }
 
-// Pointing at a noodle country (tapping, on a phone) shows its bami facts in a card next to it and lights it up.
+// Clicking a noodle country (tapping, on a phone) shows its bami facts in a card next to it and lights it up.
 const card = document.getElementById("country-card");
 
 function cardFor(code) {
@@ -177,19 +181,15 @@ function hideCard() {
   mapEl.querySelectorAll("[data-code].selected").forEach((p) => p.classList.remove("selected"));
 }
 
-mapEl.addEventListener("pointermove", (event) => {
-  if (event.pointerType !== "mouse") return;
-  const country = event.target.closest?.("[data-code]");
-  country ? showCard(country) : hideCard();
-});
-mapEl.addEventListener("pointerenter", (event) => event.pointerType === "mouse" && (hovered = true));
-mapEl.addEventListener("pointerleave", (event) => event.pointerType === "mouse" && ((hovered = false), hideCard()));
+// Clicking (or tapping) a noodle country opens its card; clicking it again, the sea or anywhere off the map
+// closes it. The map holds still while a card is open.
 mapEl.addEventListener("click", (event) => {
+  if (dragged) return;
   const country = event.target.closest?.("[data-code]");
-  if (!country) return hideCard();
+  if (!country || country.dataset.code === carded) return hideCard();
   showCard(country);
-  rest(6000);
 });
+document.addEventListener("click", (event) => !event.target.closest(".map-holder") && hideCard());
 
 // The fact sheet under the lettering: 1 year, then the totals.
 function renderFacts() {
@@ -227,14 +227,28 @@ const PILL = { h: 22, pad: 10, char: 7.2 }; // DM Mono at 12px is 7.2px a charac
 const ROW = 32; // flavours hang this far apart
 const COLUMN_GAP = 28;
 
+const LINE = 14; // extra height for each extra line in a pill
+const MAX_CHARS = 22; // a flavour longer than this goes onto more lines
+
+// A pill's lines (long flavours wrap at MAX_CHARS, between words), and its width and height.
+function measure(text, wraps) {
+  const lines = [];
+  for (const word of wraps ? text.split(" ") : [text]) {
+    const last = lines.length - 1;
+    if (last >= 0 && `${lines[last]} ${word}`.length <= MAX_CHARS) lines[last] += ` ${word}`;
+    else lines.push(word);
+  }
+  return { lines, w: Math.max(...lines.map((l) => l.length)) * PILL.char + 2 * PILL.pad, h: PILL.h + (lines.length - 1) * LINE };
+}
+
+// A pill with its left end at x, its middle at y.
 function pill(x, y, text, cls) {
-  const w = text.length * PILL.char + 2 * PILL.pad;
+  const { lines, w, h } = measure(text, cls === "flavour");
   const g = svg("g", { class: cls });
-  g.append(
-    svg("rect", { x, y: y - PILL.h / 2, width: w, height: PILL.h, rx: PILL.h / 2 }),
-    Object.assign(svg("text", { x: x + w / 2, y: y + 4 }), { textContent: text })
-  );
-  return { g, w };
+  const label = svg("text", { x: x + w / 2, y: y + 4 - ((lines.length - 1) * LINE) / 2 });
+  lines.forEach((line, i) => label.append(svg("tspan", { x: x + w / 2, dy: i ? LINE : 0 }, line)));
+  g.append(svg("rect", { x, y: y - h / 2, width: w, height: h, rx: PILL.h / 2 }), label);
+  return { g, w, h };
 }
 
 // "bami" in the logo's own shapes (tools/lettering).
@@ -312,19 +326,22 @@ function renderBrands() {
   // Lay it out loosely first: brands at slightly different heights, flavours wandering in and out below them. Their
   // noodles fan out along the bottom of the brand, the top flavour's from the right and the lowest's from the left,
   // and every flavour sits to the right of its own noodle, so no noodle runs through a pill.
-  const width = (text) => text.length * PILL.char + 2 * PILL.pad;
+  const width = (text, wraps = false) => measure(text, wraps).w;
+  const extra = (text) => measure(text, true).h - PILL.h; // a flavour on more lines needs more room
   const STEPS = [0, 22, 8, 30, 14];
   const plan = all.map(({ brand, flavours }, i) => {
     const brandX = loose(i * 7 + 3) * 10;
     const brandY = BAMI.h + 64 + loose(i * 7 + 1) * 40;
     const span = Math.max(0, width(brand) - 24); // the bottom of the brand, less its round ends
-    let y = brandY;
+    let y = brandY, before = 0;
     const leaves = flavours.map(({ flavour }, j) => {
-      y += ROW * (0.9 + loose(i * 31 + j * 5) * 0.5);
+      const text = flavour || "no flavour";
+      y += ROW * (0.9 + loose(i * 31 + j * 5) * 0.5) + (before + extra(text)) / 2;
+      before = extra(text);
       const from = brandX + 12 + (flavours.length > 1 ? span * (1 - j / (flavours.length - 1)) : span / 2);
-      return { text: flavour || "no flavour", from, x: from + 18 + STEPS[j % STEPS.length] * 0.7 + loose(i * 31 + j * 5 + 1) * 16, y };
+      return { text, from, x: from + 18 + STEPS[j % STEPS.length] * 0.7 + loose(i * 31 + j * 5 + 1) * 16, y, below: extra(text) / 2 };
     });
-    const w = Math.max(brandX + width(brand), ...leaves.map((l) => l.x + width(l.text)));
+    const w = Math.max(brandX + width(brand), ...leaves.map((l) => l.x + width(l.text, true)));
     return { brand, brandX, brandY, leaves, w };
   });
   const lines = svg("g", { class: "branches" });
@@ -332,16 +349,20 @@ function renderBrands() {
   let seed = 0, bottom = 0, minX, maxX, middle;
   // The brands' noodles leave "bami" side by side, like a bundle.
   const bundle = (k, n) => (k - (n - 1) / 2) * 3;
-  const draw = (left, top, { brand, brandX, brandY, leaves }, from) => {
-    const label = pill(left + brandX, top + brandY, brand, "brand");
-    lines.append(noodle(from(label), seed++));
+  // Draws a brand and its flavours; with `mirror` (= the width to mirror in) it's flipped left to right, flavours
+  // fanning out to the left and their noodles coming into their right ends.
+  const draw = (left, top, { brand, brandX, brandY, leaves }, from, mirror = 0) => {
+    const flip = (points) => (mirror ? points.map(([x, y]) => [mirror - x, y]) : points);
+    const at = (x, text, wraps) => (mirror ? mirror - x - width(text, wraps) : x);
+    const label = pill(at(left + brandX, brand), top + brandY, brand, "brand");
+    lines.append(noodle(flip(from(label)), seed++));
     pills.append(label.g);
     for (const leaf of leaves) {
-      const p = pill(left + leaf.x, top + leaf.y, leaf.text, "flavour");
-      lines.append(noodle(flow([left + leaf.from, top + brandY + PILL.h / 2 - 1], [left + leaf.x, top + leaf.y], true), seed++));
+      const p = pill(at(left + leaf.x, leaf.text, true), top + leaf.y, leaf.text, "flavour");
+      lines.append(noodle(flip(flow([left + leaf.from, top + brandY + PILL.h / 2 - 1], [left + leaf.x, top + leaf.y], true)), seed++));
       pills.append(p.g);
     }
-    bottom = Math.max(bottom, top + brandY, ...leaves.map((l) => top + l.y));
+    bottom = Math.max(bottom, top + brandY, ...leaves.map((l) => top + l.y + l.below));
   };
   if (wide.matches) {
     // Side by side under "bami", like a family tree.
@@ -353,25 +374,24 @@ function renderBrands() {
     });
     [minX, maxX, middle] = [-Math.max(total, BAMI.w) / 2, Math.max(total, BAMI.w) / 2, 0];
   } else {
-    // On phones the tree is turned sideways: brands one below the other at the left, each with its flavours to the
-    // right, and "bami" still in the middle at the top. The brands' noodles split, every other one running down a
-    // lane at the far left (into the brand's left end) or the far right (into its right end).
+    // On phones the tree is turned sideways: brands one below the other, every other one at the left (its
+    // flavours fanning out to the right) or the right (fanning out to the left), and "bami" still in the middle at
+    // the top. A brand's noodle swings out to a lane down its own edge and comes into the brand's outer end, so it
+    // passes the brands above without crossing them.
     const lane = 6, left = 16;
-    const w = Math.max(BAMI.w, ...plan.map((p) => left + p.w));
+    const w = Math.max(BAMI.w + 2 * left, ...plan.map((p) => 2 * left + p.w));
     middle = w / 2;
-    let top = BAMI.h + 64; // below where the noodles swing out to the lane
+    let top = BAMI.h + 64; // below where the noodles swing out to the lanes
     plan.forEach((p, i) => {
       const lift = p.brandY - (BAMI.h + 64); // its own little offset, from the wide layout
       const y = top + lift * 0.4;
       const right = i % 2 === 1;
-      draw(left, y - p.brandY + PILL.h, p, (label) =>
-        right
-          ? aside([middle + bundle(i, plan.length), BAMI.h + 6], w + 10 + (i % 3) * 3, [left + p.brandX + label.w, y + PILL.h])
-          : aside([middle + bundle(i, plan.length), BAMI.h + 6], lane + (i % 3) * 3, [left + p.brandX, y + PILL.h])
-      );
-      top = Math.max(y + PILL.h, ...p.leaves.map((l) => y - p.brandY + PILL.h + l.y)) + ROW;
+      // Worked out as if on the left; drawn flipped for the right.
+      const start = right ? w - (middle + bundle(i, plan.length)) : middle + bundle(i, plan.length);
+      draw(left, y - p.brandY + PILL.h, p, () => aside([start, BAMI.h + 6], lane + (i % 3) * 3, [left + p.brandX, y + PILL.h]), right ? w : 0);
+      top = Math.max(y + PILL.h, ...p.leaves.map((l) => y - p.brandY + PILL.h + l.y + l.below)) + ROW;
     });
-    [minX, maxX] = [0, w + 20];
+    [minX, maxX] = [0, w];
   }
   pills.append(svg("image", { href: "/lettering/bami.svg", x: middle - BAMI.w / 2, y: 0, width: BAMI.w, height: BAMI.h }));
   const reach = maxX - minX + 8, height = bottom + PILL.h / 2 + 4;
