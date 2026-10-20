@@ -83,7 +83,7 @@ GLYPHS = {
     "→": (_arrow(), 0.0, 95.0),
     # edited outlines
     "c": (_outline("c_outline"), 257.4, 300.0),
-    "r": (_outline("r_outline"), 94.5, 140.0),
+    "r": (_outline("r_outline"), 94.5, 154.0),  # the arm reaches x 156
 }
 
 def word_svg(text, gap=2.0, space=24):

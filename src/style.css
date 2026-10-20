@@ -205,6 +205,18 @@ button {
   padding: 0 16px 48px;
 }
 
+/* "bamiversary", drawn from the logo's own shapes (tools/lettering). */
+.map-title {
+  margin: 8px 0 28px;
+  line-height: 0;
+}
+
+.map-title img {
+  display: block;
+  width: min(584px, 100%);
+  height: auto;
+}
+
 /* On phones the map keeps a fixed width and scrolls sideways, edge to edge; on wider screens it just fits. */
 .map {
   --accent-light: #f19d8a;
