@@ -77,7 +77,7 @@ GLYPHS = {
     "k": (f'<path d="{P(5)}"/>' + _stem(276, 74, rot=42, sx=0.7, sy=0.6) + _stem(279, 104, rot=-36, sx=0.75, sy=0.6), 236.0, 300.0),
     "v": (_stem(14, 86, rot=-20, sx=0.9) + _stem(38, 86, rot=20, sx=0.9), 0.0, 52.0),
     "x": (_stem(26, 88, rot=34, sx=0.85, sy=1.05) + _stem(26, 88, rot=-34, sx=0.85, sy=1.05), 0.0, 52.0),
-    "y": (f'<g transform="rotate(180 125.5 89)">{_n()}</g>' + _tail((153, 108), 0.85), 94.4, 157.0),       # u + g-tail
+    "y": (f'<g transform="rotate(180 125.5 89)">{_n()}</g>' + _tail((148, 110), 1.25), 94.4, 157.0),       # u + a big g-tail, so it doesn't read as u
     "z": (_stem(25, 62, rot=90, sx=0.6, sy=0.7) + _stem(25, 117, rot=-90, sx=0.6, sy=0.7) + _stem(25, 90, rot=50, sx=0.6, sy=0.85), 0.0, 50.0),
     # arrow: two i-stems meeting in their blobby ends as the head, one laid flat as the shaft
     "→": (_arrow(), 0.0, 95.0),

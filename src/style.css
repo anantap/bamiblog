@@ -207,13 +207,13 @@ button {
 
 /* "bamiversary", drawn from the logo's own shapes (tools/lettering). */
 .map-title {
-  margin: 8px 0 28px;
+  margin: 0 0 24px;
   line-height: 0;
 }
 
 .map-title img {
   display: block;
-  width: min(584px, 100%);
+  width: min(560px, 100%);
   height: auto;
 }
 
