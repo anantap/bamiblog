@@ -8,11 +8,13 @@
 --gap sets the space between letters (default 2; negative pulls them into each other), on top of the
 per-pair KERN table in glyphs.py. --arc bends the word
 along a circle, ends down like a rainbow, spanning that many degrees. --soft rounds off every sharp corner
-where pieces meet or are cut (blur by that much, then back to a crisp edge); about 2 keeps the shapes.
+where pieces meet or are cut (blur by that much, then back to a crisp edge); about 2 keeps the shapes. The result
+is then traced into plain paths by trace.mjs (needs Node and Playwright), so it draws with smooth edges everywhere.
 
 Available letters: a–z and space. Each one is made only from the logo: see glyphs.py.
 """
 import math
+import subprocess
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -82,6 +84,8 @@ def main(text, out, outline=False, gap=2.0, arc=0.0, soft=0.0):
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" '
            f'role="img" aria-label="{text}"><defs>{defs}</defs>{group}</svg>\n')
     Path(out).write_text(svg)
+    if soft:
+        subprocess.run(["node", str(Path(__file__).with_name("trace.mjs")), out], check=True)
     print(f"{out}: {box[2]:.0f}×{box[3]:.0f}")
 
 if __name__ == "__main__":
