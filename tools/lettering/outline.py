@@ -67,9 +67,9 @@ def cap(start, end, bulge, n=16):
              start[1] + dy * k / n + ny * bulge * math.sin(math.pi * k / n)) for k in range(1, n)]
 
 def r_outline():
-    """The n without its right leg: the arch ends in a round drop."""
+    """The n without its right leg: the arch ends in a short round drop near the top, so it reads as r."""
     pts = n_points()
-    pts = replace_run(pts, lambda p: p[0] > 133 and p[1] > 84, lambda s, e: cap(s, e, 9))
+    pts = replace_run(pts, lambda p: p[0] > 133 and p[1] > 64, lambda s, e: cap(s, e, 9))
     return to_path(smooth(pts, 3))
 
 def c_outline(opening=55):

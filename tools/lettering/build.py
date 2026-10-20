@@ -17,7 +17,7 @@ from glyphs import DEFS, GLYPHS, RED, word_svg
 
 TOP, BOTTOM = 4, 136  # vertical band shared by all letters (logo coordinates)
 BASELINE = 124
-DESCENDERS = {"g": 170, "j": 152, "y": 174}  # letters whose tails hang below the band, and how far
+DESCENDERS = {"g": 170, "j": 152, "y": 164}  # letters whose tails hang below the band, and how far
 OUTLINE = 6           # outline thickness in logo units (≈1.3px at the sizes used on the site)
 
 # Traces the edge of the combined shape: erode the letters, keep what was eaten away.

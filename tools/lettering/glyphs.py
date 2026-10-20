@@ -77,13 +77,13 @@ GLYPHS = {
     "k": (f'<path d="{P(5)}"/>' + _stem(276, 74, rot=42, sx=0.7, sy=0.6) + _stem(279, 104, rot=-36, sx=0.75, sy=0.6), 236.0, 300.0),
     "v": (_stem(14, 86, rot=-20, sx=0.9) + _stem(38, 86, rot=20, sx=0.9), 0.0, 52.0),
     "x": (_stem(26, 88, rot=34, sx=0.85, sy=1.05) + _stem(26, 88, rot=-34, sx=0.85, sy=1.05), 0.0, 52.0),
-    "y": (f'<g transform="rotate(180 125.5 89)">{_n()}</g>' + _tail((148, 110), 1.25), 94.4, 157.0),       # u + a big g-tail, so it doesn't read as u
+    "y": (_stem(14, 86, rot=-20, sx=0.9) + _stem(38, 86, rot=20, sx=0.9) + _tail((34, 112)), 0.0, 56.0),  # v + g-tail
     "z": (_stem(25, 62, rot=90, sx=0.6, sy=0.7) + _stem(25, 117, rot=-90, sx=0.6, sy=0.7) + _stem(25, 90, rot=50, sx=0.6, sy=0.85), 0.0, 50.0),
     # arrow: two i-stems meeting in their blobby ends as the head, one laid flat as the shaft
     "→": (_arrow(), 0.0, 95.0),
     # edited outlines
     "c": (_outline("c_outline"), 257.4, 300.0),
-    "r": (_outline("r_outline"), 94.5, 154.0),  # the arm reaches x 156
+    "r": (_outline("r_outline"), 94.5, 146.0),  # the arm sits high, so the next letter can tuck under it
 }
 
 def word_svg(text, gap=2.0, space=24):
