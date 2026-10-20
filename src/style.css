@@ -466,12 +466,44 @@ button {
   font: 500 18px/1.3 var(--font);
 }
 
+/* On phones the card sits under the map instead, centred, and stays while the map drifts on. */
+@media (max-width: 767px) {
+  .country-card {
+    position: static;
+    margin: 16px auto 0;
+    transform: none !important;
+    text-align: center;
+  }
+}
+
+/* Until a card shows, a hint where it will be: "point at" with a mouse, "tap" on touch screens. */
+.map-hint {
+  margin: 16px 0 0;
+  font: 400 13px/1.45 var(--font);
+  color: var(--muted);
+}
+
+.map-hint .tap,
+.map-holder:has(.country-card:not([hidden])) + .map-hint {
+  display: none;
+}
+
+@media (hover: none) {
+  .map-hint .point {
+    display: none;
+  }
+
+  .map-hint .tap {
+    display: inline;
+  }
+}
+
 .map [data-code] {
   cursor: pointer;
 }
 
 .map-summary {
-  margin: 16px 0 0;
+  margin: 0 0 16px;
   font: 400 13px/1.45 var(--font);
   color: var(--anthracite);
 }

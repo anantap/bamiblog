@@ -58,7 +58,7 @@ function drift(now) {
     if (at === null || Math.abs(at - mapEl.scrollLeft) > 2) at = mapEl.scrollLeft; // moved by hand, or looped
     at += DRIFT * seconds;
     mapEl.scrollLeft = at;
-    hideCard(); // a tapped country's card goes once the map moves on
+    if (wide.matches) hideCard(); // a card beside a country goes once the map moves on (under it, it stays)
   }
   requestAnimationFrame(drift);
 }
@@ -137,9 +137,10 @@ function cardFor(code) {
   ];
 }
 
-// The card goes beside the country, never over it: to its right if it fits on screen, else its left, else above
+// On wider screens the card goes beside the country, never over it (on phones it sits under the map instead): to its right if it fits on screen, else its left, else above
 // or below it (whichever has more room), centred on it and kept on screen.
 function place(country) {
+  if (!wide.matches) return;
   const map = mapEl.getBoundingClientRect();
   const land = country.getBoundingClientRect();
   const w = card.offsetWidth, h = card.offsetHeight, gap = 12;
