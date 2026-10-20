@@ -273,7 +273,6 @@ button {
 }
 
 .map-page {
-  --accent-pale: #f6dcd4;
   --accent-light: #f19d8a;
   --accent-dark: #b5361c;
   --accent-deep: #8a2716;
@@ -390,6 +389,19 @@ button {
   margin-right: 6px;
 }
 
+/* Noodle o'clock. */
+.bar {
+  fill: var(--accent-light);
+}
+
+.bar.most {
+  fill: var(--accent);
+}
+
+.bar.none {
+  fill: var(--line);
+}
+
 /* Colours shared by the treemap and the stream graph. */
 .tone-0 { --tone: var(--accent); --on-tone: #fff; }
 .tone-1 { --tone: var(--anthracite); --on-tone: #fff; }
@@ -404,23 +416,20 @@ button {
   fill: var(--tone);
 }
 
-/* Noodle real estate: the treemap's brands use the reds, no anthracite. */
+/* Noodle real estate: the treemap's brands use the reds, no anthracite; flavours are lighter shades of them. */
 .estate.tone-1 { --tone: var(--accent-dark); }
 .estate.tone-2 { --tone: var(--accent-deep); }
 
-.estate > rect:first-child {
+.estate > rect {
   fill: var(--tone);
-}
-
-.estate .estate-flavour {
-  fill: none;
-  stroke: var(--on-tone);
-  stroke-opacity: 0.45;
-  stroke-width: 1.5;
 }
 
 .estate text {
   fill: var(--on-tone);
+}
+
+.estate .shade-light text {
+  fill: var(--anthracite);
 }
 
 .estate .estate-brand {

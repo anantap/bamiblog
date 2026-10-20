@@ -1,6 +1,6 @@
-// The charts on /bamiversary/, each drawn to fill its box: noodle o'clock (a contour plot), noodle real estate
+// The charts on /bamiversary/, each drawn to fill its box: noodle o'clock (a bar chart), noodle real estate
 // (a treemap), the year in noodles (a stream graph) and who makes what (a sociogram).
-import { brands, monthHours, weekly } from "./facts.js";
+import { brands, hours, weekly } from "./facts.js";
 import { makers } from "./makers.js";
 import { flag } from "./format.js";
 
@@ -15,12 +15,6 @@ export function svg(tag, attrs = {}, text) {
   return el;
 }
 
-// The colours, read from the stylesheet so the canvas matches it.
-function colours(el) {
-  const style = getComputedStyle(el);
-  return ["--line", "--accent-pale", "--accent-light", "--accent", "--accent-dark", "--anthracite"].map((name) => style.getPropertyValue(name).trim());
-}
-
 function frame(host) {
   const { width, height } = host.getBoundingClientRect();
   const el = svg("svg", { viewBox: `0 0 ${width} ${height}`, width, height });
@@ -28,49 +22,19 @@ function frame(host) {
   return { el, width, height };
 }
 
-// Noodle o'clock: hours across, months down. The counts are smoothed into a landscape and cut into bands, from
-// the palest red for a few noodles to anthracite for the busiest hours.
-export function contour(host, entries) {
-  const grid = monthHours(entries);
-  const blur = grid.map((row, m) =>
-    row.map((_, h) => {
-      let sum = 0, weight = 0;
-      for (let dm = -2; dm <= 2; dm++) {
-        for (let dh = -2; dh <= 2; dh++) {
-          const mm = m + dm;
-          if (mm < 0 || mm > 11) continue;
-          const k = Math.exp(-(dm * dm + dh * dh) / 2);
-          sum += grid[mm][(h + dh + 24) % 24] * k;
-          weight += k;
-        }
-      }
-      return sum / weight;
-    })
-  );
-  const most = Math.max(...blur.flat());
-  if (!most) return host.replaceChildren();
+// Noodle o'clock: a bar for each hour of the day, as tall as the noodles logged in it, the busiest in red.
+export function clock(host, entries) {
+  const counts = hours(entries);
+  const most = Math.max(...counts);
   const { el, width, height } = frame(host);
-  const left = 36, bottom = 22, w = Math.max(1, width - left), h = Math.max(1, height - bottom);
-
-  const scale = devicePixelRatio || 1;
-  const canvas = Object.assign(document.createElement("canvas"), { width: Math.round(w * scale), height: Math.round(h * scale) });
-  const ctx = canvas.getContext("2d");
-  const image = ctx.createImageData(canvas.width, canvas.height);
-  const bands = colours(host).map((c) => c.match(/\w\w/g).map((x) => parseInt(x, 16)));
-  const at = (m, hr) => blur[Math.max(0, Math.min(11, m))][(hr + 24) % 24];
-  for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-      const fh = (x / canvas.width) * 24 - 0.5, fm = (y / canvas.height) * 12 - 0.5;
-      const h0 = Math.floor(fh), m0 = Math.floor(fm), th = fh - h0, tm = fm - m0;
-      const v = ((at(m0, h0) * (1 - th) + at(m0, h0 + 1) * th) * (1 - tm) + (at(m0 + 1, h0) * (1 - th) + at(m0 + 1, h0 + 1) * th) * tm) / most;
-      const band = v < 0.08 ? null : bands[Math.min(5, 1 + Math.floor(((v - 0.08) / 0.92) * 5))];
-      image.data.set(band ? [...band, 255] : [255, 255, 255, 0], (y * canvas.width + x) * 4);
-    }
-  }
-  ctx.putImageData(image, 0, 0);
-  el.append(svg("image", { href: canvas.toDataURL(), x: left, y: 0, width: w, height: h }));
-  MONTHS.forEach((m, i) => el.append(svg("text", { x: left - 8, y: ((i + 0.5) / 12) * h + 4, "text-anchor": "end" }, m)));
-  for (let hr = 0; hr < 24; hr += 6) el.append(svg("text", { x: left + (hr / 24) * w, y: height - 4, "text-anchor": hr ? "middle" : "start" }, `${String(hr).padStart(2, "0")}:00`));
+  const bottom = 22, top = 18, gap = Math.min(6, width / 24 / 4), w = width / 24;
+  counts.forEach((count, hour) => {
+    const h = count ? Math.max(2, (count / most) * (height - bottom - top)) : 2;
+    const x = hour * w + gap / 2, y = height - bottom - h;
+    el.append(svg("rect", { x, y, width: w - gap, height: h, class: count === most ? "bar most" : count ? "bar" : "bar none" }));
+    if (count && w > 22) el.append(svg("text", { x: x + (w - gap) / 2, y: y - 5, "text-anchor": "middle" }, count));
+    if (hour % 3 === 0) el.append(svg("text", { x: x + (w - gap) / 2, y: height - 4, "text-anchor": "middle" }, String(hour).padStart(2, "0")));
+  });
 }
 
 // Squarified treemap: lays items ({ v }) out in the box as close to squares as it can.
@@ -105,24 +69,29 @@ function squarify(items, x, y, w, h, out = []) {
 
 const fits = (text, size, room) => text.length * size * 0.6 < room;
 
-// Noodle real estate: each brand a block the size of its packs, cut into its flavours.
+// Noodle real estate: each brand a block the size of its packs in its own red, cut into its flavours in lighter
+// and lighter shades of that red (busiest flavour first), with white between them.
 export function treemap(host, entries) {
   const { el, width, height } = frame(host);
-  const gap = 3, head = 26;
+  const gap = 4, head = 26;
   const blocks = squarify(brands(entries).map((b) => ({ ...b, v: b.count })), 0, 0, width, height);
   blocks.forEach((b, i) => {
     const g = svg("g", { class: `estate tone-${i % 4}` });
-    g.append(svg("rect", { x: b.x + gap / 2, y: b.y + gap / 2, width: Math.max(0, b.w - gap), height: Math.max(0, b.h - gap) }));
+    const x = b.x + gap / 2, y = b.y + gap / 2, w = Math.max(0, b.w - gap), h = Math.max(0, b.h - gap);
+    const inner = h > head * 2 ? squarify(b.flavours.map((f) => ({ ...f, v: f.count })), x, y + head, w, h - head) : [];
+    g.append(svg("rect", { x, y, width: w, height: inner.length ? head + 1 : h })); // 1px under the first flavour: no seam
+    inner.forEach((f, j) => {
+      const shade = Math.max(30, 100 - j * 22); // percent of the brand's red, the rest white
+      const tile = svg("g", { class: shade >= 70 ? "shade-dark" : "shade-light" });
+      tile.append(svg("rect", { x: f.x, y: f.y, width: Math.max(0, f.w - (f.x + f.w < x + w - 1 ? 2 : 0)), height: Math.max(0, f.h - (f.y + f.h < y + h - 1 ? 2 : 0)), style: `fill: color-mix(in srgb, var(--tone) ${shade}%, #fff)` }));
+      const label = `${f.flavour || "no flavour"} ${f.count}`;
+      if (fits(label, 11, f.w - 14) && f.h > 24) tile.append(svg("text", { x: f.x + 8, y: f.y + 17 }, label));
+      g.append(tile);
+    });
     const name = `${b.brand} ${b.count}`;
     // The brand's name, smaller or as just the number when the block is narrow.
-    const tag = [[name, 14], [name, 11], [String(b.count), 11]].find(([text, size]) => fits(text, size, b.w - 16));
-    if (tag && b.h > head) g.append(svg("text", { x: b.x + 10, y: b.y + 19, class: "estate-brand", style: `font-size: ${tag[1]}px` }, tag[0]));
-    const inner = b.h > head * 2 ? squarify(b.flavours.map((f) => ({ ...f, v: f.count })), b.x + gap, b.y + head, b.w - 2 * gap, b.h - head - gap) : [];
-    for (const f of inner) {
-      g.append(svg("rect", { x: f.x + 1, y: f.y + 1, width: Math.max(0, f.w - 2), height: Math.max(0, f.h - 2), class: "estate-flavour" }));
-      const label = `${f.flavour || "no flavour"} ${f.count}`;
-      if (fits(label, 11, f.w - 14) && f.h > 24) g.append(svg("text", { x: f.x + 8, y: f.y + 17 }, label));
-    }
+    const tag = [[name, 14], [name, 11], [String(b.count), 11]].find(([text, size]) => fits(text, size, w - 16));
+    if (tag && h > head) g.append(svg("text", { x: x + 8, y: y + 18, class: "estate-brand", style: `font-size: ${tag[1]}px` }, tag[0]));
     el.append(g);
   });
 }
@@ -174,7 +143,11 @@ export function stream(host, entries) {
     const t = at(i);
     el.append(svg("text", across ? { x: t, y: height - 2, "text-anchor": "middle" } : { x: 0, y: t + 4 }, MONTHS[day.getUTCMonth()]));
   }
-  return layers.map((l, n) => ({ label: l.country ? `${flag(l.country)} ${names.of(l.country)}` : "the rest", tone: l.country ? n % 5 : "other" }));
+}
+
+// What the streams are, in the order they're drawn (the legend is filled in before the chart takes its space).
+export function streamKey(entries) {
+  return weekly(entries).series.map((s, n) => ({ label: s.country ? `${flag(s.country)} ${names.of(s.country)}` : "the rest", tone: s.country ? n % 5 : "other" }));
 }
 
 // Who makes what: companies (anthracite) with arrows to their brands, red when eaten, outlined when not yet.

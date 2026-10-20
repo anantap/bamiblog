@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brands, facts, hours, monthHours, weekly } from "../src/facts.js";
+import { brands, facts, hours, weekly } from "../src/facts.js";
 
 describe("facts", () => {
   it("counts packs, guesses meters of noodles and liters of soup", () => {
@@ -42,14 +42,6 @@ describe("brands", () => {
       { brand: "Mama", count: 1, flavours: [{ flavour: "Tom Yum", count: 1 }] },
     ]);
     expect(facts(entries).flavours).toBe(4);
-  });
-});
-
-describe("monthHours", () => {
-  it("counts noodles per month eaten and hour logged", () => {
-    const grid = monthHours([{ date: "2026-03-02", createdAt: Date.parse("2026-03-02T18:30:00Z") }, { date: "2026-03-09", createdAt: Date.parse("2026-03-09T18:10:00Z") }, { date: "2026-03-09" }]);
-    expect(grid[2][19]).toBe(2); // 18:30 UTC is 19:30 in Amsterdam in March
-    expect(grid.flat().reduce((a, b) => a + b)).toBe(2);
   });
 });
 

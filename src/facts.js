@@ -41,14 +41,6 @@ export function brands(entries) {
   return [...byBrand.values()].map((b) => ({ ...b, flavours: [...b.flavours.values()].sort(busiest) })).sort(busiest);
 }
 
-// Noodles per month (0–11, by the date eaten) and hour (0–23, by when they were logged in Dutch time): rows are months.
-export function monthHours(entries, timeZone = "Europe/Amsterdam") {
-  const hour = new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone });
-  const grid = Array.from({ length: 12 }, () => Array(24).fill(0));
-  for (const { date, createdAt } of entries) if (date && createdAt) grid[Number(date.slice(5, 7)) - 1][Number(hour.format(createdAt))]++;
-  return grid;
-}
-
 const DAY = 24 * 60 * 60 * 1000;
 
 // Noodles per week by the country they come from, from the first noodle's week to the last's. The `top` busiest

@@ -1,7 +1,7 @@
 import { api, h } from "./dom.js";
 import { flag, padNumber, title } from "./format.js";
 import { brands, facts, hours } from "./facts.js";
-import { contour, sociogram, stream, svg, treemap } from "./charts.js";
+import { clock, sociogram, stream, streamKey, svg, treemap } from "./charts.js";
 import { byCountry } from "./map-data.js";
 import world from "./world.json";
 
@@ -153,22 +153,22 @@ function renderFacts() {
   );
 }
 
-// The charts below the map are drawn to fill their boxes, so they're drawn again when the page changes width.
-// Each gets its section shown only once there are noodles for it.
+// The charts below the map are drawn to fill their boxes, so they're drawn again when the page changes width,
+// and after their captions and legends, which take some of the room. Each section shows once there are noodles.
 function renderCharts() {
   const show = (id, on) => (document.getElementById(id).hidden = !on);
   const counts = hours(entries);
   const most = Math.max(...counts);
   show("clock", most > 0);
   if (most) {
-    contour(document.getElementById("clock-chart"), entries);
     document.getElementById("clock-caption").textContent = `most noodles around ${String(counts.indexOf(most)).padStart(2, "0")}:00.`;
+    clock(document.getElementById("clock-chart"), entries);
   }
   show("estate-panel", entries.length > 0);
   if (entries.length) treemap(document.getElementById("estate"), entries);
   show("stream-panel", entries.length > 0);
-  const legend = entries.length ? stream(document.getElementById("stream"), entries) ?? [] : [];
-  document.getElementById("stream-legend").replaceChildren(...legend.map(({ label, tone }) => h("li", {}, h("i", { class: `tone-${tone}` }), label)));
+  document.getElementById("stream-legend").replaceChildren(...streamKey(entries).map(({ label, tone }) => h("li", {}, h("i", { class: `tone-${tone}` }), label)));
+  if (entries.length) stream(document.getElementById("stream"), entries);
   show("makers-panel", entries.length > 0);
   if (entries.length) sociogram(document.getElementById("makers"), entries);
 }
@@ -180,7 +180,8 @@ new ResizeObserver(() => {
   renderCharts();
 }).observe(document.body);
 
-// Every brand with its flavours as a mind map: "bami" in the logo's lettering in the middle, brands branching off it, flavours off them.
+// Every brand with its flavours as a mind map: "bami" in the logo's lettering in the middle, brands branching off
+// it, flavours off them.
 // On wide screens the brands split over both sides; on phones they all go right, so the text stays readable.
 // A brand's clear favourite flavour (no ties) is the logo red.
 const wide = matchMedia("(min-width: 768px)");
