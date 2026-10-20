@@ -528,7 +528,7 @@ button {
   color: var(--anthracite);
 }
 
-/* Brands and flavours as a mind map (drawn in src/map.js). */
+/* Brands and flavours as a tree hanging from "bami", on noodles (drawn in src/map.js). */
 .brands {
   margin: 0 auto;
 }
@@ -540,28 +540,25 @@ button {
   margin: 0 auto;
 }
 
-/* On wider screens it's drawn big: 80% of the screen, centred on it. */
+/* On wider screens it's drawn half as big again (and never wider than 80% of the screen). */
 @media (min-width: 768px) {
   .brands svg {
-    width: 80vw;
+    width: min(calc(var(--natural) * 1.5), 80vw);
     max-width: none;
-    margin-left: calc(50% - 40vw);
   }
 }
 
 .brands .branches path {
   fill: none;
   stroke: var(--anthracite);
-  stroke-width: 1.5;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .brands text {
   font: 400 12px var(--font);
   text-anchor: middle;
-  fill: #fff;
-}
-
-.brands .theme rect {
   fill: #fff;
 }
 
@@ -635,6 +632,9 @@ button {
 
 .strip-track {
   overflow: hidden;
+  touch-action: pan-y; /* sideways drags move the row; up and down still scrolls the page */
+  cursor: grab;
+  user-select: none;
 }
 
 .strip-row {
@@ -665,6 +665,8 @@ button {
 /* With less motion asked for: a still row to swipe through. */
 .strip.free .strip-track {
   overflow-x: auto;
+  touch-action: auto;
+  cursor: auto;
 }
 
 /* About */

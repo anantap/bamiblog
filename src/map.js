@@ -219,94 +219,91 @@ new ResizeObserver(() => {
   renderCharts();
 }).observe(document.body);
 
-// Every brand with its flavours as a mind map: "bami" in the logo's lettering in the middle, brands branching off
-// it, flavours off them.
-// On wide screens the brands split over both sides; on phones they all go right, so the text stays readable.
-// A brand's clear favourite flavour (no ties) is the logo red.
+// Every brand with its flavours as a tree hanging down from "bami" (in the logo's lettering) at the top: brands
+// below it, each brand's flavours below that, every one on its own wiggly noodle. It grows downwards, so it reads
+// the same on phones and wide screens. A brand's clear favourite flavour (no ties) is the logo red.
 const wide = matchMedia("(min-width: 768px)");
 const PILL = { h: 22, pad: 10, char: 7.2 }; // DM Mono at 12px is 7.2px a character
-const ROW = 28; // flavours stack this far apart
-const SPLIT = 12; // extra space between brands
-const REACH = 44; // horizontal length of a branch
+const ROW = 32; // every pill gets a row of its own
+const INDENT = 34; // each level hangs this far right of the one above
 
-function pill(x, y, text, cls, side) {
+function pill(x, y, text, cls) {
   const w = text.length * PILL.char + 2 * PILL.pad;
-  const left = side > 0 ? x : x - w; // pills grow outwards from where their branch arrives
   const g = svg("g", { class: cls });
   g.append(
-    svg("rect", { x: left, y: y - PILL.h / 2, width: w, height: PILL.h, rx: PILL.h / 2 }),
-    Object.assign(svg("text", { x: left + w / 2, y: y + 4 }), { textContent: text })
+    svg("rect", { x, y: y - PILL.h / 2, width: w, height: PILL.h, rx: PILL.h / 2 }),
+    Object.assign(svg("text", { x: x + w / 2, y: y + 4 }), { textContent: text })
   );
   return { g, w };
 }
 
-// "bami" in the logo's own shapes (tools/lettering), on a white block so the branches stop at its edge.
-const BAMI = { w: 72, h: 57, pad: 8 }; // public/lettering/bami.svg is 167.6 × 132
+// "bami" in the logo's own shapes (tools/lettering).
+const BAMI = { w: 72, h: 57 }; // public/lettering/bami.svg is 167.6 × 132
 
-function bami(y) {
-  const g = svg("g", { class: "theme" });
-  g.append(
-    svg("rect", { x: -BAMI.w / 2 - BAMI.pad, y: y - BAMI.h / 2 - BAMI.pad, width: BAMI.w + 2 * BAMI.pad, height: BAMI.h + 2 * BAMI.pad }),
-    svg("image", { href: "/lettering/bami.svg", x: -BAMI.w / 2, y: y - BAMI.h / 2, width: BAMI.w, height: BAMI.h })
-  );
-  return g;
+// A noodle from (x1, y1) down and round into (x2, y2): the curve of a branch, with an even wiggle along it (one
+// wave every WAVE pixels) that settles at both ends. Each one wiggles a little differently.
+const WAVE = 30, AMP = 2.6;
+
+function noodle(x1, y1, x2, y2, seed) {
+  // Down first, then across: a cubic with both middle handles at the corner, sampled finely.
+  const base = [];
+  for (let i = 0; i <= 80; i++) {
+    const t = i / 80, u = 1 - t;
+    const x = u * u * u * x1 + 3 * u * u * t * x1 + 3 * u * t * t * x1 + t * t * t * x2;
+    const y = u * u * u * y1 + 3 * u * u * t * y2 + 3 * u * t * t * y2 + t * t * t * y2;
+    base.push([x, y]);
+  }
+  const along = [0];
+  for (let i = 1; i < base.length; i++) along.push(along[i - 1] + Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]));
+  const length = along[along.length - 1] || 1;
+  const points = base.map(([x, y], i) => {
+    const [ax, ay] = base[Math.max(0, i - 1)], [bx, by] = base[Math.min(base.length - 1, i + 1)];
+    const len = Math.hypot(bx - ax, by - ay) || 1;
+    const settle = Math.sin((Math.PI * along[i]) / length);
+    const wiggle = AMP * settle * Math.sin((2 * Math.PI * along[i]) / WAVE + seed * 1.7);
+    return [x + (-(by - ay) / len) * wiggle, y + ((bx - ax) / len) * wiggle];
+  });
+  return svg("path", { d: `M${points.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}` });
 }
-
-const branch = (x1, y1, x2, y2) => svg("path", { d: `M${x1} ${y1}C${(x1 + x2) / 2} ${y1} ${(x1 + x2) / 2} ${y2} ${x2} ${y2}` });
 
 function renderBrands() {
   const all = brands(entries);
   const holder = document.getElementById("brands");
   document.getElementById("brands-panel").hidden = !all.length;
   if (!all.length) return;
-  const rows = (b) => b.flavours.length * ROW + SPLIT;
-
-  // Share the brands over the sides so both are about as tall.
-  const sides = wide.matches ? [[], []] : [[]];
-  const height = (list) => list.reduce((n, b) => n + rows(b), 0);
-  for (const b of all) sides.reduce((a, c) => (height(c) < height(a) ? c : a)).push(b);
-  const tallest = Math.max(...sides.map(height));
 
   const lines = svg("g", { class: "branches" });
   const pills = svg("g");
-  const half = BAMI.w / 2 + BAMI.pad;
-  let minX = -half, maxX = half;
-  sides.forEach((list, i) => {
-    const dir = sides.length === 1 || i === 0 ? 1 : -1;
-    const brandX = dir * (half + REACH);
-    const brandW = Math.max(...list.map((b) => b.brand.length * PILL.char + 2 * PILL.pad), 0);
-    const flavourX = brandX + dir * (brandW + REACH);
-    let y = (tallest - height(list)) / 2;
-    for (const { brand, flavours } of list) {
-      const brandY = y + (flavours.length * ROW) / 2;
-      lines.append(branch(dir * half, tallest / 2, brandX, brandY));
-      const label = pill(brandX, brandY, brand, "brand", dir);
-      pills.append(label.g);
-      flavours.forEach(({ flavour, count: packs }, j) => {
-        const fy = y + j * ROW + ROW / 2;
-        const favourite = j === 0 && packs > (flavours[1]?.count ?? packs);
-        lines.append(branch(brandX + dir * label.w, brandY, flavourX, fy));
-        const leaf = pill(flavourX, fy, flavour || "no flavour", favourite ? "flavour favourite" : "flavour", dir);
-        pills.append(leaf.g);
-        minX = Math.min(minX, flavourX - (dir < 0 ? leaf.w : 0));
-        maxX = Math.max(maxX, flavourX + (dir > 0 ? leaf.w : 0));
-      });
-      y += flavours.length * ROW + SPLIT;
-    }
-  });
-  pills.append(bami(tallest / 2));
-  const top = Math.min(-PILL.h, tallest / 2 - BAMI.h / 2 - BAMI.pad), total = Math.max(tallest + PILL.h, tallest / 2 + BAMI.h / 2 + BAMI.pad) - top;
+  const rootX = BAMI.w / 2, brandX = rootX + INDENT, flavourX = brandX + INDENT;
+  let y = BAMI.h + ROW / 2 + 6, right = BAMI.w, seed = 0;
+  for (const { brand, flavours } of all) {
+    lines.append(noodle(rootX, BAMI.h - 4, brandX, y, seed++));
+    const label = pill(brandX, y, brand, "brand");
+    pills.append(label.g);
+    right = Math.max(right, brandX + label.w);
+    const brandY = y;
+    flavours.forEach(({ flavour, count: packs }, j) => {
+      y += ROW;
+      const favourite = j === 0 && packs > (flavours[1]?.count ?? packs);
+      lines.append(noodle(brandX + 12, brandY + PILL.h / 2, flavourX, y, seed++));
+      const leaf = pill(flavourX, y, flavour || "no flavour", favourite ? "flavour favourite" : "flavour");
+      pills.append(leaf.g);
+      right = Math.max(right, flavourX + leaf.w);
+    });
+    y += ROW + 8; // a little extra room before the next brand
+  }
+  pills.append(svg("image", { href: "/lettering/bami.svg", x: 0, y: 0, width: BAMI.w, height: BAMI.h }));
+  const height = y - ROW / 2;
   const map = svg("svg", {
-    viewBox: `${minX - 2} ${top} ${maxX - minX + 4} ${total}`,
-    width: maxX - minX + 4,
+    viewBox: `-2 -2 ${right + 4} ${height + 4}`,
+    width: right + 4,
     role: "img",
     "aria-label": all.map((b) => `${b.brand}: ${b.flavours.map((f) => `${f.flavour || "no flavour"} ${f.count}`).join(", ")}`).join("; "),
   });
+  map.style.setProperty("--natural", `${right + 4}px`);
   map.append(lines, pills);
   holder.replaceChildren(map);
 }
-
-wide.addEventListener("change", () => entries.length && renderBrands());
 
 api("/api/entries")
   .then((list) => {
