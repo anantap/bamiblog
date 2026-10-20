@@ -252,6 +252,13 @@ button {
   color: var(--muted);
 }
 
+/* A few sentences on how to read a chart: kept to a readable width. */
+.panel-explain {
+  max-width: 560px;
+  margin-inline: auto;
+  text-wrap: pretty;
+}
+
 /* "the bamiversary", drawn from the logo's own shapes (tools/lettering), big in the middle of the first screen. */
 .panel-intro {
   height: var(--intro);
