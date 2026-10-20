@@ -1,4 +1,4 @@
-// The bamiversary fact sheet: rough totals over every noodle in the log.
+// The bamiversary totals: rough amounts over every noodle in the log.
 export const METERS_PER_PACK = 50; // a pack holds a few dozen strands of roughly 1–1.5 m
 export const LITERS_PER_PACK = 0.45; // the water most packs ask for
 // Fried and dry noodles (mie goreng, yakisoba, …) don't come with soup.

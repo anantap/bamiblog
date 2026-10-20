@@ -203,7 +203,7 @@ button {
   --accent-light: #f19d8a;
   --accent-dark: #b5361c;
   --accent-deep: #8a2716;
-  /* The first screen: the title (about half as tall as wide) with room around it, and the fact sheet under it. */
+  /* The first screen: the title (about half as tall as wide) with room around it. */
   --intro: min(66svh, min(900px, 100vw - 32px) * 0.5 + 16svh);
   max-width: var(--page);
   margin: 0 auto;
@@ -238,7 +238,7 @@ button {
   color: var(--muted);
 }
 
-/* The story (src/story.js): a sentence ahead of each part, as big as the fact sheet. */
+/* The story (src/story.js): a sentence ahead of each part. */
 .story {
   max-width: 32em;
   margin: 0 auto 16px;
@@ -373,34 +373,6 @@ button {
   }
 }
 
-/* The fact sheet: plain rows, one fact each, right under the title. The labels are for screen readers. */
-.panel-facts {
-  padding: 0 0 12svh;
-}
-
-.facts {
-  max-width: 560px;
-  margin: 0 auto;
-}
-
-.facts div {
-  padding: 4px 0;
-}
-
-.facts dt {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-
-.facts dd {
-  margin: 0;
-  font: 500 clamp(18px, 4.5vw, 26px)/1.3 var(--font);
-  color: var(--anthracite);
-}
-
 /* The map is zoomed in, edge to edge across the screen, and loops sideways (see src/map.js): three copies of a
    world --world wide. */
 .map {
@@ -485,7 +457,8 @@ button {
   }
 }
 
-.brands .branches path {
+.brands .branches path,
+.length-noodle path {
   fill: none;
   stroke: var(--line);
   stroke-width: 1.8;
@@ -551,6 +524,44 @@ button {
 
 .estate .estate-brand {
   font-weight: 500;
+}
+
+/* All the noodles as one noodle, a pixel a meter, with a mark every kilometer; all the soup in bathtubs
+   (src/amounts.js). */
+.length svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.length-marks rect {
+  fill: var(--accent);
+}
+
+.length-marks text {
+  font: 400 10px var(--font);
+  text-anchor: middle;
+  fill: var(--muted);
+}
+
+.tubs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 24px;
+}
+
+.tub {
+  display: block;
+  width: min(240px, 60vw);
+  height: auto;
+}
+
+.tub-side {
+  fill: var(--line);
+}
+
+.tub-soup {
+  fill: var(--accent-light);
 }
 
 /* Every pack (src/every-pack.js): all the photos in a square-ish grid as big as the screen allows, and "and more to

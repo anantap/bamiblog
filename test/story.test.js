@@ -16,6 +16,8 @@ describe("storyLines", () => {
     expect(lines.brands).toBe("2 brands, 3 flavours. Some only once, some again and again.");
     expect(lines.estate).toBe("Indomie alone took up 75% of the year.");
     expect(lines.every).toBe("And here they all are, 4 packs.");
+    expect(lines.meters).toBe("All together, that's 200 meters of noodles.");
+    expect(lines.soup).toBe("And 1 liter of soup: enough to fill 1% of a bathtub.");
   });
 
   it("says when no country has more than half", () => {
@@ -30,5 +32,13 @@ describe("storyLines", () => {
     expect(lines.estate).toBe("Indomie took up the whole year.");
     expect(lines.every).toBe("And here they all are, 1 pack.");
     expect(storyLines([])).toBeNull();
+  });
+
+  it("puts the soup in bathtubs", () => {
+    const year = (n, flavour) => Array.from({ length: n }, (_, i) => pack(i + 1, "2025-10-07", "Mama", flavour, "TH"));
+    expect(storyLines(year(333, "Tom Yum")).soup).toBe("And 150 liters of soup: enough to fill a bathtub.");
+    expect(storyLines(year(1000, "Tom Yum")).soup).toBe("And 450 liters of soup: enough to fill 3 bathtubs.");
+    expect(storyLines(year(200, "Tom Yum")).soup).toBe("And 90 liters of soup: enough to fill 60% of a bathtub.");
+    expect(storyLines(year(3, "Mi Goreng")).soup).toBe("And not a drop of soup.");
   });
 });
