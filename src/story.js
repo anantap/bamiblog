@@ -8,16 +8,11 @@ const names = new Intl.DisplayNames(["en"], { type: "region" });
 const plural = (n, word) => `${n.toLocaleString("en")} ${n === 1 ? word : `${word}s`}`;
 const pack = ({ brand, flavour }) => [brand, flavour].filter(Boolean).join(" ") || "noodles";
 
-// How much soup a bathtub holds, in liters.
-export const BATHTUB = 150;
+// Water a big AI data center goes through for cooling, in liters a second: about 2 million liters a day.
+export const DATA_CENTER = 2_000_000 / 86_400;
 
-// The soup in bathtubs: a part of one, about one, or how many.
-function tubs(liters) {
-  const n = liters / BATHTUB;
-  if (n < 0.9) return `${Math.max(1, Math.round(n * 100))}% of a bathtub`;
-  if (n < 1.1) return "a bathtub";
-  return `${Math.round(n * 10) / 10} bathtubs`;
-}
+// How long the soup would cool one for, in whole seconds.
+export const coolingSeconds = (liters) => Math.round(liters / DATA_CENTER);
 
 // The sentences, by the part they open; null with no noodles.
 export function storyLines(entries) {
@@ -40,7 +35,7 @@ export function storyLines(entries) {
     map,
     brands: `${plural(all.length, "brand")}, ${plural(flavours, "flavour")}. Some only once, some again and again.`,
     meters: `All together, that's ${meters.toLocaleString("en")} meters of noodles.`,
-    soup: liters ? `And ${plural(liters, "liter")} of soup: enough to fill ${tubs(liters)}.` : "And not a drop of soup.",
+    soup: !liters ? "And not a drop of soup." : `And ${plural(liters, "liter")} of soup: enough to cool an AI data center for ${coolingSeconds(liters) ? plural(coolingSeconds(liters), "second") : "less than a second"}.`,
     estate: all.length > 1 ? `${top.brand} alone took up ${Math.round((top.count / entries.length) * 100)}% of the year.` : `${top.brand} took up the whole year.`,
     every: `And here they all are, ${plural(entries.length, "pack")}.`,
     first,

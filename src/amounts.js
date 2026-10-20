@@ -1,9 +1,10 @@
 // Two of the year's amounts on /bamiversary/, drawn to show how much they are: all the noodles as one noodle a pixel
-// a meter long, snaking back and forth with a mark every kilometer, and all the soup in bathtubs.
+// a meter long, snaking back and forth with a mark every kilometer, and all the soup cooling an AI data center.
 import { svg } from "./charts.js";
+import { h } from "./dom.js";
 import { facts } from "./facts.js";
 import { cubic, noodle } from "./noodles.js";
-import { BATHTUB } from "./story.js";
+import { DATA_CENTER } from "./story.js";
 
 const ROW = 22; // the noodle's rows are this far apart
 const TURN = ROW / 2;
@@ -53,41 +54,83 @@ function drawLength(host, meters) {
   host.replaceChildren(el);
 }
 
-// A bathtub, 200 wide and 112 tall, with soup in it to `full` (0 to 1).
-function tub(full, id) {
-  const body = "M10 28H190V60Q190 95 155 95H45Q10 95 10 60Z";
-  const el = svg("svg", { viewBox: "0 0 200 112", class: "tub" });
-  const clip = svg("clipPath", { id });
-  clip.append(svg("path", { d: body }));
-  const defs = svg("defs");
-  defs.append(clip);
-  const level = 95 - full * 67;
-  el.append(
-    defs,
-    svg("rect", { class: "tub-side", x: 0, y: 20, width: 200, height: 8 }),
-    svg("path", { class: "tub-side", d: body }),
-    svg("rect", { class: "tub-soup", x: 0, y: level, width: 200, height: 95 - level, "clip-path": `url(#${id})` }),
-    svg("rect", { class: "tub-side", x: 40, y: 95, width: 10, height: 17 }),
-    svg("rect", { class: "tub-side", x: 150, y: 95, width: 10, height: 17 })
-  );
-  return el;
-}
+// The soup cooling an AI data center, in the map's noodle bricks: a pile of red bricks, a liter each (or more, when
+// there's a lot of soup), runs down a pipe into a data center of grey bricks, emptying in real time at the rate a
+// big one goes through water. While it runs, the racks' lights blink; once the soup's gone they go dark, a moment
+// later the pile fills up again, and round it goes. With less motion asked for it stands still, full and running.
+const BRICK = { w: 14, h: 10, gap: 2 }; // as wide to tall as the map's bricks, with the same white between them
+const PILE = 8; // bricks across the pile
+const PIPE = 5; // bricks along the pipe
+const RACKS = 3, RACK = 4; // racks in the data center, and bricks across each
+const DARK = 2, REFILL = 0.8; // seconds it stays dark, and takes to fill up again
+const still = matchMedia("(prefers-reduced-motion: reduce)");
 
-function drawTubs(host, liters) {
-  const n = liters / BATHTUB;
-  const count = Math.max(1, Math.ceil(n - 0.1)); // about one bathtub is one, filled to the brim
-  host.replaceChildren(...Array.from({ length: count }, (_, i) => tub(Math.min(1, Math.max(0, n - i)) || 0, `tub-${i}`)));
+function drawDataCenter(host, liters) {
+  const per = Math.max(1, Math.ceil(liters / 400)); // liters a brick
+  const count = Math.max(1, Math.round(liters / per));
+  const run = Math.max(1, liters / DATA_CENTER); // seconds it lasts
+  const pileRows = Math.ceil(count / PILE);
+  const rows = Math.max(pileRows, 10);
+  const stepX = BRICK.w + BRICK.gap, stepY = BRICK.h + BRICK.gap;
+  const brick = (col, row, cls) => svg("rect", { class: cls, x: col * stepX, y: (rows - 1 - row) * stepY, width: BRICK.w, height: BRICK.h });
+  const wide = (PILE + PIPE + RACKS * (RACK + 1) - 1) * stepX - BRICK.gap;
+  const el = svg("svg", { viewBox: `0 0 ${wide} ${rows * stepY + 20}`, class: "cooling" });
+  const label = (x, text) => svg("text", { x, y: rows * stepY + 16 }, text);
+  el.append(label((PILE * stepX - BRICK.gap) / 2, "soup"), label(wide - (RACKS * (RACK + 1) - 1) * stepX / 2, "AI data center"));
+  // The pile, filled from the bottom up; it empties from the top.
+  const soup = Array.from({ length: count }, (_, i) => brick(i % PILE, Math.floor(i / PILE), "cool-soup"));
+  const pipe = Array.from({ length: PIPE }, (_, i) => brick(PILE + i, 0, "cool-pipe"));
+  const lights = [];
+  const racks = [];
+  for (let r = 0; r < RACKS; r++) {
+    const left = PILE + PIPE + r * (RACK + 1);
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < RACK; col++) {
+        const light = col === RACK - 1 && row % 2 === 1;
+        const b = brick(left + col, row, light ? "cool-light" : "cool-rack");
+        (light ? lights : racks).push(b);
+      }
+    }
+  }
+  el.append(...racks, ...lights, ...pipe, ...soup);
+  const timer = h("p", { class: "cool-timer" });
+  host.replaceChildren(el, timer);
   host.setAttribute("role", "img");
-  host.setAttribute("aria-label", `${liters} liters of soup in bathtubs of ${BATHTUB} liters`);
+  host.setAttribute("aria-label", `${liters} liters of soup, a brick for ${per === 1 ? "every liter" : `every ${per} liters`}, cooling an AI data center for ${Math.round(run)} seconds`);
+
+  const show = (left, t, running) => {
+    soup.forEach((b, i) => b.classList.toggle("gone", i >= left));
+    pipe.forEach((b, i) => b.classList.toggle("on", running && (i + Math.floor(t * 12)) % 3 === 0));
+    lights.forEach((b, i) => b.classList.toggle("on", running && Math.sin(i * 7.3 + Math.floor(t * 8) * 2.1) > 0));
+    timer.textContent = `${Math.min(t, run).toFixed(1)} s`;
+  };
+  if (still.matches) return show(count, run, true);
+  let start = 0, seen = false;
+  const frame = (now) => {
+    if (!host.isConnected) return;
+    if (seen) {
+      start ||= now;
+      const t = (now - start) / 1000;
+      if (t < run) show(Math.ceil(count * (1 - t / run)), t, true);
+      else if (t < run + DARK) show(0, run, false);
+      else if (t < run + DARK + REFILL) show(Math.ceil((count * (t - run - DARK)) / REFILL), 0, false);
+      else start = now;
+    }
+    requestAnimationFrame(frame);
+  };
+  // It only runs on screen, starting from full each time it comes into view.
+  new IntersectionObserver(([e]) => ((seen = e.isIntersecting), (start = 0))).observe(host);
+  show(count, 0, false);
+  requestAnimationFrame(frame);
 }
 
 export function amounts(entries) {
   const { meters, liters } = facts(entries);
-  const length = document.getElementById("length"), tubs = document.getElementById("tubs");
+  const length = document.getElementById("length");
   document.getElementById("length-panel").hidden = !meters;
   document.getElementById("soup-panel").hidden = !entries.length;
   if (!entries.length) return;
-  drawTubs(tubs, liters);
+  if (liters) drawDataCenter(document.getElementById("cooling"), liters);
   let width = 0;
   new ResizeObserver(() => {
     if (length.clientWidth === width) return;
