@@ -497,6 +497,13 @@ a.lettering.lettering-link:focus-visible {
   text-underline-offset: 2px;
 }
 
+/* /add: heads-up when the next noodle is a hundredth one. */
+.milestone {
+  margin: 0;
+  font: 500 13px/1.45 var(--font);
+  color: var(--accent);
+}
+
 /* Mail tab: the image as it will go out, whatever its shape. */
 .extra-preview {
   display: block;
