@@ -1,6 +1,6 @@
 import { api, h } from "./dom.js";
 import { flag, padNumber, title } from "./format.js";
-import { facts, hours } from "./facts.js";
+import { brands, facts, hours } from "./facts.js";
 import { byCountry } from "./map-data.js";
 import world from "./world.json";
 
@@ -147,12 +147,13 @@ countriesEl.addEventListener("click", (event) => {
 
 // The fact sheet under the lettering: 1 year, then the totals.
 function renderFacts() {
-  const { packs, meters, liters } = facts(entries);
+  const { packs, flavours, meters, liters } = facts(entries);
   const number = (n) => n.toLocaleString("en");
   document.getElementById("facts").replaceChildren(
     ...[
       ["time", "1 year."],
       ["packs", `${number(packs)} ${packs === 1 ? "pack" : "packs"} of noodles.`],
+      ["flavours", `${number(flavours)} different ${flavours === 1 ? "flavour" : "flavours"}.`],
       ["length", `${number(meters)} meters of noodles.`],
       ["soup", `${number(liters)} liters of soup.`],
     ].map(([label, value]) => h("div", {}, h("dt", {}, label), h("dd", {}, value)))
@@ -186,11 +187,39 @@ function renderClock() {
   document.getElementById("clock-caption").textContent = `most noodles around ${String(peak).padStart(2, "0")}:00.`;
 }
 
+// Every brand with its flavours: a row of bricks per flavour, one brick per pack, growing left from the middle with
+// the flavour's name on the right. A brand's clear favourite (no ties) is the logo red.
+function renderBrands() {
+  const plural = (n, word) => `${n} ${n === 1 ? word : `${word}s`}`;
+  document.getElementById("brands").replaceChildren(
+    ...brands(entries).map(({ brand, count, flavours }) =>
+      h(
+        "div",
+        { class: "brand" },
+        h("h2", {}, brand, h("span", {}, ` ${plural(count, "pack")}, ${plural(flavours.length, "flavour")}`)),
+        h(
+          "ul",
+          {},
+          ...flavours.map(({ flavour, count: packs }, i) =>
+            h(
+              "li",
+              {},
+              h("span", { class: `bricks${i === 0 && packs > (flavours[1]?.count ?? packs) ? " favourite" : ""}`, role: "img", "aria-label": plural(packs, "pack") }, ...Array.from({ length: packs }, () => h("i"))),
+              h("span", { class: "flavour" }, flavour || "no flavour")
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
 api("/api/entries")
   .then((list) => {
     entries = list;
     renderFacts();
     renderClock();
+    renderBrands();
     render();
   })
   .catch((err) => (summary.textContent = `Couldn't load the noodles: ${err.message}`))

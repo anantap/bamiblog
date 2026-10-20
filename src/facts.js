@@ -8,6 +8,7 @@ export function facts(entries) {
   const soupy = entries.filter((e) => !NO_SOUP.test(`${e.brand ?? ""} ${e.flavour ?? ""}`));
   return {
     packs: entries.length,
+    flavours: brands(entries).reduce((n, brand) => n + brand.flavours.length, 0),
     meters: Math.round(entries.length * METERS_PER_PACK),
     liters: Math.round(soupy.length * LITERS_PER_PACK),
   };
@@ -20,4 +21,22 @@ export function hours(entries, timeZone = "Europe/Amsterdam") {
   const counts = Array(24).fill(0);
   for (const { createdAt } of entries) if (createdAt) counts[Number(hour.format(createdAt))]++;
   return counts;
+}
+
+// Names compared loosely, so "Mi Goreng" and "mi  goreng" are the same flavour.
+const key = (name) => (name ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+
+// Every brand with the flavours eaten of it, busiest first: [{ brand, count, flavours: [{ flavour, count }] }].
+// A noodle without a flavour counts as its own one ("").
+export function brands(entries) {
+  const byBrand = new Map();
+  for (const { brand, flavour } of entries) {
+    if (!byBrand.has(key(brand))) byBrand.set(key(brand), { brand: (brand ?? "").trim(), count: 0, flavours: new Map() });
+    const group = byBrand.get(key(brand));
+    group.count++;
+    if (!group.flavours.has(key(flavour))) group.flavours.set(key(flavour), { flavour: (flavour ?? "").trim(), count: 0 });
+    group.flavours.get(key(flavour)).count++;
+  }
+  const busiest = (a, b) => b.count - a.count || key(a.brand ?? a.flavour).localeCompare(key(b.brand ?? b.flavour));
+  return [...byBrand.values()].map((b) => ({ ...b, flavours: [...b.flavours.values()].sort(busiest) })).sort(busiest);
 }
