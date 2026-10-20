@@ -13,7 +13,7 @@ import { geoBounds, geoContains, geoEqualEarth, geoPath } from "d3-geo";
 import countries from "i18n-iso-countries";
 import { feature } from "topojson-client";
 
-const COLS = 120; // blocks across
+const COLS = 72; // blocks across: coarse, so each brick is big enough to tap
 const BRICK = 1.4; // a block is this much wider than tall, like a noodle brick
 const WIDTH = 1000;
 
@@ -43,13 +43,30 @@ for (let row = 0; row < rows; row++) {
   }
 }
 
+// Small neighbours (the Netherlands and Belgium, say) can land on the same block; the later one moves to the
+// free block nearest its real centroid.
 const small = {};
+const taken = new Set();
 for (const f of fine) {
   const code = alpha2(f);
-  if (cells[code]) continue;
+  if (cells[code] || small[code] !== undefined) continue;
   const [x, y] = geoPath(projection).centroid(f);
   if (!Number.isFinite(x)) continue;
-  small[code] = Math.floor((y - top) / cellH) * COLS + Math.min(COLS - 1, Math.floor(x / cellW));
+  const fx = x / cellW - 0.5;
+  const fy = (y - top) / cellH - 0.5;
+  const candidates = [];
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      const col = Math.round(fx) + dx;
+      const row = Math.round(fy) + dy;
+      if (col < 0 || col >= COLS || row < 0 || row >= rows) continue;
+      candidates.push({ i: row * COLS + col, d: (col - fx) ** 2 + ((row - fy) * cellH / cellW) ** 2 });
+    }
+  }
+  const free = candidates.filter((c) => !taken.has(c.i)).sort((a, b) => a.d - b.d)[0];
+  if (!free) continue;
+  small[code] = free.i;
+  taken.add(free.i);
 }
 
 const out = { cols: COLS, rows, cellW: +cellW.toFixed(3), cellH: +cellH.toFixed(3), cells, small };

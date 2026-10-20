@@ -14,6 +14,15 @@ const countryEl = document.getElementById("country");
 let entries = [];
 let mode = location.hash === "#eaten" ? "eaten" : "made";
 let selected = null;
+let focus = true; // scroll to the noodles on the first draw and after switching modes, not when selecting
+
+// On a phone the map is wider than the screen and scrolls sideways; start with the noodle countries in view.
+function focusOn(groups) {
+  const columns = [...groups.keys()].flatMap((code) => world.cells[code] ?? [world.small[code]]).filter((i) => i !== undefined).map((i) => i % world.cols);
+  if (!columns.length || mapEl.scrollWidth <= mapEl.clientWidth) return;
+  const middle = (Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols;
+  mapEl.scrollLeft = middle * mapEl.scrollWidth - mapEl.clientWidth / 2;
+}
 
 function svg(tag, attrs = {}) {
   const el = document.createElementNS(SVG, tag);
@@ -21,20 +30,15 @@ function svg(tag, attrs = {}) {
   return el;
 }
 
-// Countries with noodles are red, darker the more there are; the rest stays the warm grey of an empty photo.
-function shade(count, max) {
-  return String(0.35 + (0.65 * (count - 1)) / Math.max(1, max - 1));
-}
-
 function select(code) {
   selected = selected === code ? null : code;
   render();
 }
 
-const GAP = 1.4; // white space between blocks, in map units (a block is about 8 wide)
+const GAP = world.cellW * 0.14; // white space between blocks
 
 // One country as a group of noodle-brick blocks.
-function country(code, groups, max) {
+function country(code, groups) {
   const count = groups.get(code)?.length ?? 0;
   const el = svg("g");
   for (const i of world.cells[code] ?? [world.small[code]]) {
@@ -46,7 +50,6 @@ function country(code, groups, max) {
   el.classList.toggle("selected", code === selected);
   el.append(Object.assign(svg("title"), { textContent: count ? `${names.of(code)} · ${count}` : names.of(code) }));
   if (count) {
-    el.setAttribute("fill-opacity", shade(count, max));
     el.setAttribute("tabindex", "0");
     el.setAttribute("role", "button");
     el.setAttribute("aria-label", `${names.of(code)}, ${count} ${count === 1 ? "noodle" : "noodles"}`);
@@ -63,14 +66,17 @@ function country(code, groups, max) {
 
 function render() {
   const groups = byCountry(entries, mode);
-  const max = Math.max(1, ...[...groups.values()].map((list) => list.length));
   const width = world.cols * world.cellW - GAP;
   const height = world.rows * world.cellH - GAP;
   const map = svg("svg", { viewBox: `0 0 ${width.toFixed(2)} ${height.toFixed(2)}`, role: "img", "aria-label": "World map" });
-  for (const code of Object.keys(world.cells)) map.append(country(code, groups, max));
+  for (const code of Object.keys(world.cells)) map.append(country(code, groups));
   // Countries too small for a block only get one when they have noodles, drawn last so it sits on top.
-  for (const code of Object.keys(world.small)) if (groups.has(code)) map.append(country(code, groups, max));
+  for (const code of Object.keys(world.small)) if (groups.has(code)) map.append(country(code, groups));
   mapEl.replaceChildren(map);
+  if (focus) {
+    focusOn(groups);
+    focus = false;
+  }
 
   const counted = [...groups.values()].reduce((n, list) => n + list.length, 0);
   const verb = mode === "eaten" ? "eaten in" : "from";
@@ -105,6 +111,7 @@ modes.addEventListener("click", (event) => {
   if (!button) return;
   mode = button.dataset.mode;
   selected = null;
+  focus = true;
   history.replaceState(null, "", mode === "eaten" ? "#eaten" : location.pathname);
   render();
 });

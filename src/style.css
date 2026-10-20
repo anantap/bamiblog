@@ -205,13 +205,39 @@ button {
   padding: 0 16px 48px;
 }
 
+/* On phones the map keeps a fixed width and scrolls sideways, edge to edge; on wider screens it just fits. */
+.map {
+  --accent-light: #f19d8a;
+  overflow-x: auto;
+  margin: 0 -16px;
+  padding: 0 16px;
+  scrollbar-width: none;
+}
+
+.map::-webkit-scrollbar {
+  display: none;
+}
+
 .map svg {
   display: block;
   width: 100%;
+  min-width: 960px;
   height: auto;
 }
 
-/* Blocks like noodle bricks; no borders, a country is just where the colour changes. */
+@media (min-width: 992px) {
+  .map {
+    margin: 0;
+    padding: 0;
+  }
+
+  .map svg {
+    min-width: 0;
+  }
+}
+
+/* Blocks like noodle bricks; no borders, a country is just where the colour changes. Noodle countries are light
+   red, the selected one the logo red. */
 .map rect {
   fill: var(--line);
 }
@@ -221,23 +247,16 @@ button {
 }
 
 .map .has rect {
+  fill: var(--accent-light);
+}
+
+.map .selected rect,
+.map .has:focus-visible rect {
   fill: var(--accent);
-}
-
-.map .selected {
-  fill-opacity: 1; /* solid, whatever the count shade */
-}
-
-.map .selected rect {
-  fill: var(--anthracite);
 }
 
 .map .has:focus-visible {
   outline: none;
-}
-
-.map .has:focus-visible rect {
-  fill: var(--anthracite);
 }
 
 .map-summary,
