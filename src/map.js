@@ -55,7 +55,34 @@ function focusOn(codes, behavior) {
     panning = false;
     recentre();
   }, 700);
+  rest(4000); // let the picked country sit in the middle for a moment
 }
+
+// The map drifts from right to left like a ticker, round and round. It stops while someone holds, drags or
+// scrolls it, and for a moment after; with less motion asked for, it stays put.
+const DRIFT = 20; // pixels a second
+const still = matchMedia("(prefers-reduced-motion: reduce)");
+let held = false, restUntil = 0, at = null, before = 0;
+
+function rest(ms) {
+  restUntil = performance.now() + ms;
+}
+
+function drift(now) {
+  const seconds = before ? Math.min(0.1, (now - before) / 1000) : 0;
+  before = now;
+  if (!still.matches && !held && !panning && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
+    if (at === null || Math.abs(at - mapEl.scrollLeft) > 2) at = mapEl.scrollLeft; // moved by hand, or looped
+    at += DRIFT * seconds;
+    mapEl.scrollLeft = at;
+  }
+  requestAnimationFrame(drift);
+}
+requestAnimationFrame(drift);
+
+for (const type of ["pointerdown", "touchstart"]) mapEl.addEventListener(type, () => (held = true), { passive: true });
+for (const type of ["pointerup", "pointercancel", "touchend"]) addEventListener(type, () => held && ((held = false), rest(2500)), { passive: true });
+mapEl.addEventListener("wheel", () => rest(2500), { passive: true });
 
 mapEl.addEventListener("scroll", recentre, { passive: true });
 
