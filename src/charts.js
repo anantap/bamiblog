@@ -84,13 +84,15 @@ export function treemap(host, entries) {
     inner.forEach((f, j) => {
       const shade = Math.max(30, 100 - j * 22); // percent of the brand's red, the rest white
       const tile = svg("g", { class: shade >= 70 ? "shade-dark" : "shade-light" });
-      // The busiest flavour runs into the brand's strip (reaching 1px up into it, so no seam shows); the others
-      // touching the strip get a white line between.
-      const top = Math.abs(f.y - (y + head)) < 0.5 ? (j ? 2 : -1) : 0;
-      const fw = f.w - (f.x + f.w < x + w - 1 ? 2 : 0), fh = f.h - (f.y + f.h < y + h - 1 ? 2 : 0) - top;
-      tile.append(svg("rect", { x: f.x, y: f.y + top, width: Math.max(0, fw), height: Math.max(0, fh), style: `fill: color-mix(in srgb, var(--tone) ${shade}%, #fff)` }));
-      const lines = wrap(f.flavour || "no flavour", 11, f.w - 14);
-      if (lines && lines.length * 14.3 + 10 < f.h) tile.append(label(f.x + 8, f.y + 17, lines, 11));
+      // The same white gap everywhere: half of it on each side that faces another flavour, a whole one under the
+      // brand's strip, none along the block's edges. The busiest flavour runs into the strip instead (reaching 1px
+      // up into it, so no seam shows).
+      const inside = (edge, limit) => Math.abs(edge - limit) > 0.5;
+      const left = inside(f.x, x) ? gap / 2 : 0, right = inside(f.x + f.w, x + w) ? gap / 2 : 0;
+      const top = inside(f.y, y + head) ? gap / 2 : j ? gap : -1, bottom = inside(f.y + f.h, y + h) ? gap / 2 : 0;
+      tile.append(svg("rect", { x: f.x + left, y: f.y + top, width: Math.max(0, f.w - left - right), height: Math.max(0, f.h - top - bottom), style: `fill: color-mix(in srgb, var(--tone) ${shade}%, #fff)` }));
+      const lines = wrap(f.flavour || "no flavour", 11, f.w - left - right - 14);
+      if (lines && lines.length * 14.3 + 10 < f.h - top) tile.append(label(f.x + left + 8, f.y + Math.max(0, top) + 17, lines, 11));
       g.append(tile);
     });
     if (lines && h > head) g.append(label(x + 8, y + 4 + size * 1.0, lines, size, { class: "estate-brand" }));
