@@ -26,7 +26,7 @@ describe("storyLines", () => {
   it("tells a year of one pack, and nothing at all without noodles", () => {
     const lines = storyLines([pack(1, "2025-10-07", "Indomie", "", "ID")]);
     expect(lines.map).toBe("Then came 1 noodle, all of them from Indonesia.");
-    expect(lines.brands).toBe("1 brand, 1 flavour. Never the same brand twice.");
+    expect(lines.brands).toBe("1 brand, 1 flavour. Some only once, some again and again.");
     expect(lines.estate).toBe("Indomie took up the whole year.");
     expect(lines.every).toBe("And here they all are, 1 pack.");
     expect(storyLines([])).toBeNull();

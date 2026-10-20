@@ -16,7 +16,6 @@ export function storyLines(entries) {
   const countries = [...byCountry(entries)].sort((a, b) => b[1].length - a[1].length);
   const all = brands(entries);
   const top = all[0];
-  const once = all.filter((b) => b.count === 1).length;
   const counted = countries.reduce((n, [, list]) => n + list.length, 0);
   let map = "";
   if (countries.length === 1) map = `Then came ${plural(counted, "noodle")}, all of them from ${names.of(countries[0][0])}.`;
@@ -27,7 +26,7 @@ export function storyLines(entries) {
   return {
     start: "It started with a pan, a stove, 300ml water and an idea.",
     map,
-    brands: `${plural(all.length, "brand")}, ${plural(facts(entries).flavours, "flavour")}. ${once === all.length ? "Never the same brand twice." : once ? "Some only once, some again and again." : "Every one of them again and again."}`,
+    brands: `${plural(all.length, "brand")}, ${plural(facts(entries).flavours, "flavour")}. Some only once, some again and again.`,
     estate: all.length > 1 ? `${top.brand} alone took up ${Math.round((top.count / entries.length) * 100)}% of the year.` : `${top.brand} took up the whole year.`,
     every: `And here they all are, ${plural(entries.length, "pack")}.`,
     first,
