@@ -1,7 +1,7 @@
 // Every pack, the closing part of /bamiversary/: all the photos in one row, running from left to right like a
-// ticker, round and round, with the number of the pack in the middle counting up underneath. It can be dragged
-// (or swiped with a trackpad) either way, and runs on by itself a moment after. With less motion asked for, it's a
-// plain row to swipe through instead.
+// ticker, round and round, with the number of the pack in the middle counting up underneath. A swipe (a drag, or a
+// trackpad swipe) moves it one picture on or back, settling with that picture in the middle, and it runs on by
+// itself a moment after. With less motion asked for, it's a plain row to swipe through instead.
 import { h } from "./dom.js";
 import { formatDate, padNumber, title } from "./format.js";
 
@@ -21,7 +21,7 @@ export function strip(section, entries) {
   let packs = oldest;
   const tile = (e) => h("img", { src: e.photo, alt: title(e), loading: "lazy", decoding: "async", draggable: "false" });
 
-  let step = 0, loop = 0, at = 0, held = false, restUntil = 0, before = 0, shown = -1;
+  let step = 0, loop = 0, at = 0, held = false, restUntil = 0, before = 0, shown = -1, glide = null;
   const show = (i) => {
     if (i === shown) return;
     shown = i;
@@ -51,7 +51,12 @@ export function strip(section, entries) {
     const seconds = before ? Math.min(0.1, (now - before) / 1000) : 0;
     before = now;
     if (!still.matches) {
-      if (!held && now > restUntil) at = (at + SPEED * seconds) % loop;
+      if (glide) {
+        const t = Math.min(1, (now - glide.start) / 350), eased = 1 - (1 - t) ** 3;
+        at = wrapAt(glide.from + (glide.to - glide.from) * eased);
+        if (t === 1) glide = null;
+        restUntil = now + 1500;
+      } else if (!held && now > restUntil) at = (at + SPEED * seconds) % loop;
       const x = at - loop; // from one copy to the left of the screen, moving right
       row.style.transform = `translate3d(${x}px, 0, 0)`;
       show(middle(x));
@@ -62,7 +67,14 @@ export function strip(section, entries) {
   // Dragging moves the row with the finger or mouse; scrolling the page up and down still works on phones, since
   // the row only takes sideways moves (touch-action: pan-y). A mouse resting on it stops it.
   const wrapAt = (v) => ((v % loop) + loop) % loop;
-  let drag = null, hovered = false;
+  // Glide to a picture sitting in the middle: the next one on (way > 0), the one before (way < 0) or the nearest.
+  const settle = (way) => {
+    const centred = innerWidth / 2 - row.children[0].offsetWidth / 2; // `at` is a multiple of step from here
+    const k = (at - centred) / step;
+    const to = centred + (way > 0 ? Math.ceil(k + 0.001) : way < 0 ? Math.floor(k - 0.001) : Math.round(k)) * step;
+    glide = { from: at, to, start: performance.now() };
+  };
+  let drag = null, hovered = false, swiped = 0;
   track.addEventListener("pointerdown", (e) => {
     if (still.matches) return;
     drag = { x: e.clientX, at };
@@ -70,21 +82,24 @@ export function strip(section, entries) {
     track.setPointerCapture(e.pointerId);
   });
   track.addEventListener("pointermove", (e) => drag && (at = wrapAt(drag.at + e.clientX - drag.x)));
-  const release = () => {
+  const release = (e) => {
     if (!drag) return;
+    const moved = e.type === "pointerup" ? e.clientX - drag.x : 0; // a cancelled touch was the page scrolling
     drag = null;
     held = hovered;
-    restUntil = performance.now() + 1500;
+    settle(Math.abs(moved) > 30 ? Math.sign(moved) : 0);
   };
   track.addEventListener("pointerup", release);
   track.addEventListener("pointercancel", release);
   track.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && (hovered = held = true));
   track.addEventListener("pointerleave", (e) => e.pointerType === "mouse" && ((hovered = false), drag || (held = false)));
+  // One trackpad swipe (a burst of sideways wheel events, momentum and all) is one picture.
   track.addEventListener("wheel", (e) => {
     if (still.matches || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
     e.preventDefault();
-    at = wrapAt(at - e.deltaX);
-    restUntil = performance.now() + 1500;
+    const now = performance.now();
+    if (now - swiped > 250 && Math.abs(e.deltaX) > 3) settle(-Math.sign(e.deltaX));
+    swiped = now;
   }, { passive: false });
   let width = innerWidth;
   addEventListener("resize", () => innerWidth !== width && ((width = innerWidth), build())); // not when a phone's bar hides

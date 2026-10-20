@@ -217,10 +217,7 @@ button {
 }
 
 /* Each part of the page fills most of the screen, with the edges of the parts around it showing so it's clear
-   there's more; scrolling settles on the middle of a part. */
-:root:has(.map-page) {
-  scroll-snap-type: y proximity;
-}
+   there's more. (No scroll snapping: it tugged the page about whenever something on it changed size.) */
 
 .panel {
   display: flex;
@@ -228,7 +225,6 @@ button {
   justify-content: center;
   height: 82svh;
   padding: 16px 0;
-  scroll-snap-align: center;
 }
 
 .panel-grow {
@@ -274,12 +270,8 @@ button {
   display: block;
   width: min(900px, 100%);
   margin: 0 auto;
-  transition: transform 0.15s;
 }
 
-.map-title a:hover {
-  transform: rotate(-2deg);
-}
 
 .map-title img,
 .intro-title img {
@@ -525,8 +517,12 @@ button {
   }
 }
 
+/* Noodle countries can be clicked a little outside their blocks, so small ones (Korea, Singapore) are easy to tap. */
 .map [data-code] {
   cursor: pointer;
+  stroke: transparent;
+  stroke-width: 9;
+  stroke-linejoin: round;
 }
 
 .map-summary {
