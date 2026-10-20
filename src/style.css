@@ -263,6 +263,43 @@ button {
   margin: 0 auto -8%;
 }
 
+/* The day as a bar chart of bricks, like the map. */
+.clock {
+  --accent-light: #f19d8a;
+  max-width: 560px;
+  margin: 0 auto 48px;
+}
+
+.clock svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.clock rect {
+  fill: var(--line);
+}
+
+.clock .has {
+  fill: var(--accent-light);
+}
+
+.clock .most {
+  fill: var(--accent);
+}
+
+.clock text {
+  font: 400 6px var(--font);
+  fill: var(--muted);
+}
+
+.clock figcaption {
+  margin-top: 12px;
+  font: 500 clamp(18px, 4.5vw, 26px)/1.3 var(--font);
+  color: var(--anthracite);
+}
+
 /* The map is zoomed in, past the edges of the screen, and loops sideways (see src/map.js): three copies of a world
    --world wide. */
 .map {

@@ -12,3 +12,12 @@ export function facts(entries) {
     liters: Math.round(soupy.length * LITERS_PER_PACK),
   };
 }
+
+// How many noodles were logged in each hour of the day (0–23), in Dutch time. Posting time stands in for eating
+// time: noodles only store the date they were eaten.
+export function hours(entries, timeZone = "Europe/Amsterdam") {
+  const hour = new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone });
+  const counts = Array(24).fill(0);
+  for (const { createdAt } of entries) if (createdAt) counts[Number(hour.format(createdAt))]++;
+  return counts;
+}

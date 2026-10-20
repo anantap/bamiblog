@@ -1,13 +1,12 @@
 import { api, h } from "./dom.js";
 import { flag, padNumber, title } from "./format.js";
-import { facts } from "./facts.js";
+import { facts, hours } from "./facts.js";
 import { byCountry } from "./map-data.js";
 import world from "./world.json";
 
 const SVG = "http://www.w3.org/2000/svg";
 const names = new Intl.DisplayNames(["en"], { type: "region" });
 const page = document.querySelector(".map-page");
-const modes = document.getElementById("modes");
 const mapEl = document.getElementById("map");
 const summary = document.getElementById("summary");
 const countryEl = document.getElementById("country");
@@ -16,9 +15,8 @@ const countriesEl = document.getElementById("countries");
 const groupsEl = document.getElementById("groups");
 
 let entries = [];
-let mode = location.hash === "#eaten" ? "eaten" : "made";
 let selected = null;
-let focus = "now"; // pan to the noodles on the first draw and after switching modes; smoothly after picking a country
+let focus = "now"; // pan to the noodles on the first draw; smoothly after picking a country
 
 // The map is drawn three times side by side and kept on the middle copy, so it loops: whatever is picked can sit in
 // the middle of the screen, and scrolling never reaches an end.
@@ -86,7 +84,7 @@ function country(code, groups) {
 const label = (code) => `${flag(code)} ${names.of(code)}`;
 
 function render() {
-  const groups = byCountry(entries, mode);
+  const groups = byCountry(entries);
   const order = [...groups.keys()].sort((a, b) => groups.get(b).length - groups.get(a).length || names.of(a).localeCompare(names.of(b)));
   const width = world.cols * world.cellW;
   const height = world.rows * world.cellH - GAP;
@@ -105,10 +103,9 @@ function render() {
   }
 
   const counted = [...groups.values()].reduce((n, list) => n + list.length, 0);
-  const verb = mode === "eaten" ? "eaten in" : "from";
   summary.textContent = counted
-    ? `${counted} ${counted === 1 ? "noodle" : "noodles"} ${verb} ${groups.size} ${groups.size === 1 ? "country" : "countries"}`
-    : mode === "eaten" ? "No locations yet." : "No noodles yet.";
+    ? `${counted} ${counted === 1 ? "noodle" : "noodles"} from ${groups.size} ${groups.size === 1 ? "country" : "countries"}`
+    : "No noodles yet.";
 
   // Picking a country lights it up and pans the map to it; the map itself isn't clickable.
   countriesEl.replaceChildren(
@@ -138,11 +135,6 @@ function render() {
       )
     )
   );
-
-  for (const button of modes.querySelectorAll("button")) {
-    if (button.dataset.mode === mode) button.setAttribute("aria-current", "page");
-    else button.removeAttribute("aria-current");
-  }
 }
 
 countriesEl.addEventListener("click", (event) => {
@@ -150,16 +142,6 @@ countriesEl.addEventListener("click", (event) => {
   if (!button) return;
   selected = selected === button.dataset.country ? null : button.dataset.country;
   focus = "smooth";
-  render();
-});
-
-modes.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-mode]");
-  if (!button) return;
-  mode = button.dataset.mode;
-  selected = null;
-  focus = "now";
-  history.replaceState(null, "", mode === "eaten" ? "#eaten" : location.pathname);
   render();
 });
 
@@ -177,10 +159,38 @@ function renderFacts() {
   );
 }
 
+// The day in 24 columns of bricks, one brick per noodle in the hour it was logged (or a few noodles per brick, once
+// an hour gets busy). The busiest hour is the logo red.
+const CLOCK_ROWS = 12;
+
+function renderClock() {
+  const counts = hours(entries);
+  const most = Math.max(...counts);
+  document.getElementById("clock").hidden = most === 0;
+  if (!most) return;
+  const per = Math.ceil(most / CLOCK_ROWS);
+  const rows = Math.ceil(most / per);
+  const w = 10, hgt = w / 1.4, gap = w * 0.14;
+  const chart = svg("svg", { viewBox: `0 0 ${24 * w - gap} ${rows * hgt - gap + 12}`, role: "img", "aria-label": `Noodles per hour of the day: ${counts.map((n, i) => `${i}:00 ${n}`).join(", ")}` });
+  counts.forEach((count, hour) => {
+    const filled = Math.ceil(count / per);
+    for (let row = 0; row < rows; row++) {
+      const attrs = { x: hour * w, y: (rows - 1 - row) * hgt, width: w - gap, height: hgt - gap };
+      const cls = row >= filled ? "" : count === most ? "most" : "has";
+      chart.append(svg("rect", cls ? { ...attrs, class: cls } : attrs));
+    }
+    if (hour % 6 === 0) chart.append(Object.assign(svg("text", { x: hour * w, y: rows * hgt - gap + 10 }), { textContent: String(hour).padStart(2, "0") }));
+  });
+  document.getElementById("clock-chart").replaceChildren(chart);
+  const peak = counts.indexOf(most);
+  document.getElementById("clock-caption").textContent = `most noodles around ${String(peak).padStart(2, "0")}:00.`;
+}
+
 api("/api/entries")
   .then((list) => {
     entries = list;
     renderFacts();
+    renderClock();
     render();
   })
   .catch((err) => (summary.textContent = `Couldn't load the noodles: ${err.message}`))
