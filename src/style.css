@@ -508,6 +508,15 @@ button {
   margin: 0 auto;
 }
 
+/* On wider screens it's drawn big: 80% of the screen, centred on it. */
+@media (min-width: 768px) {
+  .brands svg {
+    width: 80vw;
+    max-width: none;
+    margin-left: calc(50% - 40vw);
+  }
+}
+
 .brands .branches path {
   fill: none;
   stroke: var(--anthracite);
