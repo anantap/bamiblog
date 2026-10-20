@@ -296,7 +296,8 @@ button {
   height: 36px;
 }
 
-/* The thread (src/story.js): one noodle down the whole page, showing only in the room between the parts. */
+/* The thread (src/story.js): a strand of noodles in the palest grey, from a red fork under the title down the whole
+   page, showing only in the room between the parts. */
 .thread {
   position: absolute;
   top: 0;
@@ -305,12 +306,16 @@ button {
   pointer-events: none;
 }
 
-.thread path {
+.thread .strands :is(path, ellipse) {
   fill: none;
-  stroke: var(--anthracite);
-  stroke-width: 1.8;
+  stroke: var(--line);
+  stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.thread .fork {
+  fill: var(--accent);
 }
 
 /* "the bamiversary", drawn from the logo's own shapes (tools/lettering), big in the middle of the first screen. */
@@ -427,7 +432,7 @@ button {
 
 /* The fact sheet: plain rows, one fact each, right under the title. The labels are for screen readers. */
 .panel-facts {
-  padding: 0 0 12svh;
+  padding: clamp(72px, 8vw, 110px) 0 12svh; /* room above for the fork the noodles hang from (src/story.js) */
 }
 
 .facts {
