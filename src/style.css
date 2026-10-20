@@ -470,42 +470,44 @@ button {
   display: contents;
 }
 
-/* On phones the card sits under the map instead and stays while the map drifts on. Its room is kept from the start,
-   with the hint in it, so the page doesn't grow (and jump) when a card shows. */
+/* On phones the card sits under the map instead, below the hint, the full width of the screen, and stays while the map drifts on. Its room is
+   kept from the start, so the page doesn't grow (and jump) when a card shows. */
 @media (max-width: 767px) {
   .card-slot {
-    display: grid;
-    min-height: 230px; /* room for the longest card */
+    display: flex;
+    flex-direction: column;
+    min-height: 260px; /* until src/map.js measures the tallest card (keepRoom) */
     margin-top: 16px;
   }
 
-  .card-slot > * {
-    grid-area: 1 / 1;
-  }
-
   .card-slot .map-hint {
-    margin: 0;
+    order: -1;
+    margin: 0 0 12px;
   }
 
+  /* Edge to edge like the map above it, not a box inside the page's box. */
   .country-card {
     position: static;
-    align-self: start;
-    justify-self: center;
+    align-self: stretch;
+    width: auto;
+    max-width: none;
+    margin: 0 calc(50% - 50vw);
+    padding: 14px 16px;
     transform: none !important;
   }
 }
 
-/* Until a card shows, a hint where it will be: "point at" with a mouse, "tap" on touch screens. */
+/* Under the map, always there: "click" with a mouse, "tap" on touch screens. */
 .map-hint {
   margin: 16px 0 0;
   font: 400 13px/1.45 var(--font);
   color: var(--muted);
 }
 
-.map-hint .tap,
-.country-card:not([hidden]) + .map-hint {
+.map-hint .tap {
   display: none;
 }
+
 
 @media (hover: none) {
   .map-hint .point {
