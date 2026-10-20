@@ -13,12 +13,12 @@ const summary = document.getElementById("summary");
 
 const countriesEl = document.getElementById("countries");
 
-// The intro (see the page): once its images are ready, red fades in over the blank page with the title in white,
-// then fades away over the real title, so the colours fade over.
+// The intro (see the page): once its images are ready, red fades in over the blank page with the title in white
+// in the middle, the title glides up into place, and the red fades away over the real title.
 const intro = document.querySelector(".intro");
 if (document.documentElement.classList.contains("intro-on")) {
   const done = () => document.documentElement.classList.remove("intro-on");
-  intro.addEventListener("animationend", done);
+  intro.addEventListener("animationend", (event) => event.target === intro && done());
   Promise.all([...intro.querySelectorAll("img")].map((img) => img.decode())).then(() => intro.classList.add("play"), done);
 }
 
