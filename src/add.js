@@ -1,6 +1,7 @@
 import { COUNTRIES } from "../lib/countries.js";
 import { api, h } from "./dom.js";
-import { flag } from "./format.js";
+import { flag, padNumber } from "./format.js";
+import { isSpecial, nextNumber } from "../lib/numbering.js";
 import { createCropper } from "./cropper.js";
 import { initExtras } from "./extras.js";
 
@@ -78,6 +79,14 @@ tabs.addEventListener("click", (event) => {
   if (tab) showTab(tab.dataset.tab);
 });
 
+// A heads-up on the form while the next noodle will be a hundredth one (100, 200, …).
+async function showMilestone() {
+  const next = nextNumber(await api("/api/entries"));
+  const note = document.getElementById("milestone");
+  note.hidden = !isSpecial(next);
+  note.textContent = `Next up: ${padNumber(next)}. Bami special!`;
+}
+
 async function show(loggedIn) {
   loginForm.hidden = loggedIn;
   entryForm.hidden = !loggedIn;
@@ -95,6 +104,7 @@ async function show(loggedIn) {
       return;
     }
   }
+  if (loggedIn && !editId) showMilestone().catch(() => {});
   if (loggedIn && !editId && !entryForm.date.value) entryForm.date.value = today();
   if (loggedIn && !editId && !entryForm.place.value) entryForm.place.value = lastPlace();
   (loggedIn ? entryForm.brand : loginForm.password).focus();
@@ -146,6 +156,9 @@ entryForm.addEventListener("submit", async (event) => {
     } else {
       const saved = await api("/api/entries", { method: "POST", body: { ...fields, photo: cropper.toDataURL() } });
       rememberPlace(saved.place);
+      if (isSpecial(saved.number + 1)) {
+        alert(`That was ${padNumber(saved.number)}! The next one is ${padNumber(saved.number + 1)}: time for the bami special.`);
+      }
     }
     location.href = "/";
   } catch (err) {
