@@ -4,6 +4,7 @@
     python3 tools/lettering/build.py --outline "about" public/lettering/about-outline.svg
     python3 tools/lettering/build.py --gap=0 --arc=32 --soft=2 "bamiversary" public/lettering/bamiversary.svg
     python3 tools/lettering/build.py --gap=0 --arc=16 --soft=2 "the" public/lettering/the.svg
+    python3 tools/lettering/build.py --gap=0 --soft=2 "bami" public/lettering/bami.svg
 
 --gap sets the space between letters (default 2; negative pulls them into each other), on top of the
 per-pair KERN table in glyphs.py. --arc bends the word
@@ -71,7 +72,7 @@ def main(text, out, outline=False, gap=2.0, arc=0.0, soft=0.0):
         body, (left, top, right, low) = arc_svg(text, gap, arc, bottom)
         box = (left - 2, top, right - left + 4, low - top)
     else:
-        body, width = word_svg(text, gap)
+        body, width = word_svg(text, gap, letters=bool(soft))
         box = (-2, TOP, width + 4, bottom - TOP)
     defs = DEFS + (OUTLINE_FILTER if outline else "")
     filt = ' filter="url(#outline)"' if outline else ""

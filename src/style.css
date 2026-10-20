@@ -210,15 +210,16 @@ button {
   justify-content: center;
 }
 
-/* "bamiversary", drawn from the logo's own shapes (tools/lettering). */
+/* "the bamiversary", drawn from the logo's own shapes (tools/lettering), big in the middle of the first screen. */
 .map-title {
-  margin: 16px 0 24px;
+  margin: 0;
   line-height: 0;
 }
 
-.map-title a {
+.map-title a,
+.intro-title {
   display: block;
-  width: min(560px, 100%);
+  width: min(900px, 100%);
   margin: 0 auto;
   transition: transform 0.15s;
 }
@@ -230,7 +231,7 @@ button {
 /* The fact sheet: plain rows, one fact each. The labels are for screen readers. */
 .facts {
   max-width: 560px;
-  margin: 0 auto 40px;
+  margin: 0 auto;
 }
 
 .facts div {
@@ -251,25 +252,242 @@ button {
   color: var(--anthracite);
 }
 
-.map-title img {
+.map-title img,
+.intro-title img {
   display: block;
   width: 100%;
   height: auto;
 }
 
 /* "the", a size down and tucked into the arc of "bamiversary". */
-.map-title .the {
+.map-title .the,
+.intro-title .the {
   width: 22%;
   margin: 0 auto -8%;
 }
 
-/* On phones the map keeps a fixed width and scrolls sideways, edge to edge; on wider screens it just fits. */
-.map {
+/* Each part of the page fills most of the screen, with the edges of the parts around it showing so it's clear
+   there's more; scrolling settles on the middle of a part. */
+:root:has(.map-page) {
+  scroll-snap-type: y proximity;
+}
+
+.map-page {
   --accent-light: #f19d8a;
+  --accent-dark: #b5361c;
+  --accent-deep: #8a2716;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 82svh;
+  padding: 16px 0;
+  scroll-snap-align: center;
+}
+
+.panel-grow {
+  height: auto;
+  min-height: 82svh;
+}
+
+.panel-grow .chart {
+  flex: none;
+  min-height: 60svh;
+}
+
+.panel-intro {
+  height: 100svh;
+}
+
+/* On load: red fades in with the title in white over the real one, holds, and then is gone at once, so the
+   colours flip. Lined up with the title underneath: same size, same middle. */
+.intro {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 100svh;
+  padding: 0 16px;
+  background: var(--accent);
+  pointer-events: none;
+  animation: intro 1.9s forwards;
+}
+
+.intro-title img {
+  filter: brightness(0) invert(1);
+}
+
+@keyframes intro {
+  0% {
+    opacity: 0;
+  }
+  30%,
+  99.9% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 1;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+  }
+}
+
+.panel-title {
+  margin: 0;
+  font: 500 clamp(18px, 4.5vw, 26px)/1.3 var(--font);
+  color: var(--anthracite);
+}
+
+.panel-sub {
+  margin: 4px 0 16px;
+  font: 400 13px/1.45 var(--font);
+  color: var(--muted);
+}
+
+.chart {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chart svg {
+  display: block;
+}
+
+.chart text {
+  font: 400 11px var(--font);
+  fill: var(--muted);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font: 400 13px/1.45 var(--font);
+  color: var(--anthracite);
+}
+
+.legend i {
+  display: inline-block;
+  width: 12px;
+  height: 9px;
+  margin-right: 6px;
+}
+
+/* Noodle o'clock. */
+.bar {
+  fill: var(--accent-light);
+}
+
+.bar.most {
+  fill: var(--accent);
+}
+
+.bar.none {
+  fill: var(--line);
+}
+
+/* Colours shared by the treemap and the stream graph. */
+.tone-0 { --tone: var(--accent); --on-tone: #fff; }
+.tone-1 { --tone: var(--anthracite); --on-tone: #fff; }
+.tone-2 { --tone: var(--accent-dark); --on-tone: #fff; }
+.tone-3 { --tone: var(--accent-light); --on-tone: var(--anthracite); }
+.tone-4 { --tone: var(--accent-deep); --on-tone: #fff; }
+.tone-other { --tone: var(--line); --on-tone: var(--anthracite); }
+
+.legend i[class^="tone-"],
+.flow {
+  background: var(--tone);
+  fill: var(--tone);
+}
+
+/* Noodle real estate: the treemap's brands use the reds, no anthracite; flavours are lighter shades of them. */
+.estate.tone-1 { --tone: var(--accent-dark); }
+.estate.tone-2 { --tone: var(--accent-deep); }
+
+.estate > rect {
+  fill: var(--tone);
+}
+
+.estate text {
+  fill: var(--on-tone);
+}
+
+.estate .shade-light text {
+  fill: var(--anthracite);
+}
+
+.estate .estate-brand {
+  font-family: var(--font);
+  font-weight: 500;
+}
+
+/* Who makes what. */
+.tie {
+  stroke: var(--anthracite);
+  stroke-width: 1.2;
+}
+
+.arrow {
+  fill: var(--anthracite);
+}
+
+.node circle {
+  fill: var(--accent);
+}
+
+.node.company circle {
+  fill: var(--anthracite);
+}
+
+.node.company.eaten circle {
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+
+.node.not-yet circle {
+  fill: #fff;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.chart .node text {
+  font-size: 12px;
+  fill: var(--anthracite);
+}
+
+.chart .node.company text {
+  font-weight: 500;
+}
+
+.legend .company { background: var(--anthracite); border-radius: 50%; width: 10px; height: 10px; }
+.legend .eaten { background: var(--accent); border-radius: 50%; width: 10px; height: 10px; }
+.legend .not-yet { border: 2px solid var(--accent); border-radius: 50%; width: 10px; height: 10px; box-sizing: border-box; }
+
+/* The map is zoomed in, past the edges of the screen, and loops sideways (see src/map.js): three copies of a world
+   --world wide. */
+.map {
+  --world: 1400px;
   overflow-x: auto;
   margin: 0 -16px;
-  padding: 0 16px;
   scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
 }
 
 .map::-webkit-scrollbar {
@@ -278,43 +496,99 @@ button {
 
 .map svg {
   display: block;
-  width: 100%;
-  min-width: 960px;
+  width: calc(3 * var(--world));
   height: auto;
 }
 
 @media (min-width: 992px) {
   .map {
+    --world: min(2200px, 64svh * 2.87); /* the map is 2.87 times as wide as tall: keep it on screen */
     margin: 0;
-    padding: 0;
-  }
-
-  .map svg {
-    min-width: 0;
   }
 }
 
 /* Blocks like noodle bricks; no borders, a country is just where the colour changes. Noodle countries are light
-   red, the selected one the logo red. */
-.map rect {
+   red, the one picked below the map the logo red. */
+.map path {
   fill: var(--line);
 }
 
 .map .has {
-  cursor: pointer;
-}
-
-.map .has rect {
   fill: var(--accent-light);
 }
 
-.map .selected rect,
-.map .has:focus-visible rect {
+.map .selected {
   fill: var(--accent);
 }
 
-.map .has:focus-visible {
-  outline: none;
+/* The countries under the map, to pan to and light up. */
+.map-countries {
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+}
+
+.map-countries button[aria-pressed="true"] {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Brands and flavours as a mind map (drawn in src/map.js). */
+.brands {
+  margin: 0 auto;
+}
+
+.brands svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.brands .branches path {
+  fill: none;
+  stroke: var(--anthracite);
+  stroke-width: 1.5;
+}
+
+.brands text {
+  font: 400 12px var(--font);
+  text-anchor: middle;
+  fill: #fff;
+}
+
+.brands .theme rect {
+  fill: #fff;
+}
+
+.brands .brand rect {
+  fill: var(--accent);
+}
+
+.brands .brand text {
+  font-weight: 500;
+}
+
+.brands .flavour rect {
+  fill: var(--accent-light);
+}
+
+.brands .flavour text {
+  fill: var(--anthracite);
+}
+
+.brands .flavour.favourite rect {
+  fill: var(--accent);
+}
+
+.brands .flavour.favourite text {
+  fill: #fff;
+}
+
+/* All the noodles, a country at a time. */
+.map-group {
+  margin-top: 40px;
 }
 
 .map-summary,
@@ -324,7 +598,7 @@ button {
   color: var(--anthracite);
 }
 
-/* A country's noodles, centred under the map: three across on phones, six on wider screens. */
+/* A country's noodles, centred: three across on phones, six on wider screens. */
 .map-list {
   display: flex;
   flex-wrap: wrap;

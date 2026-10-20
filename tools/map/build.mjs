@@ -3,34 +3,38 @@
 //
 //     node tools/map/build.mjs
 //
-// Shapes come from Natural Earth (public domain) via world-atlas at the 1:110m scale, in the Equal Earth
-// projection. Each block of a grid goes to the country under its centre. Countries too small to get a block
+// Shapes come from Natural Earth (public domain) via world-atlas, at the 1:50m scale so islands show. The projection
+// is the plain rectangular one (longitude across, latitude down) so the map's left and right edges meet and the
+// page can loop it; it runs from NORTH to SOUTH, leaving out the far north and the Southern Ocean. Each block of the
+// grid goes to the country under its centre. Countries too small to get a block
 // (Singapore, Hong Kong, …) get one at their centroid in `small`, which the page only draws when they have
 // noodles. Keys are ISO 3166-1 alpha-2 codes, matching the noodles' `country` and the end of `place`.
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { geoBounds, geoContains, geoEqualEarth, geoPath } from "d3-geo";
+import { geoBounds, geoContains, geoEquirectangular, geoPath } from "d3-geo";
 import countries from "i18n-iso-countries";
 import { feature } from "topojson-client";
 
-const COLS = 72; // blocks across: coarse, so each brick is big enough to tap
+const COLS = 160; // blocks across: fine enough for islands, still chunky like noodle bricks
 const BRICK = 1.4; // a block is this much wider than tall, like a noodle brick
 const WIDTH = 1000;
+const NORTH = 75; // latitudes the map runs between
+const SOUTH = -50;
 
 const require = createRequire(import.meta.url);
 const load = (scale) => JSON.parse(readFileSync(require.resolve(`world-atlas/countries-${scale}.json`), "utf8"));
 const alpha2 = (f) => countries.numericToAlpha2(f.id) ?? { Kosovo: "XK", "N. Cyprus": "CY", Somaliland: "SO" }[f.properties.name];
 const features = (topo) => feature(topo, topo.objects.countries).features.filter((f) => alpha2(f) && alpha2(f) !== "AQ");
 
-const coarse = features(load("110m"));
 const fine = features(load("50m"));
-const projection = geoEqualEarth().fitWidth(WIDTH, { type: "FeatureCollection", features: coarse });
-const [[, top], [, bottom]] = geoPath(projection).bounds({ type: "FeatureCollection", features: coarse });
+const projection = geoEquirectangular().fitWidth(WIDTH, { type: "Sphere" });
+const top = projection([0, NORTH])[1];
+const bottom = projection([0, SOUTH])[1];
 
 const cellW = WIDTH / COLS;
 const cellH = cellW / BRICK;
 const rows = Math.ceil((bottom - top) / cellH);
-const boxes = coarse.map((f) => ({ code: alpha2(f), f, box: geoBounds(f) }));
+const boxes = fine.map((f) => ({ code: alpha2(f), f, box: geoBounds(f) }));
 const inBox = ([lon, lat], [[w, s], [e, n]]) => lat >= s && lat <= n && (w <= e ? lon >= w && lon <= e : lon >= w || lon <= e);
 
 const cells = {};
