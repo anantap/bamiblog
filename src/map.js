@@ -12,17 +12,20 @@ const mapEl = document.getElementById("map");
 const summary = document.getElementById("summary");
 const countryEl = document.getElementById("country");
 
+const countriesEl = document.getElementById("countries");
+const groupsEl = document.getElementById("groups");
+
 let entries = [];
 let mode = location.hash === "#eaten" ? "eaten" : "made";
 let selected = null;
-let focus = true; // scroll to the noodles on the first draw and after switching modes, not when selecting
+let focus = "now"; // pan to the noodles on the first draw and after switching modes; smoothly after picking a country
 
-// On a phone the map is wider than the screen and scrolls sideways; start with the noodle countries in view.
-function focusOn(groups) {
-  const columns = [...groups.keys()].flatMap((code) => world.cells[code] ?? [world.small[code]]).filter((i) => i !== undefined).map((i) => i % world.cols);
+// On a phone the map is wider than the screen and scrolls sideways; bring these countries to the middle.
+function focusOn(codes, behavior) {
+  const columns = codes.flatMap((code) => world.cells[code] ?? [world.small[code]]).filter((i) => i !== undefined).map((i) => i % world.cols);
   if (!columns.length || mapEl.scrollWidth <= mapEl.clientWidth) return;
   const middle = (Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols;
-  mapEl.scrollLeft = middle * mapEl.scrollWidth - mapEl.clientWidth / 2;
+  mapEl.scrollTo({ left: middle * mapEl.scrollWidth - mapEl.clientWidth / 2, behavior });
 }
 
 function svg(tag, attrs = {}) {
@@ -31,42 +34,25 @@ function svg(tag, attrs = {}) {
   return el;
 }
 
-function select(code) {
-  selected = selected === code ? null : code;
-  render();
-}
-
 const GAP = world.cellW * 0.14; // white space between blocks
 
-// One country as a group of noodle-brick blocks.
+// One country as a single path of noodle-brick blocks.
 function country(code, groups) {
-  const count = groups.get(code)?.length ?? 0;
-  const el = svg("g");
-  for (const i of world.cells[code] ?? [world.small[code]]) {
-    const x = (i % world.cols) * world.cellW;
-    const y = Math.floor(i / world.cols) * world.cellH;
-    el.append(svg("rect", { x: x.toFixed(2), y: y.toFixed(2), width: (world.cellW - GAP).toFixed(2), height: (world.cellH - GAP).toFixed(2) }));
-  }
-  el.classList.toggle("has", count > 0);
+  const w = (world.cellW - GAP).toFixed(2), hgt = (world.cellH - GAP).toFixed(2);
+  const d = (world.cells[code] ?? [world.small[code]])
+    .map((i) => `M${((i % world.cols) * world.cellW).toFixed(2)} ${(Math.floor(i / world.cols) * world.cellH).toFixed(2)}h${w}v${hgt}h-${w}z`)
+    .join("");
+  const el = svg("path", { d });
+  el.classList.toggle("has", groups.has(code));
   el.classList.toggle("selected", code === selected);
-  el.append(Object.assign(svg("title"), { textContent: count ? `${names.of(code)} · ${count}` : names.of(code) }));
-  if (count) {
-    el.setAttribute("tabindex", "0");
-    el.setAttribute("role", "button");
-    el.setAttribute("aria-label", `${names.of(code)}, ${count} ${count === 1 ? "noodle" : "noodles"}`);
-    el.addEventListener("click", () => select(code));
-    el.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        select(code);
-      }
-    });
-  }
   return el;
 }
 
+const label = (code) => `${flag(code)} ${names.of(code)}`;
+
 function render() {
   const groups = byCountry(entries, mode);
+  const order = [...groups.keys()].sort((a, b) => groups.get(b).length - groups.get(a).length || names.of(a).localeCompare(names.of(b)));
   const width = world.cols * world.cellW - GAP;
   const height = world.rows * world.cellH - GAP;
   const map = svg("svg", { viewBox: `0 0 ${width.toFixed(2)} ${height.toFixed(2)}`, role: "img", "aria-label": "World map" });
@@ -75,8 +61,8 @@ function render() {
   for (const code of Object.keys(world.small)) if (groups.has(code)) map.append(country(code, groups));
   mapEl.replaceChildren(map);
   if (focus) {
-    focusOn(groups);
-    focus = false;
+    focusOn(selected ? [selected] : order, focus === "smooth" ? "smooth" : "instant");
+    focus = null;
   }
 
   const counted = [...groups.values()].reduce((n, list) => n + list.length, 0);
@@ -85,21 +71,34 @@ function render() {
     ? `${counted} ${counted === 1 ? "noodle" : "noodles"} ${verb} ${groups.size} ${groups.size === 1 ? "country" : "countries"}`
     : mode === "eaten" ? "No locations yet." : "No noodles yet.";
 
-  const list = selected && groups.get(selected);
-  countryEl.hidden = !list;
-  if (list) {
-    document.getElementById("country-name").textContent = `${flag(selected)} ${names.of(selected)} · ${list.length}`;
-    document.getElementById("country-list").replaceChildren(
-      ...list.map((entry) =>
+  // Picking a country lights it up and pans the map to it; the map itself isn't clickable.
+  countriesEl.replaceChildren(
+    ...order.map((code) =>
+      h("button", { type: "button", "data-country": code, "aria-pressed": String(code === selected) }, `${label(code)} ${groups.get(code).length}`)
+    )
+  );
+
+  groupsEl.replaceChildren(
+    ...order.map((code) =>
+      h(
+        "section",
+        { class: "map-group" },
+        h("h2", { class: "map-country" }, `${label(code)} · ${groups.get(code).length}`),
         h(
-          "figure",
-          { class: "map-tile" },
-          h("figcaption", {}, padNumber(entry.number)),
-          h("img", { src: entry.photo, alt: title(entry), loading: "lazy", decoding: "async" })
+          "div",
+          { class: "map-list" },
+          ...groups.get(code).map((entry) =>
+            h(
+              "figure",
+              { class: "map-tile" },
+              h("figcaption", {}, padNumber(entry.number)),
+              h("img", { src: entry.photo, alt: title(entry), loading: "lazy", decoding: "async" })
+            )
+          )
         )
       )
-    );
-  }
+    )
+  );
 
   for (const button of modes.querySelectorAll("button")) {
     if (button.dataset.mode === mode) button.setAttribute("aria-current", "page");
@@ -107,12 +106,20 @@ function render() {
   }
 }
 
+countriesEl.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-country]");
+  if (!button) return;
+  selected = selected === button.dataset.country ? null : button.dataset.country;
+  focus = "smooth";
+  render();
+});
+
 modes.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-mode]");
   if (!button) return;
   mode = button.dataset.mode;
   selected = null;
-  focus = true;
+  focus = "now";
   history.replaceState(null, "", mode === "eaten" ? "#eaten" : location.pathname);
   render();
 });

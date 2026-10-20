@@ -263,7 +263,7 @@ button {
   margin: 0 auto -8%;
 }
 
-/* On phones the map keeps a fixed width and scrolls sideways, edge to edge; on wider screens it just fits. */
+/* On phones the map is zoomed in and scrolls sideways, edge to edge; on wider screens it just fits. */
 .map {
   --accent-light: #f19d8a;
   overflow-x: auto;
@@ -279,7 +279,7 @@ button {
 .map svg {
   display: block;
   width: 100%;
-  min-width: 960px;
+  min-width: 1400px;
   height: auto;
 }
 
@@ -295,26 +295,35 @@ button {
 }
 
 /* Blocks like noodle bricks; no borders, a country is just where the colour changes. Noodle countries are light
-   red, the selected one the logo red. */
-.map rect {
+   red, the one picked below the map the logo red. */
+.map path {
   fill: var(--line);
 }
 
 .map .has {
-  cursor: pointer;
-}
-
-.map .has rect {
   fill: var(--accent-light);
 }
 
-.map .selected rect,
-.map .has:focus-visible rect {
+.map .selected {
   fill: var(--accent);
 }
 
-.map .has:focus-visible {
-  outline: none;
+/* The countries under the map, to pan to and light up. */
+.map-countries {
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+}
+
+.map-countries button[aria-pressed="true"] {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* All the noodles, a country at a time. */
+.map-group {
+  margin-top: 40px;
 }
 
 .map-summary,
@@ -324,7 +333,7 @@ button {
   color: var(--anthracite);
 }
 
-/* A country's noodles, centred under the map: three across on phones, six on wider screens. */
+/* A country's noodles, centred: three across on phones, six on wider screens. */
 .map-list {
   display: flex;
   flex-wrap: wrap;

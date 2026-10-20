@@ -3,8 +3,8 @@
 //
 //     node tools/map/build.mjs
 //
-// Shapes come from Natural Earth (public domain) via world-atlas at the 1:110m scale, in the Equal Earth
-// projection. Each block of a grid goes to the country under its centre. Countries too small to get a block
+// Shapes come from Natural Earth (public domain) via world-atlas, in the Equal Earth projection; the 1:110m set
+// frames the map and the 1:50m set fills it, so islands show. Each block of a grid goes to the country under its centre. Countries too small to get a block
 // (Singapore, Hong Kong, …) get one at their centroid in `small`, which the page only draws when they have
 // noodles. Keys are ISO 3166-1 alpha-2 codes, matching the noodles' `country` and the end of `place`.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -13,7 +13,7 @@ import { geoBounds, geoContains, geoEqualEarth, geoPath } from "d3-geo";
 import countries from "i18n-iso-countries";
 import { feature } from "topojson-client";
 
-const COLS = 72; // blocks across: coarse, so each brick is big enough to tap
+const COLS = 160; // blocks across: fine enough for islands, still chunky like noodle bricks
 const BRICK = 1.4; // a block is this much wider than tall, like a noodle brick
 const WIDTH = 1000;
 
@@ -30,7 +30,7 @@ const [[, top], [, bottom]] = geoPath(projection).bounds({ type: "FeatureCollect
 const cellW = WIDTH / COLS;
 const cellH = cellW / BRICK;
 const rows = Math.ceil((bottom - top) / cellH);
-const boxes = coarse.map((f) => ({ code: alpha2(f), f, box: geoBounds(f) }));
+const boxes = fine.map((f) => ({ code: alpha2(f), f, box: geoBounds(f) }));
 const inBox = ([lon, lat], [[w, s], [e, n]]) => lat >= s && lat <= n && (w <= e ? lon >= w && lon <= e : lon >= w || lon <= e);
 
 const cells = {};
