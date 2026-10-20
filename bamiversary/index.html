@@ -34,9 +34,11 @@
         <p class="map-summary" id="summary"></p>
         <div class="map-holder">
           <div class="map" id="map"></div>
-          <div class="country-card" id="country-card" hidden></div>
+          <div class="card-slot">
+            <div class="country-card" id="country-card" hidden></div>
+            <p class="map-hint" id="map-hint"><span class="point">point at</span><span class="tap">tap</span> a red country for its bami facts.</p>
+          </div>
         </div>
-        <p class="map-hint" id="map-hint"><span class="point">point at</span><span class="tap">tap</span> a red country for its bami facts.</p>
       </section>
       <section class="panel panel-grow" id="brands-panel" hidden>
         <h2 class="panel-title">brands and flavours</h2>
@@ -44,7 +46,7 @@
       </section>
       <section class="panel" id="estate-panel" hidden>
         <h2 class="panel-title">noodle real estate</h2>
-        <p class="panel-sub">every brand sized by its packs, cut into its flavours</p>
+        <p class="panel-sub panel-explain">how much of the year each brand took up. every block is a brand, as big as the number of packs eaten of it: the more packs, the more room. inside, its flavours divide it up the same way, the most eaten in the brand's own red and the rest in lighter shades of it.</p>
         <div class="chart" id="estate"></div>
       </section>
       <section class="panel strip" id="strip" hidden>

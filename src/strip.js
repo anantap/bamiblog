@@ -1,6 +1,7 @@
 // Every pack, the closing part of /bamiversary/: all the photos in one row, running from left to right like a
-// ticker, round and round, with the number of the pack in the middle counting up underneath. Holding it stops
-// it. With less motion asked for, it's a plain row to swipe through instead.
+// ticker, round and round, with the number of the pack in the middle counting up underneath. It can be dragged
+// (or swiped with a trackpad) either way, and runs on by itself a moment after. With less motion asked for, it's a
+// plain row to swipe through instead.
 import { h } from "./dom.js";
 import { formatDate, padNumber, title } from "./format.js";
 
@@ -18,9 +19,9 @@ export function strip(section, entries) {
   // The ticker moves right, so the pack coming in from the left is the next one up: newest on the left. The still
   // row reads normally, oldest first.
   let packs = oldest;
-  const tile = (e) => h("img", { src: e.photo, alt: title(e), loading: "lazy", decoding: "async" });
+  const tile = (e) => h("img", { src: e.photo, alt: title(e), loading: "lazy", decoding: "async", draggable: "false" });
 
-  let step = 0, loop = 0, at = 0, held = false, before = 0, shown = -1;
+  let step = 0, loop = 0, at = 0, held = false, restUntil = 0, before = 0, shown = -1;
   const show = (i) => {
     if (i === shown) return;
     shown = i;
@@ -50,7 +51,7 @@ export function strip(section, entries) {
     const seconds = before ? Math.min(0.1, (now - before) / 1000) : 0;
     before = now;
     if (!still.matches) {
-      if (!held) at = (at + SPEED * seconds) % loop;
+      if (!held && now > restUntil) at = (at + SPEED * seconds) % loop;
       const x = at - loop; // from one copy to the left of the screen, moving right
       row.style.transform = `translate3d(${x}px, 0, 0)`;
       show(middle(x));
@@ -58,10 +59,33 @@ export function strip(section, entries) {
     requestAnimationFrame(run);
   };
   track.addEventListener("scroll", () => still.matches && step && show(Math.min(packs.length - 1, Math.round(track.scrollLeft / step))), { passive: true });
-  for (const type of ["pointerdown", "touchstart"]) track.addEventListener(type, () => (held = true), { passive: true });
-  for (const type of ["pointerup", "pointercancel", "touchend"]) addEventListener(type, () => (held = false), { passive: true });
-  track.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && (held = true));
-  track.addEventListener("pointerleave", (e) => e.pointerType === "mouse" && (held = false));
+  // Dragging moves the row with the finger or mouse; scrolling the page up and down still works on phones, since
+  // the row only takes sideways moves (touch-action: pan-y). A mouse resting on it stops it.
+  const wrapAt = (v) => ((v % loop) + loop) % loop;
+  let drag = null, hovered = false;
+  track.addEventListener("pointerdown", (e) => {
+    if (still.matches) return;
+    drag = { x: e.clientX, at };
+    held = true;
+    track.setPointerCapture(e.pointerId);
+  });
+  track.addEventListener("pointermove", (e) => drag && (at = wrapAt(drag.at + e.clientX - drag.x)));
+  const release = () => {
+    if (!drag) return;
+    drag = null;
+    held = hovered;
+    restUntil = performance.now() + 1500;
+  };
+  track.addEventListener("pointerup", release);
+  track.addEventListener("pointercancel", release);
+  track.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && (hovered = held = true));
+  track.addEventListener("pointerleave", (e) => e.pointerType === "mouse" && ((hovered = false), drag || (held = false)));
+  track.addEventListener("wheel", (e) => {
+    if (still.matches || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    at = wrapAt(at - e.deltaX);
+    restUntil = performance.now() + 1500;
+  }, { passive: false });
   let width = innerWidth;
   addEventListener("resize", () => innerWidth !== width && ((width = innerWidth), build())); // not when a phone's bar hides
   still.addEventListener("change", build);

@@ -252,6 +252,13 @@ button {
   color: var(--muted);
 }
 
+/* A few sentences on how to read a chart: kept to a readable width. */
+.panel-explain {
+  max-width: 560px;
+  margin-inline: auto;
+  text-wrap: pretty;
+}
+
 /* "the bamiversary", drawn from the logo's own shapes (tools/lettering), big in the middle of the first screen. */
 .panel-intro {
   height: var(--intro);
@@ -466,13 +473,33 @@ button {
   font: 500 18px/1.3 var(--font);
 }
 
-/* On phones the card sits under the map instead, centred, and stays while the map drifts on. */
+/* On wide screens the card floats by the country (placed by src/map.js) and the hint sits under the map. */
+.card-slot {
+  display: contents;
+}
+
+/* On phones the card sits under the map instead and stays while the map drifts on. Its room is kept from the start,
+   with the hint in it, so the page doesn't grow (and jump) when a card shows. */
 @media (max-width: 767px) {
+  .card-slot {
+    display: grid;
+    min-height: 230px; /* room for the longest card */
+    margin-top: 16px;
+  }
+
+  .card-slot > * {
+    grid-area: 1 / 1;
+  }
+
+  .card-slot .map-hint {
+    margin: 0;
+  }
+
   .country-card {
     position: static;
-    margin: 16px auto 0;
+    align-self: start;
+    justify-self: center;
     transform: none !important;
-    text-align: center;
   }
 }
 
@@ -484,7 +511,7 @@ button {
 }
 
 .map-hint .tap,
-.map-holder:has(.country-card:not([hidden])) + .map-hint {
+.country-card:not([hidden]) + .map-hint {
   display: none;
 }
 
@@ -508,40 +535,43 @@ button {
   color: var(--anthracite);
 }
 
-/* Brands and flavours as a mind map (drawn in src/map.js). */
+/* Brands and flavours as a family tree on noodles (drawn in src/map.js): turned sideways to fit on phones, drawn a
+   third bigger on wider screens, and always fitting the screen. */
 .brands {
-  margin: 0 auto;
+  margin: 0 calc(50% - 50vw);
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.brands::-webkit-scrollbar {
+  display: none;
 }
 
 .brands svg {
   display: block;
-  max-width: 100%;
+  width: min(var(--natural), 100%);
   height: auto;
   margin: 0 auto;
 }
 
-/* On wider screens it's drawn big: 80% of the screen, centred on it. */
 @media (min-width: 768px) {
   .brands svg {
-    width: 80vw;
-    max-width: none;
-    margin-left: calc(50% - 40vw);
+    width: min(var(--natural) * 1.35, 100%);
   }
 }
 
 .brands .branches path {
   fill: none;
   stroke: var(--anthracite);
-  stroke-width: 1.5;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .brands text {
   font: 400 12px var(--font);
   text-anchor: middle;
-  fill: #fff;
-}
-
-.brands .theme rect {
   fill: #fff;
 }
 
@@ -561,13 +591,6 @@ button {
   fill: var(--anthracite);
 }
 
-.brands .flavour.favourite rect {
-  fill: var(--accent);
-}
-
-.brands .flavour.favourite text {
-  fill: #fff;
-}
 
 /* Noodle real estate (drawn in src/charts.js): each brand a block in its own red, its flavours in lighter shades
    of it. */
@@ -615,6 +638,9 @@ button {
 
 .strip-track {
   overflow: hidden;
+  touch-action: pan-y; /* sideways drags move the row; up and down still scrolls the page */
+  cursor: grab;
+  user-select: none;
 }
 
 .strip-row {
@@ -645,6 +671,8 @@ button {
 /* With less motion asked for: a still row to swipe through. */
 .strip.free .strip-track {
   overflow-x: auto;
+  touch-action: auto;
+  cursor: auto;
 }
 
 /* About */
