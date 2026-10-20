@@ -1,7 +1,7 @@
 import { api, h } from "./dom.js";
-import { flag, padNumber, title } from "./format.js";
-import { brands, facts, hours } from "./facts.js";
-import { clock, sociogram, stream, streamKey, svg, treemap } from "./charts.js";
+import { flag } from "./format.js";
+import { brands, facts } from "./facts.js";
+import { svg, treemap } from "./charts.js";
 import { byCountry } from "./map-data.js";
 import world from "./world.json";
 
@@ -11,7 +11,15 @@ const mapEl = document.getElementById("map");
 const summary = document.getElementById("summary");
 
 const countriesEl = document.getElementById("countries");
-const groupsEl = document.getElementById("groups");
+
+// The intro (see the page): once its images are ready, red fades in over the blank page with the title in white;
+// when it ends the red goes and the real title shows, so the colours flip.
+const intro = document.querySelector(".intro");
+if (document.documentElement.classList.contains("intro-on")) {
+  const done = () => document.documentElement.classList.remove("intro-on");
+  intro.addEventListener("animationend", done);
+  Promise.all([...intro.querySelectorAll("img")].map((img) => img.decode())).then(() => intro.classList.add("play"), done);
+}
 
 let entries = [];
 let selected = null;
@@ -74,8 +82,6 @@ function country(code, groups) {
   return el;
 }
 
-const label = (code) => `${flag(code)} ${names.of(code)}`;
-
 function render() {
   const groups = byCountry(entries);
   const order = [...groups.keys()].sort((a, b) => groups.get(b).length - groups.get(a).length || names.of(a).localeCompare(names.of(b)));
@@ -100,33 +106,21 @@ function render() {
     ? `${counted} ${counted === 1 ? "noodle" : "noodles"} from ${groups.size} ${groups.size === 1 ? "country" : "countries"}`
     : "No noodles yet.";
 
-  // Picking a country lights it up and pans the map to it; the map itself isn't clickable.
+  // A bar per country, tallest first: picking one lights it up on the map and pans to it (the map itself
+  // isn't clickable).
+  const most = Math.max(1, ...order.map((code) => groups.get(code).length));
   countriesEl.replaceChildren(
-    ...order.map((code) =>
-      h("button", { type: "button", "data-country": code, "aria-pressed": String(code === selected) }, `${label(code)} ${groups.get(code).length}`)
-    )
-  );
-
-  groupsEl.replaceChildren(
-    ...order.map((code) =>
-      h(
-        "section",
-        { class: "map-group" },
-        h("h2", { class: "map-country" }, `${label(code)} · ${groups.get(code).length}`),
-        h(
-          "div",
-          { class: "map-list" },
-          ...groups.get(code).map((entry) =>
-            h(
-              "figure",
-              { class: "map-tile" },
-              h("figcaption", {}, padNumber(entry.number)),
-              h("img", { src: entry.photo, alt: title(entry), loading: "lazy", decoding: "async" })
-            )
-          )
-        )
-      )
-    )
+    ...order.map((code) => {
+      const count = groups.get(code).length;
+      return h(
+        "button",
+        { type: "button", "data-country": code, "aria-pressed": String(code === selected), "aria-label": `${names.of(code)}, ${count} ${count === 1 ? "noodle" : "noodles"}` },
+        h("span", { class: "count" }, count),
+        h("span", { class: "bar", style: `height: ${Math.max(4, (count / most) * 140)}px` }),
+        h("span", { class: "flag" }, flag(code)),
+        h("span", { class: "name" }, names.of(code))
+      );
+    })
   );
 }
 
@@ -153,24 +147,10 @@ function renderFacts() {
   );
 }
 
-// The charts below the map are drawn to fill their boxes, so they're drawn again when the page changes width,
-// and after their captions and legends, which take some of the room. Each section shows once there are noodles.
+// The treemap is drawn to fill its box, so it's drawn again when the page changes width.
 function renderCharts() {
-  const show = (id, on) => (document.getElementById(id).hidden = !on);
-  const counts = hours(entries);
-  const most = Math.max(...counts);
-  show("clock", most > 0);
-  if (most) {
-    document.getElementById("clock-caption").textContent = `most noodles around ${String(counts.indexOf(most)).padStart(2, "0")}:00.`;
-    clock(document.getElementById("clock-chart"), entries);
-  }
-  show("estate-panel", entries.length > 0);
+  document.getElementById("estate-panel").hidden = !entries.length;
   if (entries.length) treemap(document.getElementById("estate"), entries);
-  show("stream-panel", entries.length > 0);
-  document.getElementById("stream-legend").replaceChildren(...streamKey(entries).map(({ label, tone }) => h("li", {}, h("i", { class: `tone-${tone}` }), label)));
-  if (entries.length) stream(document.getElementById("stream"), entries);
-  show("makers-panel", entries.length > 0);
-  if (entries.length) sociogram(document.getElementById("makers"), entries);
 }
 
 let lastWidth = 0;
@@ -235,19 +215,19 @@ function renderBrands() {
   sides.forEach((list, i) => {
     const dir = sides.length === 1 || i === 0 ? 1 : -1;
     const brandX = dir * (half + REACH);
-    const brandW = Math.max(...list.map((b) => `${b.brand} ${b.count}`.length * PILL.char + 2 * PILL.pad), 0);
+    const brandW = Math.max(...list.map((b) => b.brand.length * PILL.char + 2 * PILL.pad), 0);
     const flavourX = brandX + dir * (brandW + REACH);
     let y = (tallest - height(list)) / 2;
-    for (const { brand, count, flavours } of list) {
+    for (const { brand, flavours } of list) {
       const brandY = y + (flavours.length * ROW) / 2;
       lines.append(branch(dir * half, tallest / 2, brandX, brandY));
-      const label = pill(brandX, brandY, `${brand} ${count}`, "brand", dir);
+      const label = pill(brandX, brandY, brand, "brand", dir);
       pills.append(label.g);
       flavours.forEach(({ flavour, count: packs }, j) => {
         const fy = y + j * ROW + ROW / 2;
         const favourite = j === 0 && packs > (flavours[1]?.count ?? packs);
         lines.append(branch(brandX + dir * label.w, brandY, flavourX, fy));
-        const leaf = pill(flavourX, fy, `${flavour || "no flavour"} ${packs}`, favourite ? "flavour favourite" : "flavour", dir);
+        const leaf = pill(flavourX, fy, flavour || "no flavour", favourite ? "flavour favourite" : "flavour", dir);
         pills.append(leaf.g);
         minX = Math.min(minX, flavourX - (dir < 0 ? leaf.w : 0));
         maxX = Math.max(maxX, flavourX + (dir > 0 ? leaf.w : 0));
