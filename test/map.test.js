@@ -22,6 +22,6 @@ describe("map data", () => {
   });
 
   it("can draw every country in the add form", () => {
-    expect(COUNTRIES.filter((c) => !world.shapes[c] && !world.dots[c])).toEqual([]);
+    expect(COUNTRIES.filter((c) => !world.cells[c] && world.small[c] === undefined)).toEqual([]);
   });
 });

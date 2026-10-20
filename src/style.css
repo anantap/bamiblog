@@ -211,31 +211,33 @@ button {
   height: auto;
 }
 
-.map path,
-.map circle {
-  fill: var(--card);
-  stroke: var(--bg);
-  stroke-width: 0.5;
+/* Blocks like noodle bricks; no borders, a country is just where the colour changes. */
+.map rect {
+  fill: var(--line);
 }
 
 .map .has {
-  fill: var(--accent);
   cursor: pointer;
 }
 
-.map circle.has {
-  stroke-width: 1.5;
+.map .has rect {
+  fill: var(--accent);
 }
 
 .map .selected {
-  stroke: var(--anthracite);
-  stroke-width: 1.5;
+  fill-opacity: 1; /* solid, whatever the count shade */
+}
+
+.map .selected rect {
+  fill: var(--anthracite);
 }
 
 .map .has:focus-visible {
   outline: none;
-  stroke: var(--anthracite);
-  stroke-width: 2;
+}
+
+.map .has:focus-visible rect {
+  fill: var(--anthracite);
 }
 
 .map-summary,

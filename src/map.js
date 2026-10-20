@@ -31,10 +31,17 @@ function select(code) {
   render();
 }
 
+const GAP = 1.4; // white space between blocks, in map units (a block is about 8 wide)
+
+// One country as a group of noodle-brick blocks.
 function country(code, groups, max) {
   const count = groups.get(code)?.length ?? 0;
-  const shape = world.shapes[code];
-  const el = shape ? svg("path", { d: shape }) : svg("circle", { cx: world.dots[code][0], cy: world.dots[code][1], r: 4 });
+  const el = svg("g");
+  for (const i of world.cells[code] ?? [world.small[code]]) {
+    const x = (i % world.cols) * world.cellW;
+    const y = Math.floor(i / world.cols) * world.cellH;
+    el.append(svg("rect", { x: x.toFixed(2), y: y.toFixed(2), width: (world.cellW - GAP).toFixed(2), height: (world.cellH - GAP).toFixed(2) }));
+  }
   el.classList.toggle("has", count > 0);
   el.classList.toggle("selected", code === selected);
   el.append(Object.assign(svg("title"), { textContent: count ? `${names.of(code)} · ${count}` : names.of(code) }));
@@ -57,10 +64,12 @@ function country(code, groups, max) {
 function render() {
   const groups = byCountry(entries, mode);
   const max = Math.max(1, ...[...groups.values()].map((list) => list.length));
-  const map = svg("svg", { viewBox: `0 0 ${world.width} ${world.height}`, role: "img", "aria-label": "World map" });
-  for (const code of Object.keys(world.shapes)) map.append(country(code, groups, max));
-  // Tiny countries only show as a dot when they have noodles, so the map doesn't fill up with specks.
-  for (const code of Object.keys(world.dots)) if (groups.has(code)) map.append(country(code, groups, max));
+  const width = world.cols * world.cellW - GAP;
+  const height = world.rows * world.cellH - GAP;
+  const map = svg("svg", { viewBox: `0 0 ${width.toFixed(2)} ${height.toFixed(2)}`, role: "img", "aria-label": "World map" });
+  for (const code of Object.keys(world.cells)) map.append(country(code, groups, max));
+  // Countries too small for a block only get one when they have noodles, drawn last so it sits on top.
+  for (const code of Object.keys(world.small)) if (groups.has(code)) map.append(country(code, groups, max));
   mapEl.replaceChildren(map);
 
   const counted = [...groups.values()].reduce((n, list) => n + list.length, 0);

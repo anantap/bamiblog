@@ -1,45 +1,58 @@
-// Builds src/world.json: country outlines for the /map page, projected once so the browser just draws paths.
+// Builds src/world.json: the /map page's world made of noodle-brick blocks, worked out once here so the browser
+// only draws rectangles.
 //
 //     node tools/map/build.mjs
 //
-// Shapes come from Natural Earth (public domain) via world-atlas at the 1:110m scale. Countries too small to
-// show at that scale (Singapore, Hong Kong, …) get a dot at their 1:50m centroid instead. Keys are ISO 3166-1
-// alpha-2 codes, matching the noodles' `country` and the code at the end of `place`.
+// Shapes come from Natural Earth (public domain) via world-atlas at the 1:110m scale, in the Equal Earth
+// projection. Each block of a grid goes to the country under its centre. Countries too small to get a block
+// (Singapore, Hong Kong, …) get one at their centroid in `small`, which the page only draws when they have
+// noodles. Keys are ISO 3166-1 alpha-2 codes, matching the noodles' `country` and the end of `place`.
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { geoEqualEarth, geoPath } from "d3-geo";
+import { geoBounds, geoContains, geoEqualEarth, geoPath } from "d3-geo";
 import countries from "i18n-iso-countries";
 import { feature } from "topojson-client";
 
-const require = createRequire(import.meta.url);
-const load = (scale) => JSON.parse(readFileSync(require.resolve(`world-atlas/countries-${scale}.json`), "utf8"));
+const COLS = 120; // blocks across
+const BRICK = 1.4; // a block is this much wider than tall, like a noodle brick
 const WIDTH = 1000;
 
+const require = createRequire(import.meta.url);
+const load = (scale) => JSON.parse(readFileSync(require.resolve(`world-atlas/countries-${scale}.json`), "utf8"));
 const alpha2 = (f) => countries.numericToAlpha2(f.id) ?? { Kosovo: "XK", "N. Cyprus": "CY", Somaliland: "SO" }[f.properties.name];
 const features = (topo) => feature(topo, topo.objects.countries).features.filter((f) => alpha2(f) && alpha2(f) !== "AQ");
 
 const coarse = features(load("110m"));
 const fine = features(load("50m"));
-
 const projection = geoEqualEarth().fitWidth(WIDTH, { type: "FeatureCollection", features: coarse });
-const path = geoPath(projection);
-const [[, top], [, bottom]] = path.bounds({ type: "FeatureCollection", features: coarse });
-projection.translate([projection.translate()[0], projection.translate()[1] - top]);
-const round = (d) => d.replace(/\d+\.\d+/g, (n) => Number(n).toFixed(1));
+const [[, top], [, bottom]] = geoPath(projection).bounds({ type: "FeatureCollection", features: coarse });
 
-const shapes = {};
-for (const f of coarse) {
-  const code = alpha2(f);
-  shapes[code] = (shapes[code] ?? "") + round(path(f));
+const cellW = WIDTH / COLS;
+const cellH = cellW / BRICK;
+const rows = Math.ceil((bottom - top) / cellH);
+const boxes = coarse.map((f) => ({ code: alpha2(f), f, box: geoBounds(f) }));
+const inBox = ([lon, lat], [[w, s], [e, n]]) => lat >= s && lat <= n && (w <= e ? lon >= w && lon <= e : lon >= w || lon <= e);
+
+const cells = {};
+for (let row = 0; row < rows; row++) {
+  for (let col = 0; col < COLS; col++) {
+    const point = projection.invert([(col + 0.5) * cellW, top + (row + 0.5) * cellH]);
+    if (!point || !Number.isFinite(point[0])) continue;
+    const hit = boxes.find(({ f, box }) => inBox(point, box) && geoContains(f, point));
+    if (hit) (cells[hit.code] ??= []).push(row * COLS + col);
+  }
 }
-const dots = {};
+
+const small = {};
 for (const f of fine) {
   const code = alpha2(f);
-  if (shapes[code]) continue;
-  const [x, y] = path.centroid(f);
-  if (Number.isFinite(x)) dots[code] = [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
+  if (cells[code]) continue;
+  const [x, y] = geoPath(projection).centroid(f);
+  if (!Number.isFinite(x)) continue;
+  small[code] = Math.floor((y - top) / cellH) * COLS + Math.min(COLS - 1, Math.floor(x / cellW));
 }
 
-const out = { width: WIDTH, height: Math.ceil(bottom - top), shapes, dots };
+const out = { cols: COLS, rows, cellW: +cellW.toFixed(3), cellH: +cellH.toFixed(3), cells, small };
 writeFileSync(new URL("../../src/world.json", import.meta.url), JSON.stringify(out));
-console.log(`src/world.json: ${Object.keys(shapes).length} shapes, ${Object.keys(dots).length} dots, ${out.width}×${out.height}, ${JSON.stringify(out).length} bytes`);
+const blocks = Object.values(cells).reduce((n, list) => n + list.length, 0);
+console.log(`src/world.json: ${COLS}×${rows} grid, ${blocks} blocks in ${Object.keys(cells).length} countries, ${Object.keys(small).length} small, ${JSON.stringify(out).length} bytes`);
