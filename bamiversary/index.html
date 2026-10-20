@@ -30,7 +30,14 @@
           <div><dt>time</dt><dd>1 year.</dd></div>
         </dl>
       </section>
+      <!-- The story: pack #1, a sentence ahead of each part (src/story.js), and the latest pack at the end. -->
+      <section class="panel chapter" id="day-one" hidden>
+        <p class="story" id="story-start"></p>
+        <img class="chapter-photo" id="first-photo" alt="" />
+        <p class="panel-sub" id="first-number"></p>
+      </section>
       <section class="panel panel-grow">
+        <p class="story" id="story-map"></p>
         <p class="map-summary" id="summary"></p>
         <div class="map-holder">
           <div class="map" id="map"></div>
@@ -41,19 +48,31 @@
         </div>
       </section>
       <section class="panel panel-grow" id="brands-panel" hidden>
+        <p class="story" id="story-brands"></p>
         <h2 class="panel-title">brands and flavours</h2>
         <div class="brands" id="brands"></div>
       </section>
       <section class="panel" id="estate-panel" hidden>
+        <p class="story" id="story-estate"></p>
         <h2 class="panel-title">noodle real estate</h2>
         <p class="panel-sub panel-explain">how much of the year each brand took up. every block is a brand, as big as the number of packs eaten of it: the more packs, the more room. inside, its flavours divide it up the same way, the most eaten in the brand's own red and the rest in lighter shades of it.</p>
         <div class="chart" id="estate"></div>
       </section>
       <section class="panel strip" id="strip" hidden>
+        <p class="story" id="story-strip"></p>
         <h2 class="panel-title">every pack</h2>
         <div class="strip-track"><div class="strip-row"></div></div>
         <p class="strip-count" aria-live="off"></p>
         <p class="panel-sub strip-name"></p>
+      </section>
+      <section class="panel chapter the-end">
+        <div class="the-end-latest" hidden>
+          <p class="story" id="story-end"></p>
+          <img class="chapter-photo" id="latest-photo" alt="" />
+          <p class="panel-sub" id="latest-number"></p>
+        </div>
+        <p class="story">year two starts now.</p>
+        <p class="the-end-action"><a class="lettering lettering-link" href="#" data-send-noods><img src="/lettering/send-noods.svg" alt="send noods" width="495" height="132" /></a></p>
       </section>
     </main>
 
