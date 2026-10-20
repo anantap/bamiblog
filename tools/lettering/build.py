@@ -2,9 +2,11 @@
 
     python3 tools/lettering/build.py "send noods" public/lettering/send-noods.svg
     python3 tools/lettering/build.py --outline "about" public/lettering/about-outline.svg
-    python3 tools/lettering/build.py --gap=1 --arc=32 --soft=2 "bamiversary" public/lettering/bamiversary.svg
+    python3 tools/lettering/build.py --gap=0 --arc=32 --soft=2 "bamiversary" public/lettering/bamiversary.svg
+    python3 tools/lettering/build.py --gap=0 --arc=16 --soft=2 "the" public/lettering/the.svg
 
---gap sets the space between letters (default 2; negative pulls them into each other). --arc bends the word
+--gap sets the space between letters (default 2; negative pulls them into each other), on top of the
+per-pair KERN table in glyphs.py. --arc bends the word
 along a circle, ends down like a rainbow, spanning that many degrees. --soft rounds off every sharp corner
 where pieces meet or are cut (blur by that much, then back to a crisp edge); about 2 keeps the shapes.
 
@@ -14,7 +16,7 @@ import math
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from glyphs import DEFS, GLYPHS, RED, word_svg
+from glyphs import DEFS, GLYPHS, RED, spacing, word_svg
 
 TOP, BOTTOM = 4, 136  # vertical band shared by all letters (logo coordinates)
 BASELINE = 124
@@ -32,13 +34,13 @@ def arc_svg(text, gap, degrees, bottom, space=24):
     """The word bent along a circle: each letter moved onto the arc and turned to follow it.
     Returns the SVG body and its bounds (each letter's box, turned, so a little generous)."""
     letters, x = [], 0.0
-    for ch in text:
+    for i, ch in enumerate(text):
         if ch == " ":
             x += space; continue
         svg, x0, x1 = GLYPHS[ch]
         letters.append((svg, x0, x1, x))
-        x += (x1 - x0) + gap
-    width = x - gap
+        x += (x1 - x0) + spacing(text, i, gap)
+    width = x - spacing(text, len(text) - 1, gap)
     radius = width / math.radians(degrees)
     parts, xs, ys = [], [], []
     for svg, x0, x1, left in letters:

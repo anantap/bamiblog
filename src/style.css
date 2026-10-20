@@ -263,6 +263,12 @@ button {
   height: auto;
 }
 
+/* "the", a size down and tucked into the arc of "bamiversary". */
+.map-title .the {
+  width: 22%;
+  margin: 0 auto -8%;
+}
+
 /* On phones the map keeps a fixed width and scrolls sideways, edge to edge; on wider screens it just fits. */
 .map {
   --accent-light: #f19d8a;

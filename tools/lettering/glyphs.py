@@ -86,12 +86,25 @@ GLYPHS = {
     "r": (_outline("r_outline"), 94.5, 146.0),  # the arm sits high, so the next letter can tuck under it
 }
 
+# Kerning: extra space (negative pulls closer) between particular pairs of letters, on top of the gap.
+# Measured by rendering each pair (softened, at gap 0) and pulling it in until the letters would touch.
+KERN = {
+    # "bamiversary" (--arc=32 --soft=2)
+    "ba": -6, "am": -10, "mi": -9, "iv": -8, "ve": -2, "er": -3, "rs": -5, "sa": -3, "ar": -10, "ry": 3,
+    # "the" (--arc=16 --soft=2)
+    "th": -4, "he": -4,
+}
+
+def spacing(text, i, gap):
+    """The space after letter i of text: the gap plus any kerning for that pair."""
+    return gap + KERN.get(text[i:i + 2], 0.0)
+
 def word_svg(text, gap=2.0, space=24):
     parts, x = [], 0.0
-    for ch in text:
+    for i, ch in enumerate(text):
         if ch == " ":
             x += space; continue
         svg, x0, x1 = GLYPHS[ch]
         parts.append(f'<g transform="translate({x - x0:.1f} 0)">{svg}</g>')
-        x += (x1 - x0) + gap
-    return "".join(parts), x - gap
+        x += (x1 - x0) + spacing(text, i, gap)
+    return "".join(parts), x - spacing(text, len(text) - 1, gap)
