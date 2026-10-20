@@ -11,7 +11,6 @@ const page = document.querySelector(".map-page");
 const mapEl = document.getElementById("map");
 const summary = document.getElementById("summary");
 
-const countriesEl = document.getElementById("countries");
 
 // The intro (see the page): once its images are ready, red fades in over the blank page with the title in white
 // in the middle, the title glides up into place, and the red fades away over the real title.
@@ -23,39 +22,23 @@ if (document.documentElement.classList.contains("intro-on")) {
 }
 
 let entries = [];
-let selected = null;
-let focus = "now"; // pan to the noodles on the first draw; smoothly after picking a country
 
 // The map is drawn three times side by side and kept on the middle copy, so it loops: whatever is picked can sit in
 // the middle of the screen, and scrolling never reaches an end.
 const copy = () => mapEl.scrollWidth / 3;
-let panning = false;
 
 function recentre() {
-  if (panning) return;
   const w = copy();
   if (mapEl.scrollLeft < w / 2) mapEl.scrollLeft += w;
   else if (mapEl.scrollLeft > w * 1.5) mapEl.scrollLeft -= w;
 }
 
-// Bring these countries to the middle of the screen, the short way round.
-function focusOn(codes, behavior) {
+// Start with these countries in the middle of the screen.
+function focusOn(codes) {
   const columns = codes.flatMap((code) => world.cells[code] ?? [world.small[code]]).filter((i) => i !== undefined).map((i) => i % world.cols);
   if (!columns.length) columns.push(world.cols / 2);
   const w = copy();
-  const middle = w + ((Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols) * w - mapEl.clientWidth / 2;
-  const left = [middle - w, middle, middle + w].reduce((a, b) => (Math.abs(b - mapEl.scrollLeft) < Math.abs(a - mapEl.scrollLeft) ? b : a));
-  if (behavior !== "smooth") {
-    mapEl.scrollLeft = middle;
-    return;
-  }
-  panning = true;
-  mapEl.scrollTo({ left, behavior });
-  setTimeout(() => {
-    panning = false;
-    recentre();
-  }, 700);
-  rest(4000); // let the picked country sit in the middle for a moment
+  mapEl.scrollLeft = w + ((Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols) * w - mapEl.clientWidth / 2;
 }
 
 // The map drifts from right to left like a ticker, round and round. It stops while someone holds, drags or
@@ -71,10 +54,11 @@ function rest(ms) {
 function drift(now) {
   const seconds = before ? Math.min(0.1, (now - before) / 1000) : 0;
   before = now;
-  if (!still.matches && !held && !hovered && !panning && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
+  if (!still.matches && !held && !hovered && now > restUntil && mapEl.scrollWidth > mapEl.clientWidth) {
     if (at === null || Math.abs(at - mapEl.scrollLeft) > 2) at = mapEl.scrollLeft; // moved by hand, or looped
     at += DRIFT * seconds;
     mapEl.scrollLeft = at;
+    hideCard(); // a tapped country's card goes once the map moves on
   }
   requestAnimationFrame(drift);
 }
@@ -106,14 +90,12 @@ function country(code, groups) {
     .join("");
   const el = svg("path", { d });
   el.classList.toggle("has", groups.has(code));
-  el.classList.toggle("selected", code === selected);
   if (groups.has(code)) el.dataset.code = code;
   return el;
 }
 
 function render() {
   const groups = byCountry(entries);
-  const order = [...groups.keys()].sort((a, b) => groups.get(b).length - groups.get(a).length || names.of(a).localeCompare(names.of(b)));
   const width = world.cols * world.cellW;
   const height = world.rows * world.cellH - GAP;
   const map = svg("svg", { viewBox: `0 0 ${(3 * width).toFixed(2)} ${height.toFixed(2)}`, role: "img", "aria-label": "World map" });
@@ -125,35 +107,13 @@ function render() {
   const copies = [1, 2].map((n) => Object.assign(earth.cloneNode(true), { id: "" }));
   copies.forEach((c, n) => c.setAttribute("transform", `translate(${((n + 1) * width).toFixed(2)} 0)`));
   map.append(earth, ...copies);
-  const left = mapEl.scrollLeft;
   mapEl.replaceChildren(map);
-  mapEl.scrollLeft = left;
-  if (focus) {
-    focusOn(selected ? [selected] : order, focus === "smooth" ? "smooth" : "instant");
-    focus = null;
-  }
+  focusOn([...groups.keys()]);
 
   const counted = [...groups.values()].reduce((n, list) => n + list.length, 0);
   summary.textContent = counted
     ? `${counted} ${counted === 1 ? "noodle" : "noodles"} from ${groups.size} ${groups.size === 1 ? "country" : "countries"}`
     : "No noodles yet.";
-
-  // A bar per country, tallest first: picking one lights it up on the map and pans to it (the map itself
-  // isn't clickable).
-  const most = Math.max(1, ...order.map((code) => groups.get(code).length));
-  countriesEl.replaceChildren(
-    ...order.map((code) => {
-      const count = groups.get(code).length;
-      return h(
-        "button",
-        { type: "button", "data-country": code, "aria-pressed": String(code === selected), "aria-label": `${names.of(code)}, ${count} ${count === 1 ? "noodle" : "noodles"}` },
-        h("span", { class: "count" }, count),
-        h("span", { class: "bar", style: `height: ${Math.max(4, (count / most) * 140)}px` }),
-        h("span", { class: "flag" }, flag(code)),
-        h("span", { class: "name" }, names.of(code))
-      );
-    })
-  );
 }
 
 // Pointing at a noodle country (tapping, on a phone) shows its bami facts in a card next to it and lights it up.
@@ -177,18 +137,36 @@ function cardFor(code) {
   ];
 }
 
+// The card goes beside the country, never over it: to its right if it fits on screen, else its left, else above
+// or below it (whichever has more room), centred on it and kept on screen.
+function place(country) {
+  const map = mapEl.getBoundingClientRect();
+  const land = country.getBoundingClientRect();
+  const w = card.offsetWidth, h = card.offsetHeight, gap = 12;
+  const left = Math.max(map.left, 0) + 8, right = Math.min(map.right, innerWidth) - 8;
+  const fit = (lo, size, hi) => Math.min(Math.max(lo, size), hi);
+  let x, y;
+  if (land.right + gap + w <= right) x = land.right + gap;
+  else if (land.left - gap - w >= left) x = land.left - gap - w;
+  if (x !== undefined) {
+    y = fit(map.top + 8, land.top + land.height / 2 - h / 2, map.bottom - h - 8);
+  } else {
+    x = fit(left, land.left + land.width / 2 - w / 2, right - w);
+    y = land.top - map.top >= map.bottom - land.bottom ? land.top - gap - h : land.bottom + gap;
+  }
+  card.style.transform = `translate(${x - map.left}px, ${y - map.top}px)`;
+}
+
 let carded = null;
-function showCard(code, x, y) {
+function showCard(country) {
+  const code = country.dataset.code;
   if (code !== carded) {
     carded = code;
     card.replaceChildren(...cardFor(code));
     mapEl.querySelectorAll("[data-code]").forEach((p) => p.classList.toggle("selected", p.dataset.code === code));
   }
   card.hidden = false;
-  const box = mapEl.getBoundingClientRect();
-  const left = Math.min(Math.max(8, x - box.left + 16), box.width - card.offsetWidth - 8);
-  const top = Math.min(Math.max(8, y - box.top + 16), box.height - card.offsetHeight - 8);
-  card.style.transform = `translate(${left}px, ${top}px)`;
+  place(country);
 }
 
 function hideCard() {
@@ -200,24 +178,16 @@ function hideCard() {
 
 mapEl.addEventListener("pointermove", (event) => {
   if (event.pointerType !== "mouse") return;
-  const code = event.target.closest?.("[data-code]")?.dataset.code;
-  code ? showCard(code, event.clientX, event.clientY) : hideCard();
+  const country = event.target.closest?.("[data-code]");
+  country ? showCard(country) : hideCard();
 });
 mapEl.addEventListener("pointerenter", (event) => event.pointerType === "mouse" && (hovered = true));
 mapEl.addEventListener("pointerleave", (event) => event.pointerType === "mouse" && ((hovered = false), hideCard()));
 mapEl.addEventListener("click", (event) => {
-  const code = event.target.closest?.("[data-code]")?.dataset.code;
-  if (!code) return hideCard();
-  showCard(code, event.clientX, event.clientY);
+  const country = event.target.closest?.("[data-code]");
+  if (!country) return hideCard();
+  showCard(country);
   rest(6000);
-});
-
-countriesEl.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-country]");
-  if (!button) return;
-  selected = selected === button.dataset.country ? null : button.dataset.country;
-  focus = "smooth";
-  render();
 });
 
 // The fact sheet under the lettering: 1 year, then the totals.

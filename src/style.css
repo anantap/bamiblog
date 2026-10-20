@@ -424,7 +424,7 @@ button {
 }
 
 /* Blocks like noodle bricks; no borders, a country is just where the colour changes. Noodle countries are light
-   red, the one picked below the map the logo red. */
+   red, the one pointed at the logo red. */
 .map path {
   fill: var(--line);
 }
@@ -474,59 +474,6 @@ button {
   margin: 16px 0 0;
   font: 400 13px/1.45 var(--font);
   color: var(--anthracite);
-}
-
-/* The countries under the map as bars, tallest first: count on top, flag and name under. Picking one turns it
-   (and the country on the map) red. */
-.country-bars {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 6px;
-  max-width: 900px;
-  margin: 16px auto 0;
-}
-
-.country-bars button {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  min-width: 0;
-  max-width: 80px;
-  height: 200px;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: 400 11px/1.3 var(--font);
-  color: var(--anthracite);
-  cursor: pointer;
-}
-
-.country-bars .bar {
-  align-self: stretch;
-  background: var(--accent-light);
-}
-
-.country-bars button[aria-pressed="true"] .bar {
-  background: var(--accent);
-}
-
-.country-bars button:hover .bar {
-  background: var(--accent);
-}
-
-.country-bars .flag {
-  font-size: 16px;
-}
-
-.country-bars .name {
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Brands and flavours as a mind map (drawn in src/map.js). */
