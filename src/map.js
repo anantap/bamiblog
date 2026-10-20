@@ -174,6 +174,28 @@ function showCard(country) {
   place(country);
 }
 
+// On phones the card sits under the map, in room kept for it from the start so the page never shifts when one
+// opens. That room is the tallest card any country has here, measured, so even a country with long brand and
+// flavour names (or a phone's own fonts) can't make it grow.
+function keepRoom() {
+  const slot = card.parentElement;
+  slot.style.minHeight = "";
+  if (wide.matches) return;
+  const codes = [...new Set([...mapEl.querySelectorAll("[data-code]")].map((p) => p.dataset.code))];
+  const was = { hidden: card.hidden, children: [...card.childNodes] };
+  card.style.visibility = "hidden";
+  card.hidden = false;
+  let tallest = 0;
+  for (const code of codes) {
+    card.replaceChildren(...cardFor(code));
+    tallest = Math.max(tallest, card.offsetHeight);
+  }
+  card.replaceChildren(...was.children);
+  card.hidden = was.hidden;
+  card.style.visibility = "";
+  slot.style.minHeight = `${Math.ceil(tallest)}px`;
+}
+
 function hideCard() {
   if (!carded) return;
   carded = null;
@@ -217,6 +239,7 @@ new ResizeObserver(() => {
   if (!entries.length || innerWidth === lastWidth) return;
   lastWidth = innerWidth;
   renderCharts();
+  keepRoom();
 }).observe(document.body);
 
 // Every brand with its flavours as a loose, hand-drawn-looking family tree on noodles: "bami" (in the logo's
@@ -417,6 +440,7 @@ api("/api/entries")
     render();
     lastWidth = innerWidth;
     renderCharts();
+    keepRoom();
     strip(document.getElementById("strip"), entries);
   })
   .catch((err) => (summary.textContent = `Couldn't load the noodles: ${err.message}`))

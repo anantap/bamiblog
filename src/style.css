@@ -475,7 +475,7 @@ button {
 @media (max-width: 767px) {
   .card-slot {
     display: grid;
-    min-height: 230px; /* room for the longest card */
+    min-height: 230px; /* until src/map.js measures the tallest card (keepRoom) */
     margin-top: 16px;
   }
 
@@ -502,9 +502,13 @@ button {
   color: var(--muted);
 }
 
-.map-hint .tap,
-.country-card:not([hidden]) + .map-hint {
+.map-hint .tap {
   display: none;
+}
+
+/* While a card shows, the hint goes invisible but keeps its room, so nothing below it moves. */
+.country-card:not([hidden]) + .map-hint {
+  visibility: hidden;
 }
 
 @media (hover: none) {
