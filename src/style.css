@@ -227,20 +227,14 @@ button {
   transform: rotate(-2deg);
 }
 
-/* The fact sheet: plain rows between thin rules, like the label on a pack. The labels are for screen readers. */
+/* The fact sheet: plain rows, one fact each. The labels are for screen readers. */
 .facts {
   max-width: 560px;
   margin: 0 auto 40px;
-  border-top: 2px solid var(--anthracite);
 }
 
 .facts div {
-  padding: 8px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.facts div:first-child {
-  border-bottom: 2px solid var(--anthracite);
+  padding: 4px 0;
 }
 
 .facts dt {
