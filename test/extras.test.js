@@ -4,7 +4,7 @@ import { validateExtra } from "../lib/validate.js";
 
 const JPEG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==";
 const NOV2 = Date.UTC(2026, 10, 2, 6);
-const OCT19 = Date.UTC(2026, 9, 19, 6);
+const OCT26 = Date.UTC(2026, 9, 26, 6);
 
 describe("validateExtra", () => {
   it("cleans a full item", () => {
@@ -35,7 +35,7 @@ describe("pickExtra", () => {
   });
 
   it("waits during weeks with a hard-coded Monday mood", () => {
-    expect(pickExtra(extras, OCT19)).toBeNull();
+    expect(pickExtra(extras, OCT26)).toBeNull();
   });
 
   it("is empty when nothing is waiting", () => {

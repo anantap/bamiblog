@@ -197,6 +197,84 @@ button {
   color: var(--muted);
 }
 
+/* Map (not linked yet) */
+
+.map-page {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.map path,
+.map circle {
+  fill: var(--card);
+  stroke: var(--bg);
+  stroke-width: 0.5;
+}
+
+.map .has {
+  fill: var(--accent);
+  cursor: pointer;
+}
+
+.map circle.has {
+  stroke-width: 1.5;
+}
+
+.map .selected {
+  stroke: var(--anthracite);
+  stroke-width: 1.5;
+}
+
+.map .has:focus-visible {
+  outline: none;
+  stroke: var(--anthracite);
+  stroke-width: 2;
+}
+
+.map-summary,
+.map-country {
+  margin: 16px 0 0;
+  font: 400 13px/1.45 var(--font);
+  color: var(--anthracite);
+}
+
+.map-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px var(--gap);
+  margin-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .map-list {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.map-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font: 400 13px/1.45 var(--font);
+  color: var(--anthracite);
+}
+
+.map-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--card);
+}
+
 /* About */
 
 .about-page {

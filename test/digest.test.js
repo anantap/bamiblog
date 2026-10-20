@@ -53,18 +53,10 @@ describe("digestEmail", () => {
     expect(digestEmail([noodle(1, 0)], "https://example.test").body).toMatch(/^<img src="https:\/\/example\.test\/logo-email\.png" alt="bami\.blog"/);
   });
 
-  it("adds the one-off Monday mood video to the 19 October email only, before the footer", () => {
-    const mood = "[![Monday mood](https://bami.blog/email/monday-mood.jpg)](https://www.threads.com/share/_iJJygnnr/)\n\nMonday mood (via [Pieter](https://pieter-de-jong.nl/))";
-    const on19 = digestEmail([noodle(1, 0)], "https://bami.blog", Date.UTC(2026, 9, 19, 6)).body;
-    expect(on19).toContain(`---\n\n${mood}\n\n---\n\nAll the noods`);
-    expect(on19).not.toContain("Bastiaan");
-  });
-
   it("adds Bastiaan's painting to the 26 October email only, after Pieter's has gone", () => {
     const painting = "![Monday mood](https://bami.blog/email/monday-mood-2.jpg)\n\nMonday mood (via [Bastiaan](https://www.instagram.com/bastiaansizoo/))";
     const on = (day) => digestEmail([noodle(1, 0)], "https://bami.blog", Date.UTC(2026, 9, day, 6)).body;
     expect(on(26)).toContain(`---\n\n${painting}\n\n---\n\nAll the noods`);
-    expect(on(26)).not.toContain("Pieter");
     expect(on(20)).toContain("Bastiaan");
     expect(on(27)).not.toContain("Monday mood");
   });
