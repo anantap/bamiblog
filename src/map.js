@@ -1,5 +1,6 @@
 import { api, h } from "./dom.js";
 import { flag, padNumber, title } from "./format.js";
+import { facts } from "./facts.js";
 import { byCountry } from "./map-data.js";
 import world from "./world.json";
 
@@ -116,9 +117,24 @@ modes.addEventListener("click", (event) => {
   render();
 });
 
+// The fact sheet under the lettering: 1 year, then the totals.
+function renderFacts() {
+  const { packs, meters, liters } = facts(entries);
+  const number = (n) => n.toLocaleString("en");
+  document.getElementById("facts").replaceChildren(
+    ...[
+      ["time", "1 year."],
+      ["packs", `${number(packs)} ${packs === 1 ? "pack" : "packs"} of noodles.`],
+      ["length", `${number(meters)} meters of noodles.`],
+      ["soup", `${number(liters)} liters of soup.`],
+    ].map(([label, value]) => h("div", {}, h("dt", {}, label), h("dd", {}, value)))
+  );
+}
+
 api("/api/entries")
   .then((list) => {
     entries = list;
+    renderFacts();
     render();
   })
   .catch((err) => (summary.textContent = `Couldn't load the noodles: ${err.message}`))

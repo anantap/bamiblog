@@ -77,21 +77,34 @@ GLYPHS = {
     "k": (f'<path d="{P(5)}"/>' + _stem(276, 74, rot=42, sx=0.7, sy=0.6) + _stem(279, 104, rot=-36, sx=0.75, sy=0.6), 236.0, 300.0),
     "v": (_stem(14, 86, rot=-20, sx=0.9) + _stem(38, 86, rot=20, sx=0.9), 0.0, 52.0),
     "x": (_stem(26, 88, rot=34, sx=0.85, sy=1.05) + _stem(26, 88, rot=-34, sx=0.85, sy=1.05), 0.0, 52.0),
-    "y": (f'<g transform="rotate(180 125.5 89)">{_n()}</g>' + _tail((153, 108), 0.85), 94.4, 157.0),       # u + g-tail
+    "y": (_stem(14, 86, rot=-20, sx=0.9) + _stem(38, 86, rot=20, sx=0.9) + _tail((34, 112)), 0.0, 56.0),  # v + g-tail
     "z": (_stem(25, 62, rot=90, sx=0.6, sy=0.7) + _stem(25, 117, rot=-90, sx=0.6, sy=0.7) + _stem(25, 90, rot=50, sx=0.6, sy=0.85), 0.0, 50.0),
     # arrow: two i-stems meeting in their blobby ends as the head, one laid flat as the shaft
     "→": (_arrow(), 0.0, 95.0),
     # edited outlines
     "c": (_outline("c_outline"), 257.4, 300.0),
-    "r": (_outline("r_outline"), 94.5, 140.0),
+    "r": (_outline("r_outline"), 94.5, 146.0),  # the arm sits high, so the next letter can tuck under it
 }
+
+# Kerning: extra space (negative pulls closer) between particular pairs of letters, on top of the gap.
+# Measured by rendering each pair (softened, at gap 0) and pulling it in until the letters would touch.
+KERN = {
+    # "bamiversary" (--arc=32 --soft=2)
+    "ba": -6, "am": -10, "mi": -9, "iv": -8, "ve": -2, "er": -3, "rs": -5, "sa": -3, "ar": -10, "ry": 3,
+    # "the" (--arc=16 --soft=2)
+    "th": -4, "he": -4,
+}
+
+def spacing(text, i, gap):
+    """The space after letter i of text: the gap plus any kerning for that pair."""
+    return gap + KERN.get(text[i:i + 2], 0.0)
 
 def word_svg(text, gap=2.0, space=24):
     parts, x = [], 0.0
-    for ch in text:
+    for i, ch in enumerate(text):
         if ch == " ":
             x += space; continue
         svg, x0, x1 = GLYPHS[ch]
         parts.append(f'<g transform="translate({x - x0:.1f} 0)">{svg}</g>')
-        x += (x1 - x0) + gap
-    return "".join(parts), x - gap
+        x += (x1 - x0) + spacing(text, i, gap)
+    return "".join(parts), x - spacing(text, len(text) - 1, gap)

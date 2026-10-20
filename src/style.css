@@ -203,6 +203,70 @@ button {
   max-width: var(--page);
   margin: 0 auto;
   padding: 0 16px 48px;
+  text-align: center;
+}
+
+.map-page .tabs {
+  justify-content: center;
+}
+
+/* "bamiversary", drawn from the logo's own shapes (tools/lettering). */
+.map-title {
+  margin: 16px 0 24px;
+  line-height: 0;
+}
+
+.map-title a {
+  display: block;
+  width: min(560px, 100%);
+  margin: 0 auto;
+  transition: transform 0.15s;
+}
+
+.map-title a:hover {
+  transform: rotate(-2deg);
+}
+
+/* The fact sheet: plain rows between thin rules, like the label on a pack. The labels are for screen readers. */
+.facts {
+  max-width: 560px;
+  margin: 0 auto 40px;
+  border-top: 2px solid var(--anthracite);
+}
+
+.facts div {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.facts div:first-child {
+  border-bottom: 2px solid var(--anthracite);
+}
+
+.facts dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.facts dd {
+  margin: 0;
+  font: 500 clamp(18px, 4.5vw, 26px)/1.3 var(--font);
+  color: var(--anthracite);
+}
+
+.map-title img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* "the", a size down and tucked into the arc of "bamiversary". */
+.map-title .the {
+  width: 22%;
+  margin: 0 auto -8%;
 }
 
 /* On phones the map keeps a fixed width and scrolls sideways, edge to edge; on wider screens it just fits. */
@@ -266,16 +330,22 @@ button {
   color: var(--anthracite);
 }
 
+/* A country's noodles, centred under the map: three across on phones, six on wider screens. */
 .map-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px var(--gap);
   margin-top: 12px;
 }
 
+.map-list .map-tile {
+  width: calc((100% - 2 * var(--gap)) / 3);
+}
+
 @media (min-width: 768px) {
-  .map-list {
-    grid-template-columns: repeat(6, 1fr);
+  .map-list .map-tile {
+    width: calc((100% - 5 * var(--gap)) / 6);
   }
 }
 
