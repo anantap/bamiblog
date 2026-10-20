@@ -197,6 +197,105 @@ button {
   color: var(--muted);
 }
 
+/* Map, at /bamiversary/ (not linked yet) */
+
+.map-page {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+/* On phones the map keeps a fixed width and scrolls sideways, edge to edge; on wider screens it just fits. */
+.map {
+  --accent-light: #f19d8a;
+  overflow-x: auto;
+  margin: 0 -16px;
+  padding: 0 16px;
+  scrollbar-width: none;
+}
+
+.map::-webkit-scrollbar {
+  display: none;
+}
+
+.map svg {
+  display: block;
+  width: 100%;
+  min-width: 960px;
+  height: auto;
+}
+
+@media (min-width: 992px) {
+  .map {
+    margin: 0;
+    padding: 0;
+  }
+
+  .map svg {
+    min-width: 0;
+  }
+}
+
+/* Blocks like noodle bricks; no borders, a country is just where the colour changes. Noodle countries are light
+   red, the selected one the logo red. */
+.map rect {
+  fill: var(--line);
+}
+
+.map .has {
+  cursor: pointer;
+}
+
+.map .has rect {
+  fill: var(--accent-light);
+}
+
+.map .selected rect,
+.map .has:focus-visible rect {
+  fill: var(--accent);
+}
+
+.map .has:focus-visible {
+  outline: none;
+}
+
+.map-summary,
+.map-country {
+  margin: 16px 0 0;
+  font: 400 13px/1.45 var(--font);
+  color: var(--anthracite);
+}
+
+.map-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px var(--gap);
+  margin-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .map-list {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.map-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font: 400 13px/1.45 var(--font);
+  color: var(--anthracite);
+}
+
+.map-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--card);
+}
+
 /* About */
 
 .about-page {

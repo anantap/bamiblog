@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>bamiversary · bami.blog</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="logo" href="/"><img src="/logo-bb.svg" alt="bami.blog" width="130" height="117" /></a>
+      <nav class="nav">
+        <a href="/about/">about</a>
+      </nav>
+    </header>
+
+    <main class="map-page" aria-busy="true">
+      <nav class="tabs" id="modes">
+        <button type="button" data-mode="made" aria-current="page">made in</button>
+        <button type="button" data-mode="eaten">eaten in</button>
+      </nav>
+      <div class="map" id="map"></div>
+      <p class="map-summary" id="summary"></p>
+      <section id="country" hidden>
+        <h2 class="map-country" id="country-name"></h2>
+        <div class="map-list" id="country-list"></div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/map.js"></script>
+  </body>
+</html>
