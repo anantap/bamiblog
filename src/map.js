@@ -1,12 +1,9 @@
 import { api, h } from "./dom.js";
-import { flag, formatDate } from "./format.js";
 import { brands, facts } from "./facts.js";
 import { svg, treemap } from "./charts.js";
-import { strip } from "./strip.js";
 import { byCountry } from "./map-data.js";
-import { cubic, loose, noodle } from "./noodles.js";
-import { linkSendNoods } from "./send-noods.js";
-import { tell, thread } from "./story.js";
+import { tell } from "./story.js";
+import { everyPack } from "./every-pack.js";
 import world from "./world.json";
 
 const names = new Intl.DisplayNames(["en"], { type: "region" });
@@ -46,7 +43,7 @@ function focusOn(codes) {
   mapEl.scrollLeft = w + ((Math.min(...columns) + Math.max(...columns) + 1) / 2 / world.cols) * w - mapEl.clientWidth / 2;
 }
 
-// The map drifts from right to left like a ticker, round and round, card open or not. It only waits while someone
+// The map drifts from right to left like a ticker, round and round. It only waits while someone
 // holds, drags or scrolls it, and drifts on as soon as the scroll has glided to a stop; with less motion asked for,
 // it stays put.
 const DRIFT = 20; // pixels a second
@@ -65,7 +62,6 @@ function drift(now) {
     at += DRIFT * seconds;
     mapEl.scrollLeft = at;
   }
-  if (carded) follow();
   requestAnimationFrame(drift);
 }
 requestAnimationFrame(drift);
@@ -79,16 +75,11 @@ mapEl.addEventListener("scroll", () => {
   if (at !== null && Math.abs(mapEl.scrollLeft - at) > 2) rest(200);
 }, { passive: true });
 
-// Mice can drag the map sideways too. A drag isn't a click on a country.
-let dragged = false;
+// Mice can drag the map sideways too.
 mapEl.addEventListener("pointerdown", (event) => {
-  dragged = false;
   if (event.pointerType !== "mouse") return;
   const start = event.clientX, from = mapEl.scrollLeft;
-  const move = (e) => {
-    if (Math.abs(e.clientX - start) > 5) dragged = true;
-    mapEl.scrollLeft = from - (e.clientX - start);
-  };
+  const move = (e) => (mapEl.scrollLeft = from - (e.clientX - start));
   const up = () => removeEventListener("pointermove", move);
   addEventListener("pointermove", move);
   addEventListener("pointerup", up, { once: true });
@@ -104,8 +95,46 @@ function country(code, groups) {
     .join("");
   const el = svg("path", { d });
   el.classList.toggle("has", groups.has(code));
-  if (groups.has(code)) el.dataset.code = code;
   return el;
+}
+
+// Over each noodle country, a label with how many packs came from it: on its block nearest the middle of its blocks,
+// the busiest country's first, and nudged down (or up) off any label already there. Labels are drawn the same size on
+// screen whatever the map's size, so they're drawn again when that changes.
+const LABEL = { h: 20, pad: 6, char: 7.2, font: 12 }; // in screen pixels; DM Mono at 12px is 7.2px a character
+
+function count() {
+  const map = mapEl.querySelector("svg");
+  if (!map) return;
+  map.querySelectorAll(".counts").forEach((g) => g.remove());
+  const width = world.cols * world.cellW;
+  const unit = (3 * width) / map.getBoundingClientRect().width || 1; // map units in a screen pixel
+  const tall = LABEL.h * unit;
+  const placed = [];
+  const labels = svg("g", { class: "counts" });
+  for (const [code, list] of [...byCountry(entries)].sort((a, b) => b[1].length - a[1].length)) {
+    const blocks = (world.cells[code] ?? [world.small[code]]).filter((i) => i !== undefined)
+      .map((i) => [((i % world.cols) + 0.5) * world.cellW, (Math.floor(i / world.cols) + 0.5) * world.cellH]);
+    if (!blocks.length) continue;
+    const mx = blocks.reduce((n, [x]) => n + x, 0) / blocks.length, my = blocks.reduce((n, [, y]) => n + y, 0) / blocks.length;
+    const [x, y0] = blocks.reduce((best, b) => (Math.hypot(b[0] - mx, b[1] - my) < Math.hypot(best[0] - mx, best[1] - my) ? b : best));
+    const text = list.length.toLocaleString("en");
+    const w = (text.length * LABEL.char + 2 * LABEL.pad) * unit;
+    const clear = (y) => placed.every((r) => Math.abs(r.x - x) >= (r.w + w) / 2 + unit || Math.abs(r.y - y) >= tall + unit);
+    const y = [0, 1, -1, 2, -2, 3, -3].map((k) => y0 + k * (tall + unit)).find(clear) ?? y0;
+    placed.push({ x, y, w });
+    const label = svg("g");
+    label.append(svg("title", {}, `${names.of(code)}: ${list.length} ${list.length === 1 ? "pack" : "packs"}`));
+    label.append(svg("rect", { x: x - w / 2, y: y - tall / 2, width: w, height: tall }));
+    label.append(svg("text", { x, y: y + LABEL.font * 0.35 * unit, style: `font-size: ${LABEL.font * unit}px` }, text));
+    labels.append(label);
+  }
+  // On every copy of the map.
+  [0, 1, 2].forEach((n) => {
+    const copy = labels.cloneNode(true);
+    copy.setAttribute("transform", `translate(${(n * width).toFixed(2)} 0)`);
+    map.append(copy);
+  });
 }
 
 function render() {
@@ -117,7 +146,7 @@ function render() {
   for (const code of Object.keys(world.cells)) earth.append(country(code, groups));
   // Countries too small for a block only get one when they have noodles, drawn last so it sits on top.
   for (const code of Object.keys(world.small)) if (groups.has(code)) earth.append(country(code, groups));
-  // Three real copies (not <use>), so pointing at any of them finds the country underneath.
+  // Three real copies, side by side.
   const copies = [1, 2].map((n) => Object.assign(earth.cloneNode(true), { id: "" }));
   copies.forEach((c, n) => c.setAttribute("transform", `translate(${((n + 1) * width).toFixed(2)} 0)`));
   map.append(earth, ...copies);
@@ -129,112 +158,6 @@ function render() {
     ? `${counted} ${counted === 1 ? "noodle" : "noodles"} from ${groups.size} ${groups.size === 1 ? "country" : "countries"}`
     : "No noodles yet.";
 }
-
-// Clicking a noodle country (tapping, on a phone) shows its bami facts in a card next to it and lights it up.
-const card = document.getElementById("country-card");
-
-function cardFor(code) {
-  const mine = entries.filter((e) => e.country === code);
-  const { packs, flavours, meters, liters } = facts(mine);
-  const top = brands(mine);
-  const favourite = top.flatMap((b) => b.flavours.map((f) => ({ ...f, brand: b.brand }))).sort((a, b) => b.count - a.count)[0];
-  const first = [...mine].sort((a, b) => a.date.localeCompare(b.date))[0];
-  const share = Math.round((packs / entries.length) * 100);
-  const plural = (n, word) => `${n.toLocaleString("en")} ${n === 1 ? word : `${word}s`}`;
-  return [
-    h("p", { class: "card-name" }, `${flag(code)} ${names.of(code)}`),
-    h("p", {}, `${plural(packs, "pack")}, ${share}% of all.`),
-    h("p", {}, `${top.slice(0, 3).map((b) => b.brand).join(", ")}${top.length > 3 ? ` and ${top.length - 3} more` : ""}.`),
-    h("p", {}, `${plural(flavours, "flavour")}, mostly ${favourite.flavour || "no flavour"}.`),
-    h("p", {}, `${meters.toLocaleString("en")} meters of noodles, ${liters.toLocaleString("en")} liters of soup.`),
-    h("p", {}, `first one on ${formatDate(first.date)}.`),
-  ];
-}
-
-// On wider screens the card goes beside the country, never over it (on phones it sits under the map instead): to its right if it fits on screen, else its left, else above
-// or below it (whichever has more room), centred on it and kept on screen.
-function place(country) {
-  if (!wide.matches) return;
-  const map = mapEl.getBoundingClientRect();
-  const land = country.getBoundingClientRect();
-  const w = card.offsetWidth, h = card.offsetHeight, gap = 12;
-  const left = Math.max(map.left, 0) + 8, right = Math.min(map.right, innerWidth) - 8;
-  const fit = (lo, size, hi) => Math.min(Math.max(lo, size), hi);
-  let x, y;
-  if (land.right + gap + w <= right) x = land.right + gap;
-  else if (land.left - gap - w >= left) x = land.left - gap - w;
-  if (x !== undefined) {
-    y = fit(map.top + 8, land.top + land.height / 2 - h / 2, map.bottom - h - 8);
-  } else {
-    x = fit(left, land.left + land.width / 2 - w / 2, right - w);
-    y = land.top - map.top >= map.bottom - land.bottom ? land.top - gap - h : land.bottom + gap;
-  }
-  card.style.transform = `translate(${x - map.left}px, ${y - map.top}px)`;
-}
-
-let carded = null;
-
-// On wider screens the open card travels with its country (whichever copy of it is on screen) and closes once the
-// country has drifted off.
-function follow() {
-  if (!wide.matches) return;
-  const map = mapEl.getBoundingClientRect(), left = Math.max(map.left, 0), right = Math.min(map.right, innerWidth);
-  const seen = (r) => Math.min(r.right, right) - Math.max(r.left, left);
-  const best = [...mapEl.querySelectorAll(`[data-code="${carded}"]`)].map((el) => ({ el, seen: seen(el.getBoundingClientRect()) })).sort((a, b) => b.seen - a.seen)[0];
-  if (!best || best.seen <= 0) return hideCard();
-  place(best.el);
-}
-
-function showCard(country) {
-  const code = country.dataset.code;
-  if (code !== carded) {
-    carded = code;
-    card.replaceChildren(...cardFor(code));
-    mapEl.querySelectorAll("[data-code]").forEach((p) => p.classList.toggle("selected", p.dataset.code === code));
-  }
-  card.hidden = false;
-  place(country);
-}
-
-// On phones the card sits under the map (below the hint, which always stays), in room kept for it from the start so
-// the page never shifts when one opens. That room is the tallest card any country has here, measured, so even a country with long brand and
-// flavour names (or a phone's own fonts) can't make it grow.
-function keepRoom() {
-  const slot = card.parentElement;
-  slot.style.minHeight = "";
-  if (wide.matches) return;
-  const codes = [...new Set([...mapEl.querySelectorAll("[data-code]")].map((p) => p.dataset.code))];
-  const was = { hidden: card.hidden, children: [...card.childNodes] };
-  card.style.visibility = "hidden";
-  card.hidden = false;
-  let tallest = 0;
-  for (const code of codes) {
-    card.replaceChildren(...cardFor(code));
-    tallest = Math.max(tallest, card.offsetHeight);
-  }
-  card.replaceChildren(...was.children);
-  card.hidden = was.hidden;
-  card.style.visibility = "";
-  const hint = document.getElementById("map-hint");
-  slot.style.minHeight = `${Math.ceil(tallest + hint.offsetHeight + 12)}px`; // the hint stays above it
-}
-
-function hideCard() {
-  if (!carded) return;
-  carded = null;
-  card.hidden = true;
-  mapEl.querySelectorAll("[data-code].selected").forEach((p) => p.classList.remove("selected"));
-}
-
-// Clicking (or tapping) a noodle country opens its card; clicking it again, the sea or anywhere off the map
-// closes it.
-mapEl.addEventListener("click", (event) => {
-  if (dragged) return;
-  const country = event.target.closest?.("[data-code]");
-  if (!country || country.dataset.code === carded) return hideCard();
-  showCard(country);
-});
-document.addEventListener("click", (event) => !event.target.closest(".map-holder") && hideCard());
 
 // The fact sheet under the lettering: 1 year, then the totals.
 function renderFacts() {
@@ -262,7 +185,7 @@ new ResizeObserver(() => {
   if (!entries.length || innerWidth === lastWidth) return;
   lastWidth = innerWidth;
   renderCharts();
-  keepRoom();
+  count();
 }).observe(document.body);
 
 // Every brand with its flavours as a loose, hand-drawn-looking family tree on noodles: "bami" (in the logo's
@@ -300,6 +223,17 @@ function pill(x, y, text, cls) {
 // "bami" in the logo's own shapes (tools/lettering).
 const BAMI = { w: 72, h: 57 }; // public/lettering/bami.svg is 167.6 × 132
 
+// A noodle along a shape (from flow or aside below): an even wiggle runs along it, settling at both ends, and quite
+// often it lies in a loop. Every noodle has its own wiggle (tighter or lazier, flatter or bouncier) and its own loop.
+
+function cubic(p0, p1, p2, p3) {
+  const steps = Math.max(12, Math.ceil(Math.hypot(p3[0] - p0[0], p3[1] - p0[1]) / 3));
+  return Array.from({ length: steps }, (_, i) => {
+    const t = (i + 1) / steps, u = 1 - t;
+    return [0, 1].map((k) => u * u * u * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] + t * t * t * p3[k]);
+  });
+}
+
 // The shape of a noodle from a to b in one smooth curve: down out of its parent, and into b from above, or with
 // `across` from the left.
 function flow([x1, y1], [x2, y2], across = false) {
@@ -316,6 +250,41 @@ function aside([x1, y1], lane, [x2, y2]) {
   if (into < out) return flow([x1, y1], [x2, y2], true);
   return [[x1, y1], ...cubic([x1, y1], [x1, y1 + 40], [lane, y1 + 20], [lane, out]), ...cubic([lane, out], [lane, out], [lane, into], [lane, into]), ...cubic([lane, into], [lane, y2 - 6], [x2 + side * 12, y2], [x2, y2])];
 }
+
+function noodle(base, seed) {
+  const along = [0];
+  for (let i = 1; i < base.length; i++) along.push(along[i - 1] + Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]));
+  const length = along[along.length - 1] || 1;
+  const wave = 22 + loose(seed * 2.7) * 18, amp = 1.6 + loose(seed * 4.3) * 2.2;
+  // Nearly half the noodles, if they're long enough, lie in a loop somewhere along the way.
+  const curl = length > 70 && loose(seed * 3.3) < 0.45 ? length * (0.3 + loose(seed * 5.1) * 0.4) : -1;
+  const wiggled = [];
+  base.forEach(([x, y], i) => {
+    const [ax, ay] = base[Math.max(0, i - 1)], [bx, by] = base[Math.min(base.length - 1, i + 1)];
+    const len = Math.hypot(bx - ax, by - ay) || 1;
+    const [dx, dy, nx, ny] = [(bx - ax) / len, (by - ay) / len, -(by - ay) / len, (bx - ax) / len];
+    const wiggle = amp * Math.sin((Math.PI * along[i]) / length) * Math.sin((2 * Math.PI * along[i]) / wave + seed * 1.7);
+    const point = [x + nx * wiggle, y + ny * wiggle];
+    wiggled.push(point);
+    if (curl >= 0 && along[i] >= curl && (i === 0 || along[i - 1] < curl)) {
+      // A full turn, touching the noodle here, to one side of it.
+      const r = 4 + loose(seed * 7.7) * 7, side = loose(seed * 9.9) < 0.5 ? 1 : -1;
+      for (let k = 1; k <= 24; k++) {
+        const a = (2 * Math.PI * k) / 24;
+        const ahead = r * 1.25 * Math.sin(a), out = side * r * 0.9 * (1 - Math.cos(a)); // a little oval, like a noodle
+        wiggled.push([point[0] + dx * ahead + nx * out, point[1] + dy * ahead + ny * out]);
+      }
+    }
+  });
+  return svg("path", { d: `M${wiggled.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}` });
+}
+
+// The same "random" offset every time for the same number, between 0 and 1, so the tree looks hand-drawn but
+// doesn't change between visits.
+const loose = (n) => {
+  const x = Math.sin(n * 12.9898 + 4.1414) * 43758.5453;
+  return x - Math.floor(x);
+};
 
 function renderBrands() {
   const all = brands(entries);
@@ -409,9 +378,6 @@ function renderBrands() {
 
 wide.addEventListener("change", () => entries.length && renderBrands());
 
-linkSendNoods();
-thread(page);
-
 api("/api/entries")
   .then((list) => {
     entries = list;
@@ -421,8 +387,8 @@ api("/api/entries")
     render();
     lastWidth = innerWidth;
     renderCharts();
-    keepRoom();
-    strip(document.getElementById("strip"), entries);
+    count();
+    everyPack(document.getElementById("every"), entries);
   })
   .catch((err) => (summary.textContent = `Couldn't load the noodles: ${err.message}`))
   .finally(() => page.setAttribute("aria-busy", "false"));
