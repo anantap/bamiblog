@@ -71,11 +71,14 @@ function label(x, y, lines, size, attrs = {}) {
 // and lighter shades of that red (busiest flavour first), with white between them.
 export function treemap(host, entries) {
   const { el, width, height } = frame(host);
-  const gap = 4, head = 26;
+  const gap = 4;
   const blocks = squarify(brands(entries).map((b) => ({ ...b, v: b.count })), 0, 0, width, height);
   blocks.forEach((b, i) => {
     const g = svg("g", { class: `estate tone-${i % 4}` });
     const x = b.x + gap / 2, y = b.y + gap / 2, w = Math.max(0, b.w - gap), h = Math.max(0, b.h - gap);
+    // The brand's name across the top, on more lines (and smaller) when the block is narrow; the strip grows to fit.
+    const [size, lines] = [14, 11].map((px) => [px, wrap(b.brand, px, w - 16)]).find(([px, l]) => l && l.length <= (px === 14 ? 2 : 3)) ?? [11, null];
+    const head = lines ? Math.round(12 + lines.length * size * 1.3) : 26;
     const inner = h > head * 2 ? squarify(b.flavours.map((f) => ({ ...f, v: f.count })), x, y + head, w, h - head) : [];
     g.append(svg("rect", { x, y, width: w, height: inner.length ? head : h }));
     inner.forEach((f, j) => {
@@ -90,9 +93,7 @@ export function treemap(host, entries) {
       if (lines && lines.length * 14.3 + 10 < f.h) tile.append(label(f.x + 8, f.y + 17, lines, 11));
       g.append(tile);
     });
-    // The brand's name, smaller when the block is narrow.
-    const size = [14, 11].find((px) => fits(b.brand, px, w - 16));
-    if (size && h > head) g.append(label(x + 8, y + 18, [b.brand], size, { class: "estate-brand" }));
+    if (lines && h > head) g.append(label(x + 8, y + 4 + size * 1.0, lines, size, { class: "estate-brand" }));
     el.append(g);
   });
 }

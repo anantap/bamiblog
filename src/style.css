@@ -466,13 +466,33 @@ button {
   font: 500 18px/1.3 var(--font);
 }
 
-/* On phones the card sits under the map instead, centred, and stays while the map drifts on. */
+/* On wide screens the card floats by the country (placed by src/map.js) and the hint sits under the map. */
+.card-slot {
+  display: contents;
+}
+
+/* On phones the card sits under the map instead and stays while the map drifts on. Its room is kept from the start,
+   with the hint in it, so the page doesn't grow (and jump) when a card shows. */
 @media (max-width: 767px) {
+  .card-slot {
+    display: grid;
+    min-height: 230px; /* room for the longest card */
+    margin-top: 16px;
+  }
+
+  .card-slot > * {
+    grid-area: 1 / 1;
+  }
+
+  .card-slot .map-hint {
+    margin: 0;
+  }
+
   .country-card {
     position: static;
-    margin: 16px auto 0;
+    align-self: start;
+    justify-self: center;
     transform: none !important;
-    text-align: center;
   }
 }
 
@@ -484,7 +504,7 @@ button {
 }
 
 .map-hint .tap,
-.map-holder:has(.country-card:not([hidden])) + .map-hint {
+.country-card:not([hidden]) + .map-hint {
   display: none;
 }
 
