@@ -219,13 +219,14 @@ new ResizeObserver(() => {
   renderCharts();
 }).observe(document.body);
 
-// Every brand with its flavours as a tree hanging down from "bami" (in the logo's lettering) at the top: brands
-// below it, each brand's flavours below that, every one on its own wiggly noodle. It grows downwards, so it reads
-// the same on phones and wide screens. A brand's clear favourite flavour (no ties) is the logo red.
+// Every brand with its flavours as a family tree on noodles: "bami" (in the logo's lettering) at the top, a noodle
+// from it down and across to each brand side by side, and each brand's flavours hanging below it in its own
+// column. When it's wider than the screen it scrolls sideways, starting in the middle.
 const wide = matchMedia("(min-width: 768px)");
 const PILL = { h: 22, pad: 10, char: 7.2 }; // DM Mono at 12px is 7.2px a character
-const ROW = 32; // every pill gets a row of its own
-const INDENT = 34; // each level hangs this far right of the one above
+const ROW = 32; // flavours hang this far apart
+const INDENT = 22; // flavours sit this far in from their brand, with their noodle in between
+const COLUMN_GAP = 28;
 
 function pill(x, y, text, cls) {
   const w = text.length * PILL.char + 2 * PILL.pad;
@@ -240,30 +241,41 @@ function pill(x, y, text, cls) {
 // "bami" in the logo's own shapes (tools/lettering).
 const BAMI = { w: 72, h: 57 }; // public/lettering/bami.svg is 167.6 × 132
 
-// A noodle from (x1, y1) down and round into (x2, y2): the curve of a branch, with an even wiggle along it (one
-// wave every WAVE pixels) that settles at both ends. Each one wiggles a little differently.
-const WAVE = 30, AMP = 2.6;
+// A noodle through these points (straight runs with rounded corners), with an even wiggle along the whole length
+// (one wave every WAVE pixels) that settles at both ends. Each one wiggles a little differently.
+const WAVE = 30, AMP = 2.4, CORNER = 12;
 
-function noodle(x1, y1, x2, y2, seed) {
-  // Down first, then across: a cubic with both middle handles at the corner, sampled finely.
-  const base = [];
-  for (let i = 0; i <= 80; i++) {
-    const t = i / 80, u = 1 - t;
-    const x = u * u * u * x1 + 3 * u * u * t * x1 + 3 * u * t * t * x1 + t * t * t * x2;
-    const y = u * u * u * y1 + 3 * u * u * t * y2 + 3 * u * t * t * y2 + t * t * t * y2;
-    base.push([x, y]);
+function noodle(points, seed) {
+  const base = [points[0]];
+  const run = ([x1, y1], [x2, y2]) => {
+    const n = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 3));
+    for (let i = 1; i <= n; i++) base.push([x1 + ((x2 - x1) * i) / n, y1 + ((y2 - y1) * i) / n]);
+  };
+  for (let i = 1; i < points.length; i++) {
+    const [px, py] = base[base.length - 1], [x, y] = points[i], next = points[i + 1];
+    if (!next) {
+      run([px, py], [x, y]);
+      continue;
+    }
+    const d1 = Math.hypot(x - px, y - py) || 1, d2 = Math.hypot(next[0] - x, next[1] - y) || 1;
+    const r = Math.min(CORNER, d1 / 2, d2 / 2);
+    const a = [x - ((x - px) / d1) * r, y - ((y - py) / d1) * r], c = [x + ((next[0] - x) / d2) * r, y + ((next[1] - y) / d2) * r];
+    run([px, py], a);
+    for (let k = 1; k <= 8; k++) {
+      const t = k / 8, u = 1 - t;
+      base.push([u * u * a[0] + 2 * u * t * x + t * t * c[0], u * u * a[1] + 2 * u * t * y + t * t * c[1]]);
+    }
   }
   const along = [0];
   for (let i = 1; i < base.length; i++) along.push(along[i - 1] + Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]));
   const length = along[along.length - 1] || 1;
-  const points = base.map(([x, y], i) => {
+  const wiggled = base.map(([x, y], i) => {
     const [ax, ay] = base[Math.max(0, i - 1)], [bx, by] = base[Math.min(base.length - 1, i + 1)];
     const len = Math.hypot(bx - ax, by - ay) || 1;
-    const settle = Math.sin((Math.PI * along[i]) / length);
-    const wiggle = AMP * settle * Math.sin((2 * Math.PI * along[i]) / WAVE + seed * 1.7);
+    const wiggle = AMP * Math.sin((Math.PI * along[i]) / length) * Math.sin((2 * Math.PI * along[i]) / WAVE + seed * 1.7);
     return [x + (-(by - ay) / len) * wiggle, y + ((bx - ax) / len) * wiggle];
   });
-  return svg("path", { d: `M${points.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}` });
+  return svg("path", { d: `M${wiggled.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}` });
 }
 
 function renderBrands() {
@@ -272,37 +284,41 @@ function renderBrands() {
   document.getElementById("brands-panel").hidden = !all.length;
   if (!all.length) return;
 
+  const width = (text) => text.length * PILL.char + 2 * PILL.pad;
+  const columns = all.map((b) => Math.max(width(b.brand), INDENT + Math.max(0, ...b.flavours.map((f) => width(f.flavour || "no flavour")))));
+  const total = columns.reduce((n, w) => n + w, 0) + COLUMN_GAP * (columns.length - 1);
+  const bus = BAMI.h + 20; // where the brands' noodles run across
+  const brandY = bus + 34;
   const lines = svg("g", { class: "branches" });
   const pills = svg("g");
-  const rootX = BAMI.w / 2, brandX = rootX + INDENT, flavourX = brandX + INDENT;
-  let y = BAMI.h + ROW / 2 + 6, right = BAMI.w, seed = 0;
-  for (const { brand, flavours } of all) {
-    lines.append(noodle(rootX, BAMI.h - 4, brandX, y, seed++));
-    const label = pill(brandX, y, brand, "brand");
+  let left = -total / 2, seed = 0, bottom = brandY;
+  all.forEach(({ brand, flavours }, i) => {
+    const label = pill(left, brandY, brand, "brand");
+    const middle = left + label.w / 2;
+    const start = (i - (all.length - 1) / 2) * 3; // the noodles leave "bami" side by side, like a bundle
+    lines.append(noodle([[start, BAMI.h - 4], [start, bus + (i % 3) * 3], [middle, bus + (i % 3) * 3], [middle, brandY - PILL.h / 2]], seed++));
     pills.append(label.g);
-    right = Math.max(right, brandX + label.w);
-    const brandY = y;
-    flavours.forEach(({ flavour, count: packs }, j) => {
-      y += ROW;
-      const favourite = j === 0 && packs > (flavours[1]?.count ?? packs);
-      lines.append(noodle(brandX + 12, brandY + PILL.h / 2, flavourX, y, seed++));
-      const leaf = pill(flavourX, y, flavour || "no flavour", favourite ? "flavour favourite" : "flavour");
+    flavours.forEach(({ flavour }, j) => {
+      const y = brandY + ROW * (j + 1);
+      const leaf = pill(left + INDENT, y, flavour || "no flavour", "flavour");
+      lines.append(noodle([[left + 10, brandY + PILL.h / 2], [left + 10, y], [left + INDENT, y]], seed++));
       pills.append(leaf.g);
-      right = Math.max(right, flavourX + leaf.w);
+      bottom = Math.max(bottom, y);
     });
-    y += ROW + 8; // a little extra room before the next brand
-  }
-  pills.append(svg("image", { href: "/lettering/bami.svg", x: 0, y: 0, width: BAMI.w, height: BAMI.h }));
-  const height = y - ROW / 2;
-  const map = svg("svg", {
-    viewBox: `-2 -2 ${right + 4} ${height + 4}`,
-    width: right + 4,
-    role: "img",
-    "aria-label": all.map((b) => `${b.brand}: ${b.flavours.map((f) => `${f.flavour || "no flavour"} ${f.count}`).join(", ")}`).join("; "),
+    left += columns[i] + COLUMN_GAP;
   });
-  map.style.setProperty("--natural", `${right + 4}px`);
+  pills.append(svg("image", { href: "/lettering/bami.svg", x: -BAMI.w / 2, y: 0, width: BAMI.w, height: BAMI.h }));
+  const reach = Math.max(total, BAMI.w) / 2 + 4, height = bottom + PILL.h / 2 + 4;
+  const map = svg("svg", {
+    viewBox: `${-reach} -2 ${2 * reach} ${height + 2}`,
+    width: 2 * reach,
+    role: "img",
+    "aria-label": all.map((b) => `${b.brand}: ${b.flavours.map((f) => f.flavour || "no flavour").join(", ")}`).join("; "),
+  });
+  map.style.setProperty("--natural", `${2 * reach}px`);
   map.append(lines, pills);
   holder.replaceChildren(map);
+  holder.scrollLeft = (holder.scrollWidth - holder.clientWidth) / 2; // start in the middle, under "bami"
 }
 
 api("/api/entries")

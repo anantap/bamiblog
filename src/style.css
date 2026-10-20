@@ -528,23 +528,29 @@ button {
   color: var(--anthracite);
 }
 
-/* Brands and flavours as a tree hanging from "bami", on noodles (drawn in src/map.js). */
+/* Brands and flavours as a family tree on noodles (drawn in src/map.js). Edge to edge; on phones it scrolls
+   sideways when it's wider than the screen, on wider screens it's drawn a third bigger but always fits. */
 .brands {
-  margin: 0 auto;
+  margin: 0 calc(50% - 50vw);
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.brands::-webkit-scrollbar {
+  display: none;
 }
 
 .brands svg {
   display: block;
-  max-width: 100%;
+  width: var(--natural);
   height: auto;
   margin: 0 auto;
 }
 
-/* On wider screens it's drawn half as big again (and never wider than 80% of the screen). */
 @media (min-width: 768px) {
   .brands svg {
-    width: min(calc(var(--natural) * 1.5), 80vw);
-    max-width: none;
+    width: min(var(--natural) * 1.35, 100%);
   }
 }
 
@@ -578,13 +584,6 @@ button {
   fill: var(--anthracite);
 }
 
-.brands .flavour.favourite rect {
-  fill: var(--accent);
-}
-
-.brands .flavour.favourite text {
-  fill: #fff;
-}
 
 /* Noodle real estate (drawn in src/charts.js): each brand a block in its own red, its flavours in lighter shades
    of it. */
