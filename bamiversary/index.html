@@ -10,32 +10,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
+    <!-- The intro plays once its images are in (src/map.js); without script, or with less motion asked for, it doesn't. -->
+    <script>
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("intro-on");
+    </script>
   </head>
   <body>
     <main class="map-page" aria-busy="true">
       <!-- Each part fills most of the screen, with the edges of the parts around it showing. -->
-      <!-- The intro: the page fades in red with the title in white, then flips to white with the title in red. -->
+      <!-- The intro: white fades to red with the title in white, then flips to white with the title in red. -->
       <div class="intro" aria-hidden="true">
         <div class="intro-title"><img class="the" src="/lettering/the.svg" alt="" width="166" height="137" /><img src="/lettering/bamiversary.svg" alt="" width="541" height="192" /></div>
       </div>
       <header class="panel panel-intro">
         <h1 class="map-title"><a href="/"><img class="the" src="/lettering/the.svg" alt="the" width="166" height="137" /><img src="/lettering/bamiversary.svg" alt="bamiversary, back to the noodles" width="541" height="192" /></a></h1>
       </header>
-      <section class="panel">
+      <section class="panel-facts">
         <dl class="facts" id="facts">
           <div><dt>time</dt><dd>1 year.</dd></div>
         </dl>
       </section>
-      <section class="panel">
+      <section class="panel panel-grow">
         <div class="map" id="map"></div>
         <p class="map-summary" id="summary"></p>
-        <nav class="tabs map-countries" id="countries" aria-label="Show a country on the map"></nav>
-      </section>
-      <section class="panel" id="clock" hidden>
-        <h2 class="panel-title">noodle o'clock</h2>
-        <p class="panel-sub">noodles by the hour they were logged</p>
-        <div class="chart" id="clock-chart"></div>
-        <p class="panel-sub" id="clock-caption"></p>
+        <nav class="country-bars" id="countries" aria-label="Show a country on the map"></nav>
       </section>
       <section class="panel panel-grow" id="brands-panel" hidden>
         <h2 class="panel-title">brands and flavours</h2>
@@ -46,23 +44,6 @@
         <p class="panel-sub">every brand sized by its packs, cut into its flavours</p>
         <div class="chart" id="estate"></div>
       </section>
-      <section class="panel" id="stream-panel" hidden>
-        <h2 class="panel-title">the year in noodles</h2>
-        <p class="panel-sub">noodles a week, a stream for each country they come from</p>
-        <div class="chart" id="stream"></div>
-        <ul class="legend" id="stream-legend"></ul>
-      </section>
-      <section class="panel panel-grow" id="makers-panel" hidden>
-        <h2 class="panel-title">who makes what</h2>
-        <p class="panel-sub">the companies behind the brands, and the brands still to try</p>
-        <div class="chart" id="makers"></div>
-        <ul class="legend">
-          <li><i class="company"></i>company</li>
-          <li><i class="eaten"></i>eaten</li>
-          <li><i class="not-yet"></i>not yet</li>
-        </ul>
-      </section>
-      <div id="groups"></div>
     </main>
 
     <script type="module" src="/src/map.js"></script>
