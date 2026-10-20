@@ -1,5 +1,5 @@
-// The story of the year on /bamiversary/: pack #1 at the start, then a sentence ahead of each part, worked out from
-// the noodles so it stays true as more come in.
+// The story of the year on /bamiversary/: how it started, then a sentence ahead of each part, worked out from the
+// noodles so it stays true as more come in.
 import { brands, facts } from "./facts.js";
 import { formatDate, padNumber, title } from "./format.js";
 import { byCountry } from "./map-data.js";
@@ -7,6 +7,17 @@ import { byCountry } from "./map-data.js";
 const names = new Intl.DisplayNames(["en"], { type: "region" });
 const plural = (n, word) => `${n.toLocaleString("en")} ${n === 1 ? word : `${word}s`}`;
 const pack = ({ brand, flavour }) => [brand, flavour].filter(Boolean).join(" ") || "noodles";
+
+// How much soup a bathtub holds, in liters.
+export const BATHTUB = 150;
+
+// The soup in bathtubs: a part of one, about one, or how many.
+function tubs(liters) {
+  const n = liters / BATHTUB;
+  if (n < 0.9) return `${Math.max(1, Math.round(n * 100))}% of a bathtub`;
+  if (n < 1.1) return "a bathtub";
+  return `${Math.round(n * 10) / 10} bathtubs`;
+}
 
 // The sentences, by the part they open; null with no noodles.
 export function storyLines(entries) {
@@ -16,6 +27,7 @@ export function storyLines(entries) {
   const countries = [...byCountry(entries)].sort((a, b) => b[1].length - a[1].length);
   const all = brands(entries);
   const top = all[0];
+  const { flavours, meters, liters } = facts(entries);
   const counted = countries.reduce((n, [, list]) => n + list.length, 0);
   let map = "";
   if (countries.length === 1) map = `Then came ${plural(counted, "noodle")}, all of them from ${names.of(countries[0][0])}.`;
@@ -26,7 +38,9 @@ export function storyLines(entries) {
   return {
     start: "It started with a pan, a stove, 300ml water and an idea.",
     map,
-    brands: `${plural(all.length, "brand")}, ${plural(facts(entries).flavours, "flavour")}. Some only once, some again and again.`,
+    brands: `${plural(all.length, "brand")}, ${plural(flavours, "flavour")}. Some only once, some again and again.`,
+    meters: `All together, that's ${meters.toLocaleString("en")} meters of noodles.`,
+    soup: liters ? `And ${plural(liters, "liter")} of soup: enough to fill ${tubs(liters)}.` : "And not a drop of soup.",
     estate: all.length > 1 ? `${top.brand} alone took up ${Math.round((top.count / entries.length) * 100)}% of the year.` : `${top.brand} took up the whole year.`,
     every: `And here they all are, ${plural(entries.length, "pack")}.`,
     first,
@@ -60,6 +74,8 @@ export function tell(entries) {
   text("story-map", lines.map);
   againAndAgain(document.getElementById("story-brands"), lines.brands);
   text("story-estate", lines.estate);
+  text("story-meters", lines.meters);
+  text("story-soup", lines.soup);
   text("story-every", lines.every);
   document.getElementById("day-one").hidden = false;
 }
