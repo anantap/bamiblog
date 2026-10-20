@@ -2,6 +2,7 @@ import { api, h } from "./dom.js";
 import { flag } from "./format.js";
 import { brands, facts } from "./facts.js";
 import { svg, treemap } from "./charts.js";
+import { strip } from "./strip.js";
 import { byCountry } from "./map-data.js";
 import world from "./world.json";
 
@@ -257,6 +258,7 @@ api("/api/entries")
     render();
     lastWidth = innerWidth;
     renderCharts();
+    strip(document.getElementById("strip"), entries);
   })
   .catch((err) => (summary.textContent = `Couldn't load the noodles: ${err.message}`))
   .finally(() => page.setAttribute("aria-busy", "false"));
