@@ -2,10 +2,11 @@
 
     python3 tools/lettering/build.py "send noods" public/lettering/send-noods.svg
     python3 tools/lettering/build.py --outline "about" public/lettering/about-outline.svg
-    python3 tools/lettering/build.py --gap=-6 --arc=30 "bamiversary" public/lettering/bamiversary.svg
+    python3 tools/lettering/build.py --gap=-6 --arc=32 --soft=2 "bamiversary" public/lettering/bamiversary.svg
 
 --gap sets the space between letters (default 2; negative pulls them into each other). --arc bends the word
-along a circle, ends down like a rainbow, spanning that many degrees.
+along a circle, ends down like a rainbow, spanning that many degrees. --soft rounds off every sharp corner
+where pieces meet or are cut (blur by that much, then back to a crisp edge); about 2 keeps the shapes.
 
 Available letters: a–z and space. Each one is made only from the logo: see glyphs.py.
 """
@@ -54,7 +55,13 @@ def arc_svg(text, gap, degrees, bottom, space=24):
             ys.append(py + BASELINE + dx * math.sin(angle) + dy * math.cos(angle))
     return "".join(parts), (min(xs), min(ys), max(xs), max(ys))
 
-def main(text, out, outline=False, gap=2.0, arc=0.0):
+def soft_filter(radius, box):
+    x, y, w, h = box
+    return (f'<filter id="soft" filterUnits="userSpaceOnUse" x="{x - 10:.1f}" y="{y - 10:.1f}" width="{w + 20:.1f}" height="{h + 20:.1f}">'
+            f'<feGaussianBlur in="SourceGraphic" stdDeviation="{radius:g}"/>'
+            f'<feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 24 -11"/></filter>')
+
+def main(text, out, outline=False, gap=2.0, arc=0.0, soft=0.0):
     bottom = max([BOTTOM] + [DESCENDERS[c] for c in text if c in DESCENDERS])
     if arc:
         body, (left, top, right, low) = arc_svg(text, gap, arc, bottom)
@@ -65,6 +72,9 @@ def main(text, out, outline=False, gap=2.0, arc=0.0):
     defs = DEFS + (OUTLINE_FILTER if outline else "")
     filt = ' filter="url(#outline)"' if outline else ""
     group = f'<g fill="{RED}"{filt}>{body}</g>'
+    if soft:
+        defs += soft_filter(soft, box)
+        group = f'<g filter="url(#soft)">{group}</g>'
     view = f"{box[0]:g} {box[1]:g} {box[2]:.1f} {box[3]:g}" if not arc else " ".join(f"{v:.1f}" for v in box)
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" '
            f'role="img" aria-label="{text}"><defs>{defs}</defs>{group}</svg>\n')
@@ -75,6 +85,6 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     option = lambda name, default: next((float(a.split("=", 1)[1]) for a in args if a.startswith(f"--{name}=")), default)
     outline = "--outline" in args
-    gap, arc = option("gap", 2.0), option("arc", 0.0)
+    gap, arc, soft = option("gap", 2.0), option("arc", 0.0), option("soft", 0.0)
     args = [a for a in args if not a.startswith("--")]
-    main(*args[:2], outline=outline, gap=gap, arc=arc)
+    main(*args[:2], outline=outline, gap=gap, arc=arc, soft=soft)
