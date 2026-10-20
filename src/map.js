@@ -259,12 +259,13 @@ function flow([x1, y1], [x2, y2], across = false) {
   return [[x1, y1], ...cubic([x1, y1], [x1, y1 + drop * (across ? 0.75 : 0.55)], c2, [x2, y2])];
 }
 
-// The shape of a noodle from a, out to the side and down a lane at x = lane, then into b from the left: for brands
-// hanging one below the other, so it passes the ones above without crossing them.
+// The shape of a noodle from a, out to the side and down a lane at x = lane, then into b from that side (b is the
+// end of a pill facing the lane): for brands hanging one below the other, so it passes the ones above without
+// crossing them.
 function aside([x1, y1], lane, [x2, y2]) {
-  const out = y1 + 60, into = y2 - 24;
+  const out = y1 + 60, into = y2 - 24, side = lane < x2 ? -1 : 1;
   if (into < out) return flow([x1, y1], [x2, y2], true);
-  return [[x1, y1], ...cubic([x1, y1], [x1, y1 + 40], [lane, y1 + 20], [lane, out]), ...cubic([lane, out], [lane, out], [lane, into], [lane, into]), ...cubic([lane, into], [lane, y2 - 6], [x2 - 12, y2], [x2, y2])];
+  return [[x1, y1], ...cubic([x1, y1], [x1, y1 + 40], [lane, y1 + 20], [lane, out]), ...cubic([lane, out], [lane, out], [lane, into], [lane, into]), ...cubic([lane, into], [lane, y2 - 6], [x2 + side * 12, y2], [x2, y2])];
 }
 
 function noodle(base, seed) {
@@ -347,13 +348,14 @@ function renderBrands() {
     const total = plan.reduce((n, p) => n + p.w, 0) + COLUMN_GAP * (plan.length - 1);
     let left = -total / 2;
     plan.forEach((p, i) => {
-      draw(left, 0, p, (label) => flow([bundle(i, plan.length), BAMI.h - 4], [left + p.brandX + label.w / 2, p.brandY - PILL.h / 2]));
+      draw(left, 0, p, (label) => flow([bundle(i, plan.length), BAMI.h + 6], [left + p.brandX + label.w / 2, p.brandY - PILL.h / 2]));
       left += p.w + COLUMN_GAP;
     });
     [minX, maxX, middle] = [-Math.max(total, BAMI.w) / 2, Math.max(total, BAMI.w) / 2, 0];
   } else {
     // On phones the tree is turned sideways: brands one below the other at the left, each with its flavours to the
-    // right, and "bami" still in the middle at the top. The brands' noodles run down a lane at the far left.
+    // right, and "bami" still in the middle at the top. The brands' noodles split, every other one running down a
+    // lane at the far left (into the brand's left end) or the far right (into its right end).
     const lane = 6, left = 16;
     const w = Math.max(BAMI.w, ...plan.map((p) => left + p.w));
     middle = w / 2;
@@ -361,10 +363,15 @@ function renderBrands() {
     plan.forEach((p, i) => {
       const lift = p.brandY - (BAMI.h + 64); // its own little offset, from the wide layout
       const y = top + lift * 0.4;
-      draw(left, y - p.brandY + PILL.h, p, (label) => aside([middle + bundle(i, plan.length), BAMI.h - 4], lane + (i % 3) * 3, [left + p.brandX, y + PILL.h]));
+      const right = i % 2 === 1;
+      draw(left, y - p.brandY + PILL.h, p, (label) =>
+        right
+          ? aside([middle + bundle(i, plan.length), BAMI.h + 6], w + 10 + (i % 3) * 3, [left + p.brandX + label.w, y + PILL.h])
+          : aside([middle + bundle(i, plan.length), BAMI.h + 6], lane + (i % 3) * 3, [left + p.brandX, y + PILL.h])
+      );
       top = Math.max(y + PILL.h, ...p.leaves.map((l) => y - p.brandY + PILL.h + l.y)) + ROW;
     });
-    [minX, maxX] = [0, w];
+    [minX, maxX] = [0, w + 20];
   }
   pills.append(svg("image", { href: "/lettering/bami.svg", x: middle - BAMI.w / 2, y: 0, width: BAMI.w, height: BAMI.h }));
   const reach = maxX - minX + 8, height = bottom + PILL.h / 2 + 4;
