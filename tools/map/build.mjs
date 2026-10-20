@@ -15,7 +15,7 @@ import { geoBounds, geoContains, geoEquirectangular, geoPath } from "d3-geo";
 import countries from "i18n-iso-countries";
 import { feature } from "topojson-client";
 
-const COLS = Number(process.argv[2] ?? 240); // blocks across: fine enough for coastlines and islands, still chunky like noodle bricks
+const COLS = Number(process.argv[2] ?? 320); // blocks across: fine enough for coastlines and islands, still chunky like noodle bricks
 const BRICK = 1.4; // a block is this much wider than tall, like a noodle brick
 const WIDTH = 1000;
 const NORTH = 75; // latitudes the map runs between

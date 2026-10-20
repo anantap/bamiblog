@@ -470,7 +470,7 @@ button {
   display: contents;
 }
 
-/* On phones the card sits under the map instead, below the hint, and stays while the map drifts on. Its room is
+/* On phones the card sits under the map instead, below the hint, the full width of the screen, and stays while the map drifts on. Its room is
    kept from the start, so the page doesn't grow (and jump) when a card shows. */
 @media (max-width: 767px) {
   .card-slot {
@@ -485,10 +485,14 @@ button {
     margin: 0 0 12px;
   }
 
+  /* Edge to edge like the map above it, not a box inside the page's box. */
   .country-card {
     position: static;
-    align-self: start;
-    justify-self: center;
+    align-self: stretch;
+    width: auto;
+    max-width: none;
+    margin: 0 calc(50% - 50vw);
+    padding: 14px 16px;
     transform: none !important;
   }
 }
