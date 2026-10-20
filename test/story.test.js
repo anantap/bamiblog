@@ -11,7 +11,7 @@ describe("storyLines", () => {
       pack(2, "2025-11-02", "Indomie", "Soto Mie", "ID"),
       pack(4, "2026-10-03", "Indomie", "Mi Goreng", "ID"),
     ]);
-    expect(lines.start).toBe("it started on 07.10.25, with one pack of Indomie Mi Goreng.");
+    expect(lines.start).toBe("it started with a pan, a stove, 300ml water and an idea.");
     expect(lines.map).toBe("then they came from 2 countries, most of them from Indonesia.");
     expect(lines.brands).toBe("2 brands, 3 flavours. some only once, some again and again.");
     expect(lines.estate).toBe("Indomie alone took up 75% of the year.");
