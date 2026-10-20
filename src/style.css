@@ -568,6 +568,10 @@ button {
   fill: transparent;
 }
 
+.cooling .cool-smoke {
+  fill: var(--line);
+}
+
 .cooling :is(.cool-pipe, .cool-light).on {
   fill: var(--accent);
 }

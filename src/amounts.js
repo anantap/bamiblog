@@ -55,13 +55,15 @@ function drawLength(host, meters) {
 }
 
 // The soup cooling an AI data center, in the map's noodle bricks: a pile of red bricks, a liter each (or more, when
-// there's a lot of soup), runs down a pipe into a data center of grey bricks, emptying in real time at the rate a
-// big one goes through water. While it runs, the racks' lights blink; once the soup's gone they go dark, a moment
+// there's a lot of soup), runs down a pipe into the data center, built like a factory of grey bricks (a hall with a
+// sawtooth roof, a door and windows, and a chimney), emptying in real time at the rate a big one goes through water.
+// While it runs, the windows flicker and smoke rises from the chimney; once the soup's gone it goes dark, a moment
 // later the pile fills up again, and round it goes. With less motion asked for it stands still, full and running.
 const BRICK = { w: 14, h: 10, gap: 2 }; // as wide to tall as the map's bricks, with the same white between them
 const PILE = 8; // bricks across the pile
-const PIPE = 5; // bricks along the pipe
-const RACKS = 3, RACK = 4; // racks in the data center, and bricks across each
+const PIPE = 4; // bricks along the pipe
+const HALL = 15, TOOTH = 5, CHIMNEY = 2; // bricks across the hall and each tooth of its roof, and the chimney
+const SMOKE = 5; // puffs of smoke
 const DARK = 2, REFILL = 0.8; // seconds it stays dark, and takes to fill up again
 const still = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -70,29 +72,33 @@ function drawDataCenter(host, liters) {
   const count = Math.max(1, Math.round(liters / per));
   const run = Math.max(1, liters / DATA_CENTER); // seconds it lasts
   const pileRows = Math.ceil(count / PILE);
-  const rows = Math.max(pileRows, 10);
+  const walls = Math.max(6, pileRows - 10); // the hall's walls, below the roof
+  const stack = walls + 9; // the chimney's top
+  const rows = Math.max(pileRows, stack + 6); // with room for the smoke
   const stepX = BRICK.w + BRICK.gap, stepY = BRICK.h + BRICK.gap;
-  const brick = (col, row, cls) => svg("rect", { class: cls, x: col * stepX, y: (rows - 1 - row) * stepY, width: BRICK.w, height: BRICK.h });
-  const wide = (PILE + PIPE + RACKS * (RACK + 1) - 1) * stepX - BRICK.gap;
+  const y = (row) => (rows - 1 - row) * stepY;
+  const brick = (col, row, cls) => svg("rect", { class: cls, x: col * stepX, y: y(row), width: BRICK.w, height: BRICK.h });
+  const factory = PILE + PIPE; // its first column
+  const wide = (factory + HALL + CHIMNEY) * stepX - BRICK.gap;
   const el = svg("svg", { viewBox: `0 0 ${wide} ${rows * stepY + 20}`, class: "cooling" });
   const label = (x, text) => svg("text", { x, y: rows * stepY + 16 }, text);
-  el.append(label((PILE * stepX - BRICK.gap) / 2, "soup"), label(wide - (RACKS * (RACK + 1) - 1) * stepX / 2, "AI data center"));
+  el.append(label((PILE * stepX - BRICK.gap) / 2, "soup"), label((factory + (HALL + CHIMNEY) / 2) * stepX, "AI data center"));
   // The pile, filled from the bottom up; it empties from the top.
   const soup = Array.from({ length: count }, (_, i) => brick(i % PILE, Math.floor(i / PILE), "cool-soup"));
   const pipe = Array.from({ length: PIPE }, (_, i) => brick(PILE + i, 0, "cool-pipe"));
-  const lights = [];
-  const racks = [];
-  for (let r = 0; r < RACKS; r++) {
-    const left = PILE + PIPE + r * (RACK + 1);
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < RACK; col++) {
-        const light = col === RACK - 1 && row % 2 === 1;
-        const b = brick(left + col, row, light ? "cool-light" : "cool-rack");
-        (light ? lights : racks).push(b);
-      }
+  const lights = [], building = [];
+  for (let col = 0; col < HALL; col++) {
+    const roof = Math.ceil((((col % TOOTH) + 1) * 3) / TOOTH); // each tooth rises to the right, then drops
+    for (let row = 0; row < walls + roof; row++) {
+      const door = row < 2 && col >= 6 && col <= 8;
+      if (door) continue;
+      const pane = row >= 1 && row < walls - 1 && row % 2 === 1 && col % 3 === 1;
+      (pane ? lights : building).push(brick(factory + col, row, pane ? "cool-light" : "cool-rack"));
     }
   }
-  el.append(...racks, ...lights, ...pipe, ...soup);
+  for (let col = 0; col < CHIMNEY; col++) for (let row = 0; row < stack; row++) building.push(brick(factory + HALL + col, row, "cool-rack"));
+  const smoke = Array.from({ length: SMOKE }, () => svg("rect", { class: "cool-smoke", width: BRICK.w, height: BRICK.h }));
+  el.append(...building, ...lights, ...pipe, ...soup, ...smoke);
   const timer = h("p", { class: "cool-timer" });
   host.replaceChildren(el, timer);
   host.setAttribute("role", "img");
@@ -101,7 +107,14 @@ function drawDataCenter(host, liters) {
   const show = (left, t, running) => {
     soup.forEach((b, i) => b.classList.toggle("gone", i >= left));
     pipe.forEach((b, i) => b.classList.toggle("on", running && (i + Math.floor(t * 12)) % 3 === 0));
-    lights.forEach((b, i) => b.classList.toggle("on", running && Math.sin(i * 7.3 + Math.floor(t * 8) * 2.1) > 0));
+    lights.forEach((b, i) => b.classList.toggle("on", running && Math.sin(i * 7.3 + Math.floor(t * 4) * 2.1) > -0.6));
+    // Puffs rise from the chimney, drifting back over the roof and fading as they go.
+    smoke.forEach((b, i) => {
+      const up = (t * 1.6 + (i * 6) / SMOKE) % 6;
+      b.setAttribute("x", (factory + HALL + CHIMNEY / 2 - 0.5 - up * 0.45 + Math.sin(i + up) * 0.3) * stepX);
+      b.setAttribute("y", y(stack) - up * stepY);
+      b.style.opacity = running ? 1 - up / 6 : 0;
+    });
     timer.textContent = `${Math.min(t, run).toFixed(1)} s`;
   };
   if (still.matches) return show(count, run, true);
