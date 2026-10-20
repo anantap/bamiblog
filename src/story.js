@@ -25,7 +25,7 @@ export function storyLines(entries) {
     map = `then they came from ${countries.length} countries, ${most} from ${names.of(countries[0][0])}.`;
   }
   return {
-    start: `it started on ${formatDate(first.date)}, with one pack of ${pack(first)}.`,
+    start: "it started with a pan, a stove, 300ml water and an idea.",
     map,
     brands: `${plural(all.length, "brand")}, ${plural(facts(entries).flavours, "flavour")}. ${once === all.length ? "never the same brand twice." : once ? "some only once, some again and again." : "every one of them again and again."}`,
     estate: all.length > 1 ? `${top.brand} alone took up ${Math.round((top.count / entries.length) * 100)}% of the year.` : `${top.brand} took up the whole year.`,
@@ -41,7 +41,7 @@ export function tell(entries) {
   const text = (id, value) => (document.getElementById(id).textContent = value);
   text("story-start", lines.start);
   Object.assign(document.getElementById("first-photo"), { src: lines.first.photo, alt: title(lines.first) });
-  text("first-number", `#${padNumber(lines.first.number)}`);
+  text("first-number", `#${padNumber(lines.first.number)} ${pack(lines.first)} · ${formatDate(lines.first.date)}`);
   text("story-map", lines.map);
   text("story-brands", lines.brands);
   text("story-estate", lines.estate);
