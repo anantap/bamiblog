@@ -31,9 +31,12 @@
         </dl>
       </section>
       <section class="panel panel-grow">
-        <div class="map" id="map"></div>
         <p class="map-summary" id="summary"></p>
-        <nav class="country-bars" id="countries" aria-label="Show a country on the map"></nav>
+        <div class="map-holder">
+          <div class="map" id="map"></div>
+          <div class="country-card" id="country-card" hidden></div>
+        </div>
+        <p class="map-hint" id="map-hint"><span class="point">point at</span><span class="tap">tap</span> a red country for its bami facts.</p>
       </section>
       <section class="panel panel-grow" id="brands-panel" hidden>
         <h2 class="panel-title">brands and flavours</h2>
@@ -44,13 +47,11 @@
         <p class="panel-sub">every brand sized by its packs, cut into its flavours</p>
         <div class="chart" id="estate"></div>
       </section>
-      <section class="strip" id="strip" hidden>
-        <div class="strip-pin">
-          <h2 class="panel-title">every pack</h2>
-          <div class="strip-track"><div class="strip-row"></div></div>
-          <p class="strip-count" aria-live="polite"></p>
-          <p class="panel-sub strip-name"></p>
-        </div>
+      <section class="panel strip" id="strip" hidden>
+        <h2 class="panel-title">every pack</h2>
+        <div class="strip-track"><div class="strip-row"></div></div>
+        <p class="strip-count" aria-live="off"></p>
+        <p class="panel-sub strip-name"></p>
       </section>
     </main>
 
