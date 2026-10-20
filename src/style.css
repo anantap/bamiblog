@@ -382,7 +382,7 @@ button {
 }
 
 .brands .theme rect {
-  fill: var(--anthracite);
+  fill: #fff;
 }
 
 .brands .brand rect {

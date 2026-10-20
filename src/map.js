@@ -187,7 +187,7 @@ function renderClock() {
   document.getElementById("clock-caption").textContent = `most noodles around ${String(peak).padStart(2, "0")}:00.`;
 }
 
-// Every brand with its flavours as a mind map: "bami" in the middle, brands branching off it, flavours off them.
+// Every brand with its flavours as a mind map: "bami" in the logo's lettering in the middle, brands branching off it, flavours off them.
 // On wide screens the brands split over both sides; on phones they all go right, so the text stays readable.
 // A brand's clear favourite flavour (no ties) is the logo red.
 const wide = matchMedia("(min-width: 768px)");
@@ -207,6 +207,18 @@ function pill(x, y, text, cls, side) {
   return { g, w };
 }
 
+// "bami" in the logo's own shapes (tools/lettering), on a white block so the branches stop at its edge.
+const BAMI = { w: 72, h: 57, pad: 8 }; // public/lettering/bami.svg is 167.6 × 132
+
+function bami(y) {
+  const g = svg("g", { class: "theme" });
+  g.append(
+    svg("rect", { x: -BAMI.w / 2 - BAMI.pad, y: y - BAMI.h / 2 - BAMI.pad, width: BAMI.w + 2 * BAMI.pad, height: BAMI.h + 2 * BAMI.pad }),
+    svg("image", { href: "/lettering/bami.svg", x: -BAMI.w / 2, y: y - BAMI.h / 2, width: BAMI.w, height: BAMI.h })
+  );
+  return g;
+}
+
 const branch = (x1, y1, x2, y2) => svg("path", { d: `M${x1} ${y1}C${(x1 + x2) / 2} ${y1} ${(x1 + x2) / 2} ${y2} ${x2} ${y2}` });
 
 function renderBrands() {
@@ -224,8 +236,7 @@ function renderBrands() {
 
   const lines = svg("g", { class: "branches" });
   const pills = svg("g");
-  const centre = pill(0, tallest / 2, "bami", "theme", 1);
-  const half = centre.w / 2;
+  const half = BAMI.w / 2 + BAMI.pad;
   let minX = -half, maxX = half;
   sides.forEach((list, i) => {
     const dir = sides.length === 1 || i === 0 ? 1 : -1;
@@ -250,8 +261,8 @@ function renderBrands() {
       y += flavours.length * ROW + SPLIT;
     }
   });
-  pills.prepend(centre.g);
-  const top = -PILL.h, total = tallest + 2 * PILL.h;
+  pills.append(bami(tallest / 2));
+  const top = Math.min(-PILL.h, tallest / 2 - BAMI.h / 2 - BAMI.pad), total = Math.max(tallest + PILL.h, tallest / 2 + BAMI.h / 2 + BAMI.pad) - top;
   const map = svg("svg", {
     viewBox: `${minX - 2} ${top} ${maxX - minX + 4} ${total}`,
     width: maxX - minX + 4,

@@ -99,12 +99,14 @@ def spacing(text, i, gap):
     """The space after letter i of text: the gap plus any kerning for that pair."""
     return gap + KERN.get(text[i:i + 2], 0.0)
 
-def word_svg(text, gap=2.0, space=24):
+def word_svg(text, gap=2.0, space=24, letters=False):
+    """The word laid out in a row; with letters=True each letter is its own <g class="letter"> (for --soft)."""
     parts, x = [], 0.0
     for i, ch in enumerate(text):
         if ch == " ":
             x += space; continue
         svg, x0, x1 = GLYPHS[ch]
-        parts.append(f'<g transform="translate({x - x0:.1f} 0)">{svg}</g>')
+        part = f'<g transform="translate({x - x0:.1f} 0)">{svg}</g>'
+        parts.append(f'<g class="letter">{part}</g>' if letters else part)
         x += (x1 - x0) + spacing(text, i, gap)
     return "".join(parts), x - spacing(text, len(text) - 1, gap)
