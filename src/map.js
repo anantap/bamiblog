@@ -242,9 +242,8 @@ const BAMI = { w: 72, h: 57 }; // public/lettering/bami.svg is 167.6 × 132
 
 // A noodle from (x1, y1) flowing down to (x2, y2) in one smooth curve: it leaves its parent going straight down
 // and arrives going down (into the top of a pill) or, with `across`, sideways (into its left end). An even wiggle
-// runs along the whole length (one wave every WAVE pixels), settling at both ends, and now and then it lies in a
-// loop. Each one is a little different.
-const WAVE = 30, AMP = 2.4;
+// runs along it, settling at both ends, and quite often it lies in a loop. Every noodle has its own wiggle (tighter
+// or lazier, flatter or bouncier) and its own loop.
 
 function noodle([x1, y1], [x2, y2], seed, across = false) {
   const drop = y2 - y1;
@@ -258,19 +257,20 @@ function noodle([x1, y1], [x2, y2], seed, across = false) {
   const along = [0];
   for (let i = 1; i < base.length; i++) along.push(along[i - 1] + Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]));
   const length = along[along.length - 1] || 1;
-  // About one noodle in three, if it's long enough, lies in a loop somewhere along the way.
-  const curl = length > 90 && loose(seed * 3.3) < 0.35 ? length * (0.35 + loose(seed * 5.1) * 0.3) : -1;
+  const wave = 22 + loose(seed * 2.7) * 18, amp = 1.6 + loose(seed * 4.3) * 2.2;
+  // Nearly half the noodles, if they're long enough, lie in a loop somewhere along the way.
+  const curl = length > 70 && loose(seed * 3.3) < 0.45 ? length * (0.3 + loose(seed * 5.1) * 0.4) : -1;
   const wiggled = [];
   base.forEach(([x, y], i) => {
     const [ax, ay] = base[Math.max(0, i - 1)], [bx, by] = base[Math.min(base.length - 1, i + 1)];
     const len = Math.hypot(bx - ax, by - ay) || 1;
     const [dx, dy, nx, ny] = [(bx - ax) / len, (by - ay) / len, -(by - ay) / len, (bx - ax) / len];
-    const wiggle = AMP * Math.sin((Math.PI * along[i]) / length) * Math.sin((2 * Math.PI * along[i]) / WAVE + seed * 1.7);
+    const wiggle = amp * Math.sin((Math.PI * along[i]) / length) * Math.sin((2 * Math.PI * along[i]) / wave + seed * 1.7);
     const point = [x + nx * wiggle, y + ny * wiggle];
     wiggled.push(point);
     if (curl >= 0 && along[i] >= curl && (i === 0 || along[i - 1] < curl)) {
       // A full turn, touching the noodle here, to one side of it.
-      const r = 6 + loose(seed * 7.7) * 4, side = loose(seed * 9.9) < 0.5 ? 1 : -1;
+      const r = 4 + loose(seed * 7.7) * 7, side = loose(seed * 9.9) < 0.5 ? 1 : -1;
       for (let k = 1; k <= 24; k++) {
         const a = (2 * Math.PI * k) / 24;
         const ahead = r * 1.25 * Math.sin(a), out = side * r * 0.9 * (1 - Math.cos(a)); // a little oval, like a noodle
@@ -294,35 +294,37 @@ function renderBrands() {
   document.getElementById("brands-panel").hidden = !all.length;
   if (!all.length) return;
 
-  // Lay it out loosely first: brands at slightly different heights, flavours stepping in and out below them, all
-  // to the right of where their noodles leave the brand.
+  // Lay it out loosely first: brands at slightly different heights, flavours wandering in and out below them. Their
+  // noodles fan out along the bottom of the brand, the top flavour's from the right and the lowest's from the left,
+  // and every flavour sits to the right of its own noodle, so no noodle runs through a pill.
   const width = (text) => text.length * PILL.char + 2 * PILL.pad;
   const STEPS = [0, 22, 8, 30, 14];
   const plan = all.map(({ brand, flavours }, i) => {
     const brandX = loose(i * 7 + 3) * 10;
     const brandY = BAMI.h + 64 + loose(i * 7 + 1) * 40;
-    const root = brandX + Math.min(width(brand) / 2, 28); // where its flavours' noodles leave the brand
+    const span = Math.max(0, width(brand) - 24); // the bottom of the brand, less its round ends
     let y = brandY;
     const leaves = flavours.map(({ flavour }, j) => {
-      y += ROW * (0.9 + loose(i * 31 + j * 5) * 0.45);
-      return { text: flavour || "no flavour", x: root + 22 + STEPS[j % STEPS.length] + loose(i * 31 + j * 5 + 1) * 6, y };
+      y += ROW * (0.9 + loose(i * 31 + j * 5) * 0.5);
+      const from = brandX + 12 + (flavours.length > 1 ? span * (1 - j / (flavours.length - 1)) : span / 2);
+      return { text: flavour || "no flavour", from, x: from + 18 + STEPS[j % STEPS.length] * 0.7 + loose(i * 31 + j * 5 + 1) * 16, y };
     });
     const w = Math.max(brandX + width(brand), ...leaves.map((l) => l.x + width(l.text)));
-    return { brand, brandX, brandY, root, leaves, w };
+    return { brand, brandX, brandY, leaves, w };
   });
   const total = plan.reduce((n, p) => n + p.w, 0) + COLUMN_GAP * (plan.length - 1);
   const lines = svg("g", { class: "branches" });
   const pills = svg("g");
   let left = -total / 2, seed = 0, bottom = 0;
-  // The noodles leave their parent side by side, like a bundle, from just under it.
+  // The brands' noodles leave "bami" side by side, like a bundle.
   const bundle = (k, n) => (k - (n - 1) / 2) * 3;
-  plan.forEach(({ brand, brandX, brandY, root, leaves, w }, i) => {
+  plan.forEach(({ brand, brandX, brandY, leaves, w }, i) => {
     const label = pill(left + brandX, brandY, brand, "brand");
     lines.append(noodle([bundle(i, plan.length), BAMI.h - 4], [left + brandX + label.w / 2, brandY - PILL.h / 2], seed++));
     pills.append(label.g);
-    leaves.forEach((leaf, j) => {
+    leaves.forEach((leaf) => {
       const p = pill(left + leaf.x, leaf.y, leaf.text, "flavour");
-      lines.append(noodle([left + root + bundle(j, leaves.length), brandY + PILL.h / 2 - 1], [left + leaf.x, leaf.y], seed++, true));
+      lines.append(noodle([left + leaf.from, brandY + PILL.h / 2 - 1], [left + leaf.x, leaf.y], seed++, true));
       pills.append(p.g);
     });
     bottom = Math.max(bottom, brandY, ...leaves.map((l) => l.y));
